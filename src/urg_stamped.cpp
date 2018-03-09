@@ -9,7 +9,7 @@
 
 #include <string>
 
-#include <scip/connection.h>
+#include <scip/scip.h>
 
 class UrgStampedNode
 {
@@ -17,11 +17,13 @@ protected:
   ros::NodeHandle nh_;
   ros::NodeHandle pnh_;
 
-  scip::Connection::Ptr scip_;
+  scip::Connection::Ptr device_;
+  scip::Protocol::Ptr scip_;
 
-  void cbClose()
+  void cbConnect()
   {
-    ros::shutdown();
+    scip_->sendCommand("PP");
+    scip_->sendCommand("VV");
   }
 
 public:
@@ -34,16 +36,19 @@ public:
     pnh_.param("ip", ip, std::string("192.168.0.10"));
     pnh_.param("port", port, 10940);
 
-    scip_.reset(new scip::ConnectionTcp(ip, port));
-    scip_->registerCloseCallback(
-        boost::bind(&UrgStampedNode::cbClose, this));
+    device_.reset(new scip::ConnectionTcp(ip, port));
+    device_->registerCloseCallback(ros::shutdown);
+    device_->registerConnectCallback(
+        boost::bind(&UrgStampedNode::cbConnect, this));
+
+    scip_.reset(new scip::Protocol(device_));
   }
   void spin()
   {
     boost::thread thread(
-        boost::bind(&scip::Connection::spin, scip_.get()));
+        boost::bind(&scip::Connection::spin, device_.get()));
     ros::spin();
-    scip_->stop();
+    device_->stop();
   }
 };
 

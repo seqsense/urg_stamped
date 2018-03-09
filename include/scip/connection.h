@@ -7,6 +7,7 @@
 #define SCIP_CONNECTION_H
 
 #include <boost/asio.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <string>
 
@@ -15,15 +16,28 @@ namespace scip
 class Connection
 {
 protected:
+  using CallbackConnect = boost::function<void(void)>;
   using CallbackClose = boost::function<void(void)>;
+  using CallbackReceive = boost::function<void(boost::asio::streambuf &)>;
 
-  bool active_;
+  CallbackConnect cb_connect_;
   CallbackClose cb_close_;
+  CallbackReceive cb_receive_;
 
   void close()
   {
     if (cb_close_)
       cb_close_();
+  }
+  void connect()
+  {
+    if (cb_connect_)
+      cb_connect_();
+  }
+  void receive(boost::asio::streambuf &buf)
+  {
+    if (cb_receive_)
+      cb_receive_(buf);
   }
 
 public:
@@ -31,17 +45,21 @@ public:
 
   virtual void spin() = 0;
   virtual void stop() = 0;
+  virtual void send(const std::string &) = 0;
 
-  bool isActive()
-  {
-    return active_;
-  }
   void registerCloseCallback(CallbackClose cb)
   {
     cb_close_ = cb;
   }
+  void registerReceiveCallback(CallbackReceive cb)
+  {
+    cb_receive_ = cb;
+  }
+  void registerConnectCallback(CallbackConnect cb)
+  {
+    cb_connect_ = cb;
+  }
   Connection()
-    : active_(false)
   {
   }
 };
@@ -56,26 +74,44 @@ protected:
 
   void onReceive(const boost::system::error_code &error)
   {
+    if (error)
+    {
+      std::cerr << "send error" << std::endl;
+      close();
+      return;
+    }
+    receive(buf_);
+    asyncRead();
     std::cerr << "recieve" << std::endl;
   }
+  void onSend(const boost::system::error_code &error)
+  {
+    if (error)
+    {
+      std::cerr << "send error" << std::endl;
+      close();
+      return;
+    }
+  }
 
+  void asyncRead()
+  {
+    boost::asio::async_read(
+        socket_, buf_, boost::asio::transfer_at_least(4),
+        boost::bind(&ConnectionTcp::onReceive, this, boost::asio::placeholders::error));
+  }
   void onConnect(const boost::system::error_code &error)
   {
-    if (!error)
-    {
-      active_ = true;
-      timeout_.cancel();
-      boost::asio::async_read(
-          socket_, buf_, boost::asio::transfer_at_least(4),
-          boost::bind(&ConnectionTcp::onReceive, this, boost::asio::placeholders::error));
-
-      std::cerr << "connected" << std::endl;
-    }
-    else
+    if (error)
     {
       std::cerr << "connection error" << std::endl;
       close();
+      return;
     }
+    timeout_.cancel();
+    connect();
+    asyncRead();
+    std::cerr << "connected" << std::endl;
   }
   void onConnectTimeout(const boost::system::error_code &error)
   {
@@ -83,6 +119,7 @@ protected:
     {
       std::cerr << "connection timeout" << std::endl;
       close();
+      return;
     }
   }
 
@@ -112,6 +149,15 @@ public:
   void stop()
   {
     io_.stop();
+  }
+  void send(const std::string &data)
+  {
+    boost::shared_ptr<std::string> buf(new std::string(data));
+    boost::asio::async_write(
+        socket_, boost::asio::buffer(*buf),
+        boost::bind(
+            &ConnectionTcp::onSend,
+            this, boost::asio::placeholders::error));
   }
 };
 
