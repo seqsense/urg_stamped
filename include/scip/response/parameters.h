@@ -20,6 +20,7 @@ class ResponseParams : public Response
 public:
   using Callback = boost::function<void(
       const std::string &,
+      const std::string &,
       const std::map<std::string, std::string> &)>;
 
 protected:
@@ -36,7 +37,7 @@ public:
     if (status != "00")
     {
       if (cb_)
-        cb_(status, params);
+        cb_(echo_back, status, params);
       std::cout << echo_back << " errored with " << status << std::endl;
       return;
     }
@@ -62,7 +63,7 @@ public:
       params[key] = value;
     }
     if (cb_)
-      cb_(status, params);
+      cb_(echo_back, status, params);
   }
   void registerCallback(Callback cb)
   {
