@@ -18,7 +18,8 @@ class Connection
 protected:
   using CallbackConnect = boost::function<void(void)>;
   using CallbackClose = boost::function<void(void)>;
-  using CallbackReceive = boost::function<void(boost::asio::streambuf &)>;
+  using CallbackReceive = boost::function<void(
+      boost::asio::streambuf &, const boost::chrono::system_clock::time_point &)>;
 
   CallbackConnect cb_connect_;
   CallbackClose cb_close_;
@@ -34,10 +35,12 @@ protected:
     if (cb_connect_)
       cb_connect_();
   }
-  void receive(boost::asio::streambuf &buf)
+  void receive(
+      boost::asio::streambuf &buf,
+      const boost::chrono::system_clock::time_point &time_read)
   {
     if (cb_receive_)
-      cb_receive_(buf);
+      cb_receive_(buf, time_read);
   }
 
 public:
@@ -74,21 +77,21 @@ protected:
 
   void onReceive(const boost::system::error_code &error)
   {
+    const auto time_read = boost::chrono::system_clock::now();
     if (error)
     {
-      std::cerr << "send error" << std::endl;
+      std::cerr << "Receive error" << std::endl;
       close();
       return;
     }
-    receive(buf_);
+    receive(buf_, time_read);
     asyncRead();
-    std::cerr << "recieve" << std::endl;
   }
   void onSend(const boost::system::error_code &error)
   {
     if (error)
     {
-      std::cerr << "send error" << std::endl;
+      std::cerr << "Send error" << std::endl;
       close();
       return;
     }
@@ -96,28 +99,27 @@ protected:
 
   void asyncRead()
   {
-    boost::asio::async_read(
-        socket_, buf_, boost::asio::transfer_at_least(4),
+    boost::asio::async_read_until(
+        socket_, buf_, "\n\n",
         boost::bind(&ConnectionTcp::onReceive, this, boost::asio::placeholders::error));
   }
   void onConnect(const boost::system::error_code &error)
   {
     if (error)
     {
-      std::cerr << "connection error" << std::endl;
+      std::cerr << "Connection error" << std::endl;
       close();
       return;
     }
     timeout_.cancel();
     connect();
     asyncRead();
-    std::cerr << "connected" << std::endl;
   }
   void onConnectTimeout(const boost::system::error_code &error)
   {
     if (!error)
     {
-      std::cerr << "connection timeout" << std::endl;
+      std::cerr << "Connection timeout" << std::endl;
       close();
       return;
     }

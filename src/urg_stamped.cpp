@@ -20,10 +20,30 @@ protected:
   scip::Connection::Ptr device_;
   scip::Protocol::Ptr scip_;
 
+  void cbPP(
+      const std::string &status,
+      const std::map<std::string, std::string> &params)
+  {
+    ROS_ERROR("PP");
+    scip_->sendCommand("MD0000000100030");
+  }
+  void cbVV(
+      const std::string &status,
+      const std::map<std::string, std::string> &params)
+  {
+    ROS_ERROR("VV");
+  }
+  void cbII(
+      const std::string &status,
+      const std::map<std::string, std::string> &params)
+  {
+    ROS_ERROR("II");
+  }
   void cbConnect()
   {
     scip_->sendCommand("PP");
     scip_->sendCommand("VV");
+    scip_->sendCommand("II");
   }
 
 public:
@@ -42,6 +62,15 @@ public:
         boost::bind(&UrgStampedNode::cbConnect, this));
 
     scip_.reset(new scip::Protocol(device_));
+    scip_->registerCallback<scip::ResponsePP>(
+        boost::bind(&UrgStampedNode::cbPP, this,
+                    boost::placeholders::_1, boost::placeholders::_2));
+    scip_->registerCallback<scip::ResponseVV>(
+        boost::bind(&UrgStampedNode::cbVV, this,
+                    boost::placeholders::_1, boost::placeholders::_2));
+    scip_->registerCallback<scip::ResponseII>(
+        boost::bind(&UrgStampedNode::cbII, this,
+                    boost::placeholders::_1, boost::placeholders::_2));
   }
   void spin()
   {
