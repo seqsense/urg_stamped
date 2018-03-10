@@ -13,13 +13,18 @@
 
 namespace scip
 {
+class Protocol;
 class Connection
 {
+  friend class Protocol;
+
 protected:
   using CallbackConnect = boost::function<void(void)>;
   using CallbackClose = boost::function<void(void)>;
   using CallbackReceive = boost::function<void(
       boost::asio::streambuf &, const boost::posix_time::ptime &)>;
+  using CallbackSend = boost::function<void(
+      const boost::posix_time::ptime &)>;
 
   CallbackConnect cb_connect_;
   CallbackClose cb_close_;
@@ -48,7 +53,7 @@ public:
 
   virtual void spin() = 0;
   virtual void stop() = 0;
-  virtual void send(const std::string &) = 0;
+  virtual void send(const std::string &, CallbackSend = CallbackSend()) = 0;
 
   void registerCloseCallback(CallbackClose cb)
   {
@@ -87,14 +92,17 @@ protected:
     receive(buf_, time_read);
     asyncRead();
   }
-  void onSend(const boost::system::error_code &error)
+  void onSend(const boost::system::error_code &error, CallbackSend cb)
   {
+    const auto time_send = boost::posix_time::microsec_clock::universal_time();
     if (error)
     {
       std::cerr << "Send error" << std::endl;
       close();
       return;
     }
+    if (cb)
+      cb(time_send);
   }
 
   void asyncRead()
@@ -152,14 +160,14 @@ public:
   {
     io_.stop();
   }
-  void send(const std::string &data)
+  void send(const std::string &data, CallbackSend cb = CallbackSend())
   {
     boost::shared_ptr<std::string> buf(new std::string(data));
     boost::asio::async_write(
         socket_, boost::asio::buffer(*buf),
         boost::bind(
             &ConnectionTcp::onSend,
-            this, boost::asio::placeholders::error));
+            this, boost::asio::placeholders::error, cb));
   }
 };
 

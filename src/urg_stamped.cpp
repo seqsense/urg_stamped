@@ -21,6 +21,8 @@ protected:
   ros::Publisher pub_scan_;
 
   sensor_msgs::LaserScan msg_base_;
+  uint32_t step_min_;
+  uint32_t step_max_;
 
   scip::Connection::Ptr device_;
   scip::Protocol::Ptr scip_;
@@ -58,6 +60,57 @@ protected:
 
     pub_scan_.publish(msg);
   }
+  boost::posix_time::ptime time_tm_request;
+  std::vector<ros::Duration> communication_delays_;
+  void cbTMSend(const boost::posix_time::ptime &time_send)
+  {
+    time_tm_request = time_send;
+  }
+  void cbTM(
+      const boost::posix_time::ptime &time_read,
+      const std::string &echo_back,
+      const std::string &status,
+      const scip::Timestamp &time_device)
+  {
+    switch (echo_back[2])
+    {
+      case '0':
+      {
+        scip_->sendCommand(
+            "TM1",
+            boost::bind(&UrgStampedNode::cbTMSend, this, boost::placeholders::_1));
+        break;
+      }
+      case '1':
+      {
+        const auto delay =
+            ros::Time::fromBoost(time_read) -
+            ros::Time::fromBoost(time_tm_request);
+        communication_delays_.push_back(delay);
+        if (communication_delays_.size() > 40)
+        {
+          sort(communication_delays_.begin(), communication_delays_.end());
+          ROS_INFO("communication delay: %0.6f", communication_delays_[20].toSec());
+          scip_->sendCommand("TM2");
+        }
+        else
+        {
+          scip_->sendCommand(
+              "TM1",
+              boost::bind(&UrgStampedNode::cbTMSend, this, boost::placeholders::_1));
+        }
+        break;
+      }
+      case '2':
+      {
+        scip_->sendCommand(
+            "ME" +
+            (boost::format("%04d%04d") % step_min_ % step_max_).str() +
+            "00000");
+        break;
+      }
+    }
+  }
   void cbPP(
       const boost::posix_time::ptime &time_read,
       const std::string &echo_back,
@@ -79,6 +132,8 @@ protected:
       ROS_ERROR("PP doesn't have required parameters");
       return;
     }
+    step_min_ = std::stoi(amin->second);
+    step_max_ = std::stoi(amax->second);
     msg_base_.scan_time = 60.0 / std::stoi(scan->second);
     msg_base_.angle_increment = 2.0 * M_PI / std::stoi(ares->second);
     msg_base_.range_min = std::stoi(dmin->second) * 1e-3;
@@ -88,10 +143,7 @@ protected:
     msg_base_.angle_max =
         (std::stoi(amax->second) - std::stoi(afrt->second)) * msg_base_.angle_increment;
 
-    scip_->sendCommand(
-        "ME" +
-        (boost::format("%04d%04d") % std::stoi(amin->second) % std::stoi(amax->second)).str() +
-        "00000");
+    scip_->sendCommand("TM0");
   }
   void cbVV(
       const boost::posix_time::ptime &time_read,
@@ -157,6 +209,12 @@ public:
                     boost::placeholders::_4));
     scip_->registerCallback<scip::ResponseME>(
         boost::bind(&UrgStampedNode::cbME, this,
+                    boost::placeholders::_1,
+                    boost::placeholders::_2,
+                    boost::placeholders::_3,
+                    boost::placeholders::_4));
+    scip_->registerCallback<scip::ResponseTM>(
+        boost::bind(&UrgStampedNode::cbTM, this,
                     boost::placeholders::_1,
                     boost::placeholders::_2,
                     boost::placeholders::_3,

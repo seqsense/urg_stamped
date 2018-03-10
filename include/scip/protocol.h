@@ -59,9 +59,11 @@ public:
         boost::bind(&scip::Protocol::cbReceive, this, _1, _2));
   }
 
-  void sendCommand(const std::string &command)
+  void sendCommand(
+      const std::string &command,
+      Connection::CallbackSend cb = Connection::CallbackSend())
   {
-    connection_->send(command + "\n");
+    connection_->send(command + "\n", cb);
   }
 
   template <typename TResponse>

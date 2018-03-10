@@ -14,6 +14,7 @@
 #include <scip/response/abstract.h>
 #include <scip/response/parameters.h>
 #include <scip/response/stream.h>
+#include <scip/response/time_sync.h>
 
 namespace scip
 {
@@ -34,6 +35,7 @@ public:
     registerResponse(Response::Ptr(new ResponseII));
     registerResponse(Response::Ptr(new ResponseMD));
     registerResponse(Response::Ptr(new ResponseME));
+    registerResponse(Response::Ptr(new ResponseTM));
   }
   void operator()(
       const boost::posix_time::ptime &time_read,
