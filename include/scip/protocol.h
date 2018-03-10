@@ -24,7 +24,7 @@ protected:
 
   void cbReceive(
       boost::asio::streambuf &buf,
-      const boost::chrono::system_clock::time_point &time_read)
+      const boost::posix_time::ptime &time_read)
   {
     std::istream stream(&buf);
     std::string echo_back;
@@ -41,7 +41,7 @@ protected:
     }
     status.pop_back();  // remove checksum
 
-    response_processor_(echo_back, status, stream);
+    response_processor_(time_read, echo_back, status, stream);
 
     std::string line;
     while (std::getline(stream, line))

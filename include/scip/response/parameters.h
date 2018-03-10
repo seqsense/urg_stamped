@@ -19,6 +19,7 @@ class ResponseParams : public Response
 {
 public:
   using Callback = boost::function<void(
+      const boost::posix_time::ptime &,
       const std::string &,
       const std::string &,
       const std::map<std::string, std::string> &)>;
@@ -29,6 +30,7 @@ protected:
 public:
   virtual std::string getCommandCode() const = 0;
   void operator()(
+      const boost::posix_time::ptime &time_read,
       const std::string &echo_back,
       const std::string &status,
       std::istream &stream)
@@ -37,7 +39,7 @@ public:
     if (status != "00")
     {
       if (cb_)
-        cb_(echo_back, status, params);
+        cb_(time_read, echo_back, status, params);
       std::cout << echo_back << " errored with " << status << std::endl;
       return;
     }
@@ -63,7 +65,7 @@ public:
       params[key] = value;
     }
     if (cb_)
-      cb_(echo_back, status, params);
+      cb_(time_read, echo_back, status, params);
   }
   void registerCallback(Callback cb)
   {

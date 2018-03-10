@@ -13,7 +13,7 @@ namespace scip
 class DecoderRemain
 {
 public:
-  uint32_t buf_;
+  uint64_t buf_;
   uint32_t chars_;
 
   DecoderRemain()
@@ -21,7 +21,7 @@ public:
     , chars_(0)
   {
   }
-  DecoderRemain(const uint32_t &buf, const uint32_t &chars)
+  DecoderRemain(const uint64_t &buf, const uint32_t &chars)
     : buf_(buf)
     , chars_(chars)
   {
@@ -79,10 +79,10 @@ public:
     {
       return remain_;
     }
-    const uint32_t operator*()
+    const uint64_t operator*()
     {
       std::string::const_iterator pos(pos_);
-      uint32_t buf(remain_.buf_);
+      uint64_t buf(remain_.buf_);
       for (size_t i = 0; i < L - remain_.chars_; ++i)
       {
         if (pos == end_)

@@ -19,7 +19,7 @@ protected:
   using CallbackConnect = boost::function<void(void)>;
   using CallbackClose = boost::function<void(void)>;
   using CallbackReceive = boost::function<void(
-      boost::asio::streambuf &, const boost::chrono::system_clock::time_point &)>;
+      boost::asio::streambuf &, const boost::posix_time::ptime &)>;
 
   CallbackConnect cb_connect_;
   CallbackClose cb_close_;
@@ -37,7 +37,7 @@ protected:
   }
   void receive(
       boost::asio::streambuf &buf,
-      const boost::chrono::system_clock::time_point &time_read)
+      const boost::posix_time::ptime &time_read)
   {
     if (cb_receive_)
       cb_receive_(buf, time_read);
@@ -77,7 +77,7 @@ protected:
 
   void onReceive(const boost::system::error_code &error)
   {
-    const auto time_read = boost::chrono::system_clock::now();
+    const auto time_read = boost::posix_time::microsec_clock::universal_time();
     if (error)
     {
       std::cerr << "Receive error" << std::endl;

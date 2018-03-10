@@ -36,6 +36,7 @@ public:
     registerResponse(Response::Ptr(new ResponseME));
   }
   void operator()(
+      const boost::posix_time::ptime &time_read,
       const std::string &echo_back,
       const std::string &status,
       std::istream &stream) const
@@ -47,7 +48,7 @@ public:
       std::cerr << "Unknown response " << command_code << std::endl;
       return;
     }
-    (*(response->second))(echo_back, status, stream);
+    (*(response->second))(time_read, echo_back, status, stream);
   }
   template <typename TResponse>
   void registerCallback(typename TResponse::Callback cb)

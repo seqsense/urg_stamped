@@ -28,7 +28,10 @@ class ResponseStream : public Response
 {
 public:
   using Callback = boost::function<void(
-      const std::string &, const std::string &, const ScanData &)>;
+      const boost::posix_time::ptime &,
+      const std::string &,
+      const std::string &,
+      const ScanData &)>;
 
 protected:
   Callback cb_;
@@ -36,17 +39,18 @@ protected:
 public:
   virtual std::string getCommandCode() const = 0;
   virtual void operator()(
-      const std::string &echo_back,
-      const std::string &status,
-      std::istream &stream) = 0;
+      const boost::posix_time::ptime &,
+      const std::string &,
+      const std::string &,
+      std::istream &) = 0;
 
   bool readTimestamp(
+      const boost::posix_time::ptime &time_read,
       const std::string &echo_back,
       const std::string &status,
       std::istream &stream,
       ScanData &scan)
   {
-    std::map<std::string, std::string> params;
     if (status == "00")
     {
       return false;
@@ -54,7 +58,7 @@ public:
     if (status != "99")
     {
       if (cb_)
-        cb_(echo_back, status, scan);
+        cb_(time_read, echo_back, status, scan);
       std::cout << echo_back << " errored with " << status << std::endl;
       return false;
     }
@@ -89,13 +93,15 @@ public:
     return std::string("MD");
   }
   void operator()(
+      const boost::posix_time::ptime &time_read,
       const std::string &echo_back,
       const std::string &status,
       std::istream &stream) override
   {
     ScanData scan;
-    if (!readTimestamp(echo_back, status, stream, scan))
+    if (!readTimestamp(time_read, echo_back, status, stream, scan))
       return;
+    scan.ranges_.reserve(512);
 
     std::string line;
     scip::DecoderRemain remain;
@@ -119,7 +125,7 @@ public:
       remain = it.getRemain();
     }
     if (cb_)
-      cb_(echo_back, status, scan);
+      cb_(time_read, echo_back, status, scan);
   }
 };
 
@@ -131,13 +137,16 @@ public:
     return std::string("ME");
   }
   void operator()(
+      const boost::posix_time::ptime &time_read,
       const std::string &echo_back,
       const std::string &status,
       std::istream &stream) override
   {
     ScanData scan;
-    if (!readTimestamp(echo_back, status, stream, scan))
+    if (!readTimestamp(time_read, echo_back, status, stream, scan))
       return;
+    scan.ranges_.reserve(512);
+    scan.intensities_.reserve(512);
 
     std::string line;
     scip::DecoderRemain remain;
@@ -152,21 +161,17 @@ public:
         std::cerr << "Wrong stream format" << std::endl;
         return;
       }
-      auto dec = Decoder<3>(line, remain);
+      auto dec = Decoder<6>(line, remain);
       auto it = dec.begin();
-      bool range(true);
       for (; it != dec.end(); ++it)
       {
-        if (range)
-          scan.ranges_.push_back(*it);
-        else
-          scan.intensities_.push_back(*it);
-        range = !range;
+        scan.ranges_.push_back((*it) >> 18);
+        scan.intensities_.push_back((*it) & 0x3FFFF);
       }
       remain = it.getRemain();
     }
     if (cb_)
-      cb_(echo_back, status, scan);
+      cb_(time_read, echo_back, status, scan);
   }
 };
 
