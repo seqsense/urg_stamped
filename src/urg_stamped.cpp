@@ -6,12 +6,15 @@
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
 
-#include <boost/thread.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/format.hpp>
+#include <boost/thread.hpp>
 
 #include <string>
 
 #include <scip2/scip2.h>
+
+#include <old_boost_fix.h>
 
 class UrgStampedNode
 {

@@ -3,7 +3,12 @@ project(urg_stamped)
 
 ## Find catkin and any catkin packages
 find_package(catkin REQUIRED COMPONENTS roscpp sensor_msgs roslint)
-find_package(Boost 1.53 REQUIRED system serialization chrono thread)
+find_package(Boost 1.53 REQUIRED system chrono thread)
+
+if(Boost_VERSION LESS 106000)
+  message(STATUS "Using old boost version without namespaced placeholders")
+  add_definitions(-DUSE_OLD_BOOST_PLACEHOLDERS=1)
+endif()
 
 ## Declare a catkin package
 catkin_package(

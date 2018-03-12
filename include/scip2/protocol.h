@@ -14,6 +14,8 @@
 
 #include <map>
 
+#include <old_boost_fix.h>
+
 namespace scip2
 {
 class Protocol
@@ -56,7 +58,7 @@ public:
     : connection_(connection)
   {
     connection_->registerReceiveCallback(
-        boost::bind(&scip2::Protocol::cbReceive, this, _1, _2));
+        boost::bind(&scip2::Protocol::cbReceive, this, boost::placeholders::_1, boost::placeholders::_2));
   }
 
   void sendCommand(
