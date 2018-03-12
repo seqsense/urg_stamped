@@ -62,7 +62,9 @@ protected:
       const scip2::ScanData &scan)
   {
     sensor_msgs::LaserScan msg(msg_base_);
-    msg.header.stamp = device_time_origin_ + ros::Duration().fromNSec(scan.timestamp_ * 1e6);
+    msg.header.stamp = device_time_origin_ +
+                       ros::Duration().fromNSec(scan.timestamp_ * 1e6) +
+                       ros::Duration(msg_base_.time_increment * step_min_);
 
     msg.ranges.reserve(scan.ranges_.size());
     for (auto &r : scan.ranges_)
@@ -78,7 +80,9 @@ protected:
       const scip2::ScanData &scan)
   {
     sensor_msgs::LaserScan msg(msg_base_);
-    msg.header.stamp = device_time_origin_ + ros::Duration().fromNSec(scan.timestamp_ * 1e6);
+    msg.header.stamp = device_time_origin_ +
+                       ros::Duration().fromNSec(scan.timestamp_ * 1e6) +
+                       ros::Duration(msg_base_.time_increment * step_min_);
 
     msg.ranges.reserve(scan.ranges_.size());
     for (auto &r : scan.ranges_)
@@ -177,6 +181,7 @@ protected:
     step_max_ = std::stoi(amax->second);
     msg_base_.scan_time = 60.0 / std::stoi(scan->second);
     msg_base_.angle_increment = 2.0 * M_PI / std::stoi(ares->second);
+    msg_base_.time_increment = msg_base_.scan_time / std::stoi(ares->second);
     msg_base_.range_min = std::stoi(dmin->second) * 1e-3;
     msg_base_.range_max = std::stoi(dmax->second) * 1e-3;
     msg_base_.angle_min =
