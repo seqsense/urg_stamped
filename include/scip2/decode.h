@@ -8,7 +8,7 @@
 
 #include <string>
 
-namespace scip
+namespace scip2
 {
 class DecoderRemain
 {
@@ -110,6 +110,6 @@ public:
     return Iterator(end_, end_);
   }
 };
-}  // namespace scip
+}  // namespace scip2
 
 #endif  // SCIP_DECODE_H

@@ -11,7 +11,7 @@
 
 #include <string>
 
-#include <scip/scip.h>
+#include <scip2/scip2.h>
 
 class UrgStampedNode
 {
@@ -24,14 +24,14 @@ protected:
   uint32_t step_min_;
   uint32_t step_max_;
 
-  scip::Connection::Ptr device_;
-  scip::Protocol::Ptr scip_;
+  scip2::Connection::Ptr device_;
+  scip2::Protocol::Ptr scip_;
 
   void cbMD(
       const boost::posix_time::ptime &time_read,
       const std::string &echo_back,
       const std::string &status,
-      const scip::ScanData &scan)
+      const scip2::ScanData &scan)
   {
     sensor_msgs::LaserScan msg(msg_base_);
     msg.header.stamp = ros::Time::fromBoost(time_read);
@@ -46,7 +46,7 @@ protected:
       const boost::posix_time::ptime &time_read,
       const std::string &echo_back,
       const std::string &status,
-      const scip::ScanData &scan)
+      const scip2::ScanData &scan)
   {
     sensor_msgs::LaserScan msg(msg_base_);
     msg.header.stamp = ros::Time::fromBoost(time_read);
@@ -70,7 +70,7 @@ protected:
       const boost::posix_time::ptime &time_read,
       const std::string &echo_back,
       const std::string &status,
-      const scip::Timestamp &time_device)
+      const scip2::Timestamp &time_device)
   {
     switch (echo_back[2])
     {
@@ -177,43 +177,43 @@ public:
 
     pub_scan_ = nh_.advertise<sensor_msgs::LaserScan>("scan", 10);
 
-    device_.reset(new scip::ConnectionTcp(ip, port));
+    device_.reset(new scip2::ConnectionTcp(ip, port));
     device_->registerCloseCallback(ros::shutdown);
     device_->registerConnectCallback(
         boost::bind(&UrgStampedNode::cbConnect, this));
 
-    scip_.reset(new scip::Protocol(device_));
-    scip_->registerCallback<scip::ResponsePP>(
+    scip_.reset(new scip2::Protocol(device_));
+    scip_->registerCallback<scip2::ResponsePP>(
         boost::bind(&UrgStampedNode::cbPP, this,
                     boost::placeholders::_1,
                     boost::placeholders::_2,
                     boost::placeholders::_3,
                     boost::placeholders::_4));
-    scip_->registerCallback<scip::ResponseVV>(
+    scip_->registerCallback<scip2::ResponseVV>(
         boost::bind(&UrgStampedNode::cbVV, this,
                     boost::placeholders::_1,
                     boost::placeholders::_2,
                     boost::placeholders::_3,
                     boost::placeholders::_4));
-    scip_->registerCallback<scip::ResponseII>(
+    scip_->registerCallback<scip2::ResponseII>(
         boost::bind(&UrgStampedNode::cbII, this,
                     boost::placeholders::_1,
                     boost::placeholders::_2,
                     boost::placeholders::_3,
                     boost::placeholders::_4));
-    scip_->registerCallback<scip::ResponseMD>(
+    scip_->registerCallback<scip2::ResponseMD>(
         boost::bind(&UrgStampedNode::cbMD, this,
                     boost::placeholders::_1,
                     boost::placeholders::_2,
                     boost::placeholders::_3,
                     boost::placeholders::_4));
-    scip_->registerCallback<scip::ResponseME>(
+    scip_->registerCallback<scip2::ResponseME>(
         boost::bind(&UrgStampedNode::cbME, this,
                     boost::placeholders::_1,
                     boost::placeholders::_2,
                     boost::placeholders::_3,
                     boost::placeholders::_4));
-    scip_->registerCallback<scip::ResponseTM>(
+    scip_->registerCallback<scip2::ResponseTM>(
         boost::bind(&UrgStampedNode::cbTM, this,
                     boost::placeholders::_1,
                     boost::placeholders::_2,
@@ -223,7 +223,7 @@ public:
   void spin()
   {
     boost::thread thread(
-        boost::bind(&scip::Connection::spin, device_.get()));
+        boost::bind(&scip2::Connection::spin, device_.get()));
     ros::spin();
     scip_->sendCommand("QT");
     device_->stop();

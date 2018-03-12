@@ -9,12 +9,12 @@
 #include <boost/asio.hpp>
 #include <boost/bind/bind.hpp>
 
-#include <scip/connection.h>
-#include <scip/response.h>
+#include <scip2/connection.h>
+#include <scip2/response.h>
 
 #include <map>
 
-namespace scip
+namespace scip2
 {
 class Protocol
 {
@@ -56,7 +56,7 @@ public:
     : connection_(connection)
   {
     connection_->registerReceiveCallback(
-        boost::bind(&scip::Protocol::cbReceive, this, _1, _2));
+        boost::bind(&scip2::Protocol::cbReceive, this, _1, _2));
   }
 
   void sendCommand(
@@ -73,6 +73,6 @@ public:
   }
 };
 
-}  // namespace scip
+}  // namespace scip2
 
 #endif  // SCIP_PROTOCOL_H

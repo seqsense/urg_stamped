@@ -6,7 +6,7 @@
 #ifndef SCIP_H
 #define SCIP_H
 
-#include <scip/connection.h>
-#include <scip/protocol.h>
+#include <scip2/connection.h>
+#include <scip2/protocol.h>
 
 #endif  // SCIP_H

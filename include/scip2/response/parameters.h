@@ -11,9 +11,9 @@
 #include <string>
 #include <map>
 
-#include <scip/response/abstract.h>
+#include <scip2/response/abstract.h>
 
-namespace scip
+namespace scip2
 {
 class ResponseParams : public Response
 {
@@ -100,6 +100,6 @@ public:
   }
 };
 
-}  // namespace scip
+}  // namespace scip2
 
 #endif  // RESPONSE_H

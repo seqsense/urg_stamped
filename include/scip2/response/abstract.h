@@ -8,7 +8,7 @@
 
 #include <boost/asio.hpp>
 
-namespace scip
+namespace scip2
 {
 class Response
 {
@@ -22,6 +22,6 @@ public:
       std::istream &) = 0;
 };
 
-}  // namespace scip
+}  // namespace scip2
 
 #endif  // RESPONSE_H

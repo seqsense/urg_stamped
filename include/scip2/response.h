@@ -11,12 +11,12 @@
 #include <string>
 #include <map>
 
-#include <scip/response/abstract.h>
-#include <scip/response/parameters.h>
-#include <scip/response/stream.h>
-#include <scip/response/time_sync.h>
+#include <scip2/response/abstract.h>
+#include <scip2/response/parameters.h>
+#include <scip2/response/stream.h>
+#include <scip2/response/time_sync.h>
 
-namespace scip
+namespace scip2
 {
 class ResponseProcessor
 {
@@ -64,6 +64,6 @@ public:
   }
 };
 
-}  // namespace scip
+}  // namespace scip2
 
 #endif  // RESPONSE_H

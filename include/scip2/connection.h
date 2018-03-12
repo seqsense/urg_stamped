@@ -11,7 +11,7 @@
 
 #include <string>
 
-namespace scip
+namespace scip2
 {
 class Protocol;
 class Connection
@@ -171,6 +171,6 @@ public:
   }
 };
 
-}  // namespace scip
+}  // namespace scip2
 
 #endif  // SCIP_CONNECTION_H

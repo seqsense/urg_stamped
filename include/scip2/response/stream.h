@@ -11,10 +11,10 @@
 #include <string>
 #include <map>
 
-#include <scip/response/abstract.h>
-#include <scip/decode.h>
+#include <scip2/response/abstract.h>
+#include <scip2/decode.h>
 
-namespace scip
+namespace scip2
 {
 class ScanData
 {
@@ -104,7 +104,7 @@ public:
     scan.ranges_.reserve(512);
 
     std::string line;
-    scip::DecoderRemain remain;
+    scip2::DecoderRemain remain;
     while (std::getline(stream, line))
     {
       if (line.size() == 0)
@@ -149,7 +149,7 @@ public:
     scan.intensities_.reserve(512);
 
     std::string line;
-    scip::DecoderRemain remain;
+    scip2::DecoderRemain remain;
     while (std::getline(stream, line))
     {
       if (line.size() == 0)
@@ -175,6 +175,6 @@ public:
   }
 };
 
-}  // namespace scip
+}  // namespace scip2
 
 #endif  // RESPONSE_H
