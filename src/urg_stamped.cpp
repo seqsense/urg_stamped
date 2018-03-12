@@ -224,7 +224,7 @@ protected:
         ros::Time::fromBoost(time_read) -
         ros::Time::fromBoost(time_ii_request);
 
-    if ((estimated_communication_delay_ - delay).toSec() < 0.001)
+    if ((estimated_communication_delay_ - delay).toSec() < 0.002)
     {
       const auto time = params.find("TIME");
       if (time == params.end())
@@ -244,7 +244,7 @@ protected:
       const auto origin = calculateDeviceTimeOrigin(
           time_read, time_ii_request, device_timestamp);
 
-      if (fabs((origin - device_time_origin_).toSec()) < 0.001)
+      if (fabs((origin - device_time_origin_).toSec()) < 0.005)
       {
         device_time_origin_ +=
             (origin - device_time_origin_) *
