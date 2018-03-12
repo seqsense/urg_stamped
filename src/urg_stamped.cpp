@@ -171,8 +171,8 @@ public:
   {
     std::string ip;
     int port;
-    pnh_.param("ip", ip, std::string("192.168.0.10"));
-    pnh_.param("port", port, 10940);
+    pnh_.param("ip_address", ip, std::string("192.168.0.10"));
+    pnh_.param("ip_port", port, 10940);
     pnh_.param("frame_id", msg_base_.header.frame_id, std::string("laser"));
 
     pub_scan_ = nh_.advertise<sensor_msgs::LaserScan>("scan", 10);
