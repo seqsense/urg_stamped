@@ -27,6 +27,31 @@ protected:
   scip2::Connection::Ptr device_;
   scip2::Protocol::Ptr scip_;
 
+  size_t scan_count;
+  int on_scan_sync_interval;
+
+  boost::posix_time::ptime time_tm_request;
+  std::vector<ros::Duration> communication_delays_;
+  std::vector<ros::Time> device_time_origins_;
+  ros::Duration estimated_communication_delay_;
+
+  boost::posix_time::ptime time_ii_request;
+  std::vector<ros::Duration> on_scan_communication_delays_;
+
+  ros::Time device_time_origin_;
+
+  ros::Time calculateDeviceTimeOrigin(
+      const boost::posix_time::ptime &time_request,
+      const boost::posix_time::ptime &time_response,
+      uint32_t device_timestamp)
+  {
+    const auto delay =
+        ros::Time::fromBoost(time_response) -
+        ros::Time::fromBoost(time_request);
+    const ros::Time time_at_device_timestamp = ros::Time::fromBoost(time_request) + delay * 0.5;
+    return time_at_device_timestamp - ros::Duration().fromNSec(device_timestamp * 1e6);
+  }
+
   void cbMD(
       const boost::posix_time::ptime &time_read,
       const std::string &echo_back,
@@ -34,13 +59,14 @@ protected:
       const scip2::ScanData &scan)
   {
     sensor_msgs::LaserScan msg(msg_base_);
-    msg.header.stamp = ros::Time::fromBoost(time_read);
+    msg.header.stamp = device_time_origin_ + ros::Duration().fromNSec(scan.timestamp_ * 1e6);
 
     msg.ranges.reserve(scan.ranges_.size());
     for (auto &r : scan.ranges_)
       msg.ranges.push_back(r * 1e-3);
 
     pub_scan_.publish(msg);
+    onScanTimeSync();
   }
   void cbME(
       const boost::posix_time::ptime &time_read,
@@ -49,7 +75,7 @@ protected:
       const scip2::ScanData &scan)
   {
     sensor_msgs::LaserScan msg(msg_base_);
-    msg.header.stamp = ros::Time::fromBoost(time_read);
+    msg.header.stamp = device_time_origin_ + ros::Duration().fromNSec(scan.timestamp_ * 1e6);
 
     msg.ranges.reserve(scan.ranges_.size());
     for (auto &r : scan.ranges_)
@@ -59,9 +85,8 @@ protected:
       msg.intensities.push_back(r);
 
     pub_scan_.publish(msg);
+    onScanTimeSync();
   }
-  boost::posix_time::ptime time_tm_request;
-  std::vector<ros::Duration> communication_delays_;
   void cbTMSend(const boost::posix_time::ptime &time_send)
   {
     time_tm_request = time_send;
@@ -79,6 +104,8 @@ protected:
         scip_->sendCommand(
             "TM1",
             boost::bind(&UrgStampedNode::cbTMSend, this, boost::placeholders::_1));
+        communication_delays_.clear();
+        device_time_origins_.clear();
         break;
       }
       case '1':
@@ -87,10 +114,21 @@ protected:
             ros::Time::fromBoost(time_read) -
             ros::Time::fromBoost(time_tm_request);
         communication_delays_.push_back(delay);
-        if (communication_delays_.size() > 40)
+        const auto origin = calculateDeviceTimeOrigin(
+            time_read, time_tm_request, time_device.timestamp_);
+        device_time_origins_.push_back(origin);
+
+        if (communication_delays_.size() > 20)
         {
           sort(communication_delays_.begin(), communication_delays_.end());
-          ROS_INFO("communication delay: %0.6f", communication_delays_[20].toSec());
+          sort(device_time_origins_.begin(), device_time_origins_.end());
+
+          estimated_communication_delay_ = communication_delays_[10];
+          device_time_origin_ = device_time_origins_[10];
+          ROS_DEBUG("communication delay: %0.6f, device timestamp: %d, device time origin: %0.6f",
+                    estimated_communication_delay_.toSec(),
+                    time_device.timestamp_,
+                    device_time_origin_.toSec());
           scip_->sendCommand("TM2");
         }
         else
@@ -152,12 +190,73 @@ protected:
       const std::map<std::string, std::string> &params)
   {
   }
+  void cbIISend(const boost::posix_time::ptime &time_send)
+  {
+    time_ii_request = time_send;
+  }
+  void onScanTimeSync()
+  {
+    if (on_scan_sync_interval == 0)
+      return;
+    ++scan_count;
+    if (scan_count % on_scan_sync_interval == 0)
+    {
+      scip_->sendCommand(
+          "II",
+          boost::bind(&UrgStampedNode::cbIISend, this, boost::placeholders::_1));
+    }
+  }
   void cbII(
       const boost::posix_time::ptime &time_read,
       const std::string &echo_back,
       const std::string &status,
       const std::map<std::string, std::string> &params)
   {
+    const auto delay =
+        ros::Time::fromBoost(time_read) -
+        ros::Time::fromBoost(time_ii_request);
+
+    if ((estimated_communication_delay_ - delay).toSec() < 0.001)
+    {
+      const auto time = params.find("TIME");
+      if (time == params.end())
+      {
+        ROS_WARN("II doesn't have timestamp");
+        return;
+      }
+      if (time->second.size() != 6 && time->second.size() != 4)
+      {
+        ROS_INFO("Timestamp in II is ill-formatted");
+        return;
+      }
+      const int device_timestamp =
+          time->second.size() == 6 ?
+              std::stoi(time->second) :
+              *(scip2::Decoder<4>(time->second).begin());
+      const auto origin = calculateDeviceTimeOrigin(
+          time_read, time_ii_request, device_timestamp);
+
+      if (fabs((origin - device_time_origin_).toSec()) < 0.001)
+      {
+        device_time_origin_ +=
+            (origin - device_time_origin_) *
+            (msg_base_.scan_time * on_scan_sync_interval) * (1.0 / 60.0);  // 60 seconds exponential LPF
+        ROS_DEBUG("on scan communication delay: %0.6f, device timestamp: %d, device time origin: %0.6f",
+                  delay.toSec(),
+                  device_timestamp,
+                  device_time_origin_.toSec());
+      }
+      else
+      {
+        ROS_DEBUG("calculated device time origin (%0.6f) is far from expected; skipping",
+                  origin.toSec());
+      }
+    }
+    else
+    {
+      ROS_DEBUG("on scan communication delay (%0.6f) is larger than expected; skipping",
+                delay.toSec());
+    }
   }
   void cbConnect()
   {
@@ -174,6 +273,7 @@ public:
     pnh_.param("ip_address", ip, std::string("192.168.0.10"));
     pnh_.param("ip_port", port, 10940);
     pnh_.param("frame_id", msg_base_.header.frame_id, std::string("laser"));
+    pnh_.param("on_scan_sync_interval", on_scan_sync_interval, 400);
 
     pub_scan_ = nh_.advertise<sensor_msgs::LaserScan>("scan", 10);
 
