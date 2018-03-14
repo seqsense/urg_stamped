@@ -269,8 +269,8 @@ protected:
           time_read, time_ii_request, device_timestamp, time_at_device_timestamp);
 
       const double gain =
-          (time_at_device_timestamp - origin).toSec() /
-          (time_at_device_timestamp - device_time_origin_.origin_).toSec();
+          (time_at_device_timestamp - device_time_origin_.origin_).toSec() /
+          (time_at_device_timestamp - origin).toSec();
       const double exp_lpf_alpha =
           (msg_base_.scan_time * on_scan_sync_interval) * (1.0 / 30.0);  // 30 seconds exponential LPF
       const double updated_gain =
