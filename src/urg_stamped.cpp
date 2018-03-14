@@ -35,6 +35,7 @@ protected:
 
   size_t scan_count;
   int on_scan_sync_interval;
+  bool publish_intensity_;
 
   boost::posix_time::ptime time_tm_request;
   std::vector<ros::Duration> communication_delays_;
@@ -172,7 +173,7 @@ protected:
       case '2':
       {
         scip_->sendCommand(
-            "ME" +
+            (publish_intensity_ ? "ME" : "MD") +
             (boost::format("%04d%04d") % step_min_ % step_max_).str() +
             "00000");
         break;
@@ -305,6 +306,7 @@ public:
     pnh_.param("ip_port", port, 10940);
     pnh_.param("frame_id", msg_base_.header.frame_id, std::string("laser"));
     pnh_.param("on_scan_sync_interval", on_scan_sync_interval, 400);
+    pnh_.param("publish_intensity", publish_intensity_, true);
 
     pub_scan_ = nh_.advertise<sensor_msgs::LaserScan>("scan", 10);
 
