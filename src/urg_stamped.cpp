@@ -45,6 +45,9 @@ protected:
   boost::posix_time::ptime time_ii_request;
   std::vector<ros::Duration> on_scan_communication_delays_;
 
+  uint32_t time_device_prev_;
+  uint64_t wall_time_device_base_;
+
   class DriftedTime
   {
   public:
@@ -66,7 +69,7 @@ protected:
   ros::Time calculateDeviceTimeOrigin(
       const boost::posix_time::ptime &time_request,
       const boost::posix_time::ptime &time_response,
-      uint32_t device_timestamp,
+      uint64_t device_timestamp,
       ros::Time &time_at_device_timestamp)
   {
     const auto delay =
@@ -76,6 +79,14 @@ protected:
 
     return time_at_device_timestamp - ros::Duration().fromNSec(device_timestamp * 1e6);
   }
+  uint64_t updateWalltime(const uint32_t &time_device)
+  {
+    if (time_device < 0x100000 && 0xF00000 < time_device_prev_)
+      wall_time_device_base_ += 0x1000000;
+    time_device_prev_ = time_device;
+
+    return wall_time_device_base_ + time_device;
+  }
 
   void cbMD(
       const boost::posix_time::ptime &time_read,
@@ -83,9 +94,11 @@ protected:
       const std::string &status,
       const scip2::ScanData &scan)
   {
+    const uint64_t wall_time_device = updateWalltime(scan.timestamp_);
+
     sensor_msgs::LaserScan msg(msg_base_);
     msg.header.stamp = device_time_origin_.origin_ +
-                       ros::Duration().fromNSec(scan.timestamp_ * 1e6 * device_time_origin_.gain_) +
+                       ros::Duration().fromNSec(wall_time_device * 1e6 * device_time_origin_.gain_) +
                        ros::Duration(msg_base_.time_increment * step_min_);
 
     msg.ranges.reserve(scan.ranges_.size());
@@ -101,9 +114,11 @@ protected:
       const std::string &status,
       const scip2::ScanData &scan)
   {
+    const uint64_t wall_time_device = updateWalltime(scan.timestamp_);
+
     sensor_msgs::LaserScan msg(msg_base_);
     msg.header.stamp = device_time_origin_.origin_ +
-                       ros::Duration().fromNSec(scan.timestamp_ * 1e6 * device_time_origin_.gain_) +
+                       ros::Duration().fromNSec(wall_time_device * 1e6 * device_time_origin_.gain_) +
                        ros::Duration(msg_base_.time_increment * step_min_);
 
     msg.ranges.reserve(scan.ranges_.size());
@@ -139,13 +154,15 @@ protected:
       }
       case '1':
       {
+        const uint64_t wall_time_device = updateWalltime(time_device.timestamp_);
+
         const auto delay =
             ros::Time::fromBoost(time_read) -
             ros::Time::fromBoost(time_tm_request);
         communication_delays_.push_back(delay);
         ros::Time time_at_device_timestamp;
         const auto origin = calculateDeviceTimeOrigin(
-            time_read, time_tm_request, time_device.timestamp_, time_at_device_timestamp);
+            time_read, time_tm_request, wall_time_device, time_at_device_timestamp);
         device_time_origins_.push_back(origin);
 
         if (communication_delays_.size() > 20)
@@ -155,9 +172,9 @@ protected:
 
           estimated_communication_delay_ = communication_delays_[10];
           device_time_origin_ = DriftedTime(device_time_origins_[10], 1.0);
-          ROS_DEBUG("delay: %0.6f, device timestamp: %d, device time origin: %0.6f",
+          ROS_DEBUG("delay: %0.6f, device timestamp: %ld, device time origin: %0.6f",
                     estimated_communication_delay_.toSec(),
-                    time_device.timestamp_,
+                    wall_time_device,
                     device_time_origin_.origin_.toSec());
           scip_->sendCommand("TM2");
         }
@@ -261,13 +278,16 @@ protected:
         ROS_INFO("Timestamp in II is ill-formatted (%s)", time->second.c_str());
         return;
       }
-      const int device_timestamp =
+      const uint32_t time_device =
           time->second.size() == 6 ?
               std::stoi(time->second) :
               *(scip2::Decoder<4>(time->second).begin());
+
+      const uint64_t wall_time_device = updateWalltime(time_device);
+
       ros::Time time_at_device_timestamp;
       const auto origin = calculateDeviceTimeOrigin(
-          time_read, time_ii_request, device_timestamp, time_at_device_timestamp);
+          time_read, time_ii_request, wall_time_device, time_at_device_timestamp);
 
       const double gain =
           (time_at_device_timestamp - device_time_origin_.origin_).toSec() /
@@ -278,9 +298,9 @@ protected:
           (1.0 - exp_lpf_alpha) * device_time_origin_.gain_ + exp_lpf_alpha * gain;
       device_time_origin_.gain_ = updated_gain;
 
-      ROS_DEBUG("on scan delay: %0.6f, device timestamp: %d, device time origin: %0.3f, clock gain: %0.9f",
+      ROS_DEBUG("on scan delay: %0.6f, device timestamp: %ld, device time origin: %0.3f, clock gain: %0.9f",
                 delay.toSec(),
-                device_timestamp,
+                wall_time_device,
                 origin.toSec(),
                 updated_gain);
     }
@@ -299,6 +319,7 @@ public:
   UrgStampedNode()
     : nh_("")
     , pnh_("~")
+    , wall_time_device_base_(0)
   {
     std::string ip;
     int port;
