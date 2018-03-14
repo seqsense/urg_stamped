@@ -61,7 +61,6 @@ protected:
     }
   };
   DriftedTime device_time_origin_;
-  bool origin_initialized_;
 
   ros::Time calculateDeviceTimeOrigin(
       const boost::posix_time::ptime &time_request,
@@ -159,7 +158,6 @@ protected:
                     estimated_communication_delay_.toSec(),
                     time_device.timestamp_,
                     device_time_origin_.origin_.toSec());
-          origin_initialized_ = false;  // we should wait for gain_ update
           scip_->sendCommand("TM2");
         }
         else
@@ -274,30 +272,16 @@ protected:
           (time_at_device_timestamp - device_time_origin_.origin_).toSec() /
           (time_at_device_timestamp - origin).toSec();
       const double exp_lpf_alpha =
-          (msg_base_.scan_time * on_scan_sync_interval) * (1.0 / 120.0);  // 120 seconds exponential LPF
+          (msg_base_.scan_time * on_scan_sync_interval) * (1.0 / 30.0);  // 30 seconds exponential LPF
       const double updated_gain =
-          origin_initialized_ ?
-              (1.0 - exp_lpf_alpha) * device_time_origin_.gain_ + exp_lpf_alpha * gain :
-              gain;
+          (1.0 - exp_lpf_alpha) * device_time_origin_.gain_ + exp_lpf_alpha * gain;
+      device_time_origin_.gain_ = updated_gain;
 
       ROS_DEBUG("on scan delay: %0.6f, device timestamp: %d, device time origin: %0.3f, clock gain: %0.9f",
                 delay.toSec(),
                 device_timestamp,
                 origin.toSec(),
                 updated_gain);
-
-      const auto stamp = device_time_origin_.origin_ +
-                         ros::Duration().fromNSec(device_timestamp * 1e6 * updated_gain);
-      if (fabs((stamp - time_at_device_timestamp).toSec()) > 0.002)
-      {
-        ROS_INFO("Estimated device clock gain is considered as an outlier (stamp error: %0.6f); skipping",
-                 (stamp - time_at_device_timestamp).toSec());
-      }
-      else
-      {
-        device_time_origin_.gain_ = updated_gain;
-        origin_initialized_ = true;
-      }
     }
     else
     {
