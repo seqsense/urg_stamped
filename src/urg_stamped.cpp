@@ -259,7 +259,7 @@ protected:
       }
       if (time->second.size() != 6 && time->second.size() != 4)
       {
-        ROS_INFO("Timestamp in II is ill-formatted");
+        ROS_INFO("Timestamp in II is ill-formatted (%s)", time->second.c_str());
         return;
       }
       const int device_timestamp =
@@ -280,20 +280,22 @@ protected:
               (1.0 - exp_lpf_alpha) * device_time_origin_.gain_ + exp_lpf_alpha * gain :
               gain;
 
+      ROS_DEBUG("on scan delay: %0.6f, device timestamp: %d, device time origin: %0.3f, clock gain: %0.9f",
+                delay.toSec(),
+                device_timestamp,
+                origin.toSec(),
+                updated_gain);
+
       const auto stamp = device_time_origin_.origin_ +
                          ros::Duration().fromNSec(device_timestamp * 1e6 * updated_gain);
       if (fabs((stamp - time_at_device_timestamp).toSec()) > 0.002)
       {
-        ROS_INFO("Estimated device clock gain is considered as an outlier; skipping");
+        ROS_INFO("Estimated device clock gain is considered as an outlier (stamp error: %0.6f); skipping",
+                 (stamp - time_at_device_timestamp).toSec());
       }
       else
       {
         device_time_origin_.gain_ = updated_gain;
-        ROS_DEBUG("on scan delay: %0.6f, device timestamp: %d, device time origin: %0.3f, clock gain: %0.9f",
-                  delay.toSec(),
-                  device_timestamp,
-                  origin.toSec(),
-                  device_time_origin_.gain_);
         origin_initialized_ = true;
       }
     }
