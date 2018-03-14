@@ -109,6 +109,15 @@ public:
   {
     return Iterator(end_, end_);
   }
+  uint8_t getChecksum() const
+  {
+    uint8_t sum = 0;
+    for (std::string::const_iterator it = begin_; it != end_; ++it)
+    {
+      sum += *it;
+    }
+    return sum;
+  }
 };
 }  // namespace scip2
 

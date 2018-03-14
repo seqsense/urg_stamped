@@ -60,6 +60,17 @@ public:
         std::cout << "Parameter decode error" << std::endl;
         return;
       }
+      const uint8_t checksum = line.back();
+      uint8_t sum = 0;
+      for (auto it = line.begin(); it != end; ++it)
+      {
+        sum += *it;
+      }
+      if ((sum & 0x3F) + 0x30 != checksum)
+      {
+        std::cerr << "Checksum mismatch; parameters dropped" << std::endl;
+        return;
+      }
       const std::string key(line.begin(), delm);
       const std::string value(delm + 1, end);
       params[key] = value;

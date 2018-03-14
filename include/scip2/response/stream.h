@@ -69,6 +69,7 @@ public:
       std::cerr << "Failed to get timestamp" << std::endl;
       return false;
     }
+    const uint8_t checksum = stamp.back();
     stamp.pop_back();  // remove checksum
     if (stamp.size() < 4)
     {
@@ -77,7 +78,13 @@ public:
     }
 
     auto dec = Decoder<4>(stamp);
-    scan.timestamp_ = *dec.begin();
+    auto it = dec.begin();
+    scan.timestamp_ = *it;
+    if ((dec.getChecksum() & 0x3F) + 0x30 != checksum)
+    {
+      std::cerr << "Checksum mismatch" << std::endl;
+      return false;
+    }
     return true;
   }
   void registerCallback(Callback cb)
@@ -111,6 +118,7 @@ public:
       if (line.size() == 0)
         break;
 
+      const uint8_t checksum = line.back();
       line.pop_back();  // remove checksum
       if (line.size() < 3)
       {
@@ -124,6 +132,12 @@ public:
         scan.ranges_.push_back(*it);
       }
       remain = it.getRemain();
+      if ((dec.getChecksum() & 0x3F) + 0x30 != checksum)
+      {
+        std::cerr << "Checksum mismatch; scan dropped" << std::endl
+                  << line << std::endl;
+        return;
+      }
     }
     if (cb_)
       cb_(time_read, echo_back, status, scan);
@@ -156,6 +170,7 @@ public:
       if (line.size() == 0)
         break;
 
+      const uint8_t checksum = line.back();
       line.pop_back();  // remove checksum
       if (line.size() < 3)
       {
@@ -170,6 +185,12 @@ public:
         scan.intensities_.push_back((*it) & 0x3FFFF);
       }
       remain = it.getRemain();
+      if ((dec.getChecksum() & 0x3F) + 0x30 != checksum)
+      {
+        std::cerr << "Checksum mismatch; scan dropped" << std::endl
+                  << line << std::endl;
+        return;
+      }
     }
     if (cb_)
       cb_(time_read, echo_back, status, scan);
