@@ -65,6 +65,7 @@ public:
         std::cerr << "Failed to get timestamp" << std::endl;
         return;
       }
+      const uint8_t checksum = stamp.back();
       stamp.pop_back();  // remove checksum
       if (stamp.size() < 4)
       {
@@ -73,7 +74,13 @@ public:
       }
 
       auto dec = Decoder<4>(stamp);
-      timestamp.timestamp_ = *dec.begin();
+      auto it = dec.begin();
+      timestamp.timestamp_ = *it;
+      if ((dec.getChecksum() & 0x3F) + 0x30 != checksum)
+      {
+        std::cerr << "Checksum mismatch" << std::endl;
+        return;
+      }
     }
     if (cb_)
       cb_(time_read, echo_back, status, timestamp);
