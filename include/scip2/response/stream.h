@@ -3,16 +3,17 @@
  * All rights reserved.
  */
 
-#ifndef SCIP_RESPONSE_STREAM_H
-#define SCIP_RESPONSE_STREAM_H
+#ifndef SCIP2_RESPONSE_STREAM_H
+#define SCIP2_RESPONSE_STREAM_H
 
 #include <boost/asio.hpp>
 
-#include <string>
 #include <map>
+#include <string>
+#include <vector>
 
-#include <scip2/response/abstract.h>
 #include <scip2/decode.h>
+#include <scip2/response/abstract.h>
 
 namespace scip2
 {
@@ -177,4 +178,4 @@ public:
 
 }  // namespace scip2
 
-#endif  // RESPONSE_H
+#endif  // SCIP2_RESPONSE_STREAM_H

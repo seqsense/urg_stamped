@@ -3,8 +3,8 @@
  * All rights reserved.
  */
 
-#ifndef SCIP_CONNECTION_H
-#define SCIP_CONNECTION_H
+#ifndef SCIP2_CONNECTION_H
+#define SCIP2_CONNECTION_H
 
 #include <boost/asio.hpp>
 #include <boost/bind/bind.hpp>
@@ -175,4 +175,4 @@ public:
 
 }  // namespace scip2
 
-#endif  // SCIP_CONNECTION_H
+#endif  // SCIP2_CONNECTION_H

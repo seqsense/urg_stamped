@@ -10,7 +10,10 @@
 #include <boost/format.hpp>
 #include <boost/thread.hpp>
 
+#include <algorithm>
+#include <map>
 #include <string>
+#include <vector>
 
 #include <scip2/scip2.h>
 

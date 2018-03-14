@@ -3,10 +3,12 @@
  * All rights reserved.
  */
 
-#ifndef SCIP_RESPONSE_ABSTRACT_H
-#define SCIP_RESPONSE_ABSTRACT_H
+#ifndef SCIP2_RESPONSE_ABSTRACT_H
+#define SCIP2_RESPONSE_ABSTRACT_H
 
 #include <boost/asio.hpp>
+
+#include <string>
 
 namespace scip2
 {
@@ -24,4 +26,4 @@ public:
 
 }  // namespace scip2
 
-#endif  // RESPONSE_H
+#endif  // SCIP2_RESPONSE_ABSTRACT_H

@@ -3,8 +3,8 @@
  * All rights reserved.
  */
 
-#ifndef SCIP_PROTOCOL_H
-#define SCIP_PROTOCOL_H
+#ifndef SCIP2_PROTOCOL_H
+#define SCIP2_PROTOCOL_H
 
 #include <boost/asio.hpp>
 #include <boost/bind/bind.hpp>
@@ -13,6 +13,7 @@
 #include <scip2/response.h>
 
 #include <map>
+#include <string>
 
 #include <old_boost_fix.h>
 
@@ -54,7 +55,7 @@ protected:
 public:
   using Ptr = std::shared_ptr<Protocol>;
 
-  Protocol(Connection::Ptr connection)
+  explicit Protocol(Connection::Ptr connection)
     : connection_(connection)
   {
     connection_->registerReceiveCallback(
@@ -77,4 +78,4 @@ public:
 
 }  // namespace scip2
 
-#endif  // SCIP_PROTOCOL_H
+#endif  // SCIP2_PROTOCOL_H

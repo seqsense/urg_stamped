@@ -3,8 +3,8 @@
  * All rights reserved.
  */
 
-#ifndef SCIP_DECODE_H
-#define SCIP_DECODE_H
+#ifndef SCIP2_DECODE_H
+#define SCIP2_DECODE_H
 
 #include <string>
 
@@ -95,7 +95,7 @@ public:
     }
   };
 
-  Decoder(const std::string &line, const DecoderRemain &remain = DecoderRemain())
+  explicit Decoder(const std::string &line, const DecoderRemain &remain = DecoderRemain())
     : begin_(line.begin())
     , end_(line.end())
     , remain_(remain)
@@ -112,4 +112,4 @@ public:
 };
 }  // namespace scip2
 
-#endif  // SCIP_DECODE_H
+#endif  // SCIP2_DECODE_H

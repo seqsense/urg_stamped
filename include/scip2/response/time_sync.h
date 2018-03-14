@@ -3,8 +3,8 @@
  * All rights reserved.
  */
 
-#ifndef SCIP_RESPONSE_TIME_SYNC_H
-#define SCIP_RESPONSE_TIME_SYNC_H
+#ifndef SCIP2_RESPONSE_TIME_SYNC_H
+#define SCIP2_RESPONSE_TIME_SYNC_H
 
 #include <boost/asio.hpp>
 
@@ -86,4 +86,4 @@ public:
 
 }  // namespace scip2
 
-#endif  // RESPONSE_H
+#endif  // SCIP2_RESPONSE_TIME_SYNC_H

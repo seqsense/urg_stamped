@@ -3,8 +3,8 @@
  * All rights reserved.
  */
 
-#ifndef SCIP_RESPONSE_PARAMETERS_H
-#define SCIP_RESPONSE_PARAMETERS_H
+#ifndef SCIP2_RESPONSE_PARAMETERS_H
+#define SCIP2_RESPONSE_PARAMETERS_H
 
 #include <boost/asio.hpp>
 
@@ -102,4 +102,4 @@ public:
 
 }  // namespace scip2
 
-#endif  // RESPONSE_H
+#endif  // SCIP2_RESPONSE_PARAMETERS_H
