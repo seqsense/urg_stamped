@@ -3,10 +3,10 @@
  * All rights reserved.
  */
 
-#ifndef SCIP_H
-#define SCIP_H
+#ifndef SCIP2_SCIP2_H
+#define SCIP2_SCIP2_H
 
 #include <scip2/connection.h>
 #include <scip2/protocol.h>
 
-#endif  // SCIP_H
+#endif  // SCIP2_SCIP2_H
