@@ -1,7 +1,7 @@
 FROM ros:kinetic
 
 RUN apt-get -qq update && \
-  apt-get install -y --no-install-recommends sudo libgtest-dev && \
+  apt-get install -y --no-install-recommends sudo libgtest-dev python-pip && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
