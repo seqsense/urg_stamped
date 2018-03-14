@@ -41,17 +41,36 @@ protected:
   boost::posix_time::ptime time_ii_request;
   std::vector<ros::Duration> on_scan_communication_delays_;
 
-  ros::Time device_time_origin_;
+  class DriftedTime
+  {
+  public:
+    ros::Time origin_;
+    double gain_;
+
+    DriftedTime()
+      : gain_(1.0)
+    {
+    }
+    DriftedTime(const ros::Time origin, const float gain)
+      : origin_(origin)
+      , gain_(gain)
+    {
+    }
+  };
+  DriftedTime device_time_origin_;
+  bool origin_initialized_;
 
   ros::Time calculateDeviceTimeOrigin(
       const boost::posix_time::ptime &time_request,
       const boost::posix_time::ptime &time_response,
-      uint32_t device_timestamp)
+      uint32_t device_timestamp,
+      ros::Time &time_at_device_timestamp)
   {
     const auto delay =
         ros::Time::fromBoost(time_response) -
         ros::Time::fromBoost(time_request);
-    const ros::Time time_at_device_timestamp = ros::Time::fromBoost(time_request) + delay * 0.5;
+    time_at_device_timestamp = ros::Time::fromBoost(time_request) + delay * 0.5;
+
     return time_at_device_timestamp - ros::Duration().fromNSec(device_timestamp * 1e6);
   }
 
@@ -62,8 +81,8 @@ protected:
       const scip2::ScanData &scan)
   {
     sensor_msgs::LaserScan msg(msg_base_);
-    msg.header.stamp = device_time_origin_ +
-                       ros::Duration().fromNSec(scan.timestamp_ * 1e6) +
+    msg.header.stamp = device_time_origin_.origin_ +
+                       ros::Duration().fromNSec(scan.timestamp_ * 1e6 * device_time_origin_.gain_) +
                        ros::Duration(msg_base_.time_increment * step_min_);
 
     msg.ranges.reserve(scan.ranges_.size());
@@ -80,8 +99,8 @@ protected:
       const scip2::ScanData &scan)
   {
     sensor_msgs::LaserScan msg(msg_base_);
-    msg.header.stamp = device_time_origin_ +
-                       ros::Duration().fromNSec(scan.timestamp_ * 1e6) +
+    msg.header.stamp = device_time_origin_.origin_ +
+                       ros::Duration().fromNSec(scan.timestamp_ * 1e6 * device_time_origin_.gain_) +
                        ros::Duration(msg_base_.time_increment * step_min_);
 
     msg.ranges.reserve(scan.ranges_.size());
@@ -121,8 +140,9 @@ protected:
             ros::Time::fromBoost(time_read) -
             ros::Time::fromBoost(time_tm_request);
         communication_delays_.push_back(delay);
+        ros::Time time_at_device_timestamp;
         const auto origin = calculateDeviceTimeOrigin(
-            time_read, time_tm_request, time_device.timestamp_);
+            time_read, time_tm_request, time_device.timestamp_, time_at_device_timestamp);
         device_time_origins_.push_back(origin);
 
         if (communication_delays_.size() > 20)
@@ -131,15 +151,17 @@ protected:
           sort(device_time_origins_.begin(), device_time_origins_.end());
 
           estimated_communication_delay_ = communication_delays_[10];
-          device_time_origin_ = device_time_origins_[10];
-          ROS_DEBUG("communication delay: %0.6f, device timestamp: %d, device time origin: %0.6f",
+          device_time_origin_ = DriftedTime(device_time_origins_[10], 1.0);
+          ROS_DEBUG("delay: %0.6f, device timestamp: %d, device time origin: %0.6f",
                     estimated_communication_delay_.toSec(),
                     time_device.timestamp_,
-                    device_time_origin_.toSec());
+                    device_time_origin_.origin_.toSec());
+          origin_initialized_ = false;  // we should wait for gain_ update
           scip_->sendCommand("TM2");
         }
         else
         {
+          ros::Duration(0.01).sleep();
           scip_->sendCommand(
               "TM1",
               boost::bind(&UrgStampedNode::cbTMSend, this, boost::placeholders::_1));
@@ -241,28 +263,40 @@ protected:
           time->second.size() == 6 ?
               std::stoi(time->second) :
               *(scip2::Decoder<4>(time->second).begin());
+      ros::Time time_at_device_timestamp;
       const auto origin = calculateDeviceTimeOrigin(
-          time_read, time_ii_request, device_timestamp);
+          time_read, time_ii_request, device_timestamp, time_at_device_timestamp);
 
-      if (fabs((origin - device_time_origin_).toSec()) < 0.005)
+      const double gain =
+          (time_at_device_timestamp - device_time_origin_.origin_).toSec() /
+          (time_at_device_timestamp - origin).toSec();
+      const double exp_lpf_alpha =
+          (msg_base_.scan_time * on_scan_sync_interval) * (1.0 / 120.0);  // 120 seconds exponential LPF
+      const double updated_gain =
+          origin_initialized_ ?
+              (1.0 - exp_lpf_alpha) * device_time_origin_.gain_ + exp_lpf_alpha * gain :
+              gain;
+
+      const auto stamp = device_time_origin_.origin_ +
+                         ros::Duration().fromNSec(device_timestamp * 1e6 * updated_gain);
+      if (fabs((stamp - time_at_device_timestamp).toSec()) > 0.002)
       {
-        device_time_origin_ +=
-            (origin - device_time_origin_) *
-            (msg_base_.scan_time * on_scan_sync_interval) * (1.0 / 60.0);  // 60 seconds exponential LPF
-        ROS_DEBUG("on scan communication delay: %0.6f, device timestamp: %d, device time origin: %0.6f",
-                  delay.toSec(),
-                  device_timestamp,
-                  device_time_origin_.toSec());
+        ROS_INFO("Estimated device clock gain is considered as an outlier; skipping");
       }
       else
       {
-        ROS_DEBUG("calculated device time origin (%0.6f) is far from expected; skipping",
-                  origin.toSec());
+        device_time_origin_.gain_ = updated_gain;
+        ROS_DEBUG("on scan delay: %0.6f, device timestamp: %d, device time origin: %0.3f, clock gain: %0.9f",
+                  delay.toSec(),
+                  device_timestamp,
+                  origin.toSec(),
+                  device_time_origin_.gain_);
+        origin_initialized_ = true;
       }
     }
     else
     {
-      ROS_DEBUG("on scan communication delay (%0.6f) is larger than expected; skipping",
+      ROS_DEBUG("on scan delay (%0.6f) is larger than expected; skipping",
                 delay.toSec());
     }
   }
