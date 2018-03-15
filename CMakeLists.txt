@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(urg_stamped)
 
 ## Find catkin and any catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp sensor_msgs roslint)
+find_package(catkin REQUIRED COMPONENTS roscpp rostest sensor_msgs roslint)
 find_package(Boost 1.53 REQUIRED system chrono thread)
 
 if(Boost_VERSION LESS 106000)
@@ -35,6 +35,9 @@ roslint_cpp()
 
 if(CATKIN_ENABLE_TESTING)
   roslint_add_test()
+
+  catkin_add_gtest(test_decode test/src/test_decode.cpp)
+  target_link_libraries(test_decode ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 endif()
 
 install(TARGETS urg_stamped
