@@ -87,11 +87,21 @@ protected:
 
   void clearWatchdog()
   {
+    if (watchdog_duration_ == boost::posix_time::time_duration())
+      return;
     watchdog_.cancel();
 
-    timeout_.expires_from_now(watchdog_duration_);
-    timeout_.async_wait(
-        boost::bind(&ConnectionTcp::stop, this));
+    watchdog_.expires_from_now(watchdog_duration_);
+    watchdog_.async_wait(
+        boost::bind(&ConnectionTcp::onWatchdog, this, boost::asio::placeholders::error));
+  }
+  void onWatchdog(const boost::system::error_code &error)
+  {
+    if (!error)
+    {
+      std::cerr << "Watchdog timeout" << std::endl;
+      close();
+    }
   }
 
   void onReceive(const boost::system::error_code &error)

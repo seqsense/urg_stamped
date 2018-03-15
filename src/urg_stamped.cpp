@@ -305,6 +305,7 @@ protected:
   void cbConnect()
   {
     scip_->sendCommand("PP");
+    device_->startWatchdog(boost::posix_time::seconds(1));
   }
 
 public:
@@ -369,7 +370,6 @@ public:
   {
     boost::thread thread(
         boost::bind(&scip2::Connection::spin, device_.get()));
-    device_->startWatchdog(boost::posix_time::seconds(1));
     ros::spin();
     scip_->sendCommand("QT");
     device_->stop();
