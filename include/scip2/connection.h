@@ -56,6 +56,7 @@ public:
   virtual void spin() = 0;
   virtual void stop() = 0;
   virtual void send(const std::string &, CallbackSend = CallbackSend()) = 0;
+  virtual void startWatchdog(const boost::posix_time::time_duration &) = 0;
 
   void registerCloseCallback(CallbackClose cb)
   {
@@ -81,6 +82,27 @@ protected:
   boost::asio::ip::tcp::socket socket_;
   boost::asio::streambuf buf_;
   boost::asio::deadline_timer timeout_;
+  boost::asio::deadline_timer watchdog_;
+  boost::posix_time::time_duration watchdog_duration_;
+
+  void clearWatchdog()
+  {
+    if (watchdog_duration_ == boost::posix_time::time_duration())
+      return;
+    watchdog_.cancel();
+
+    watchdog_.expires_from_now(watchdog_duration_);
+    watchdog_.async_wait(
+        boost::bind(&ConnectionTcp::onWatchdog, this, boost::asio::placeholders::error));
+  }
+  void onWatchdog(const boost::system::error_code &error)
+  {
+    if (!error)
+    {
+      std::cerr << "Watchdog timeout" << std::endl;
+      close();
+    }
+  }
 
   void onReceive(const boost::system::error_code &error)
   {
@@ -91,6 +113,7 @@ protected:
       close();
       return;
     }
+    clearWatchdog();
     receive(buf_, time_read);
     asyncRead();
   }
@@ -136,9 +159,12 @@ protected:
   }
 
 public:
+  using Ptr = std::shared_ptr<ConnectionTcp>;
+
   ConnectionTcp(const std::string &ip, const uint16_t port)
     : socket_(io_)
     , timeout_(io_)
+    , watchdog_(io_)
   {
     boost::asio::ip::tcp::endpoint endpoint(
         boost::asio::ip::address::from_string(ip), port);
@@ -170,6 +196,11 @@ public:
         boost::bind(
             &ConnectionTcp::onSend,
             this, boost::asio::placeholders::error, cb));
+  }
+  void startWatchdog(const boost::posix_time::time_duration &duration)
+  {
+    watchdog_duration_ = duration;
+    clearWatchdog();
   }
 };
 

@@ -305,6 +305,7 @@ protected:
   void cbConnect()
   {
     scip_->sendCommand("PP");
+    device_->startWatchdog(boost::posix_time::seconds(1));
   }
 
 public:
