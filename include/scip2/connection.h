@@ -102,6 +102,7 @@ protected:
       close();
       return;
     }
+    clearWatchdog();
     receive(buf_, time_read);
     asyncRead();
   }
