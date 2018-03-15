@@ -38,6 +38,9 @@ if(CATKIN_ENABLE_TESTING)
 
   catkin_add_gtest(test_decode test/src/test_decode.cpp)
   target_link_libraries(test_decode ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
+  catkin_add_gtest(test_walltime test/src/test_walltime.cpp)
+  target_link_libraries(test_walltime ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 endif()
 
 install(TARGETS urg_stamped
