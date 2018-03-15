@@ -81,6 +81,17 @@ protected:
   boost::asio::ip::tcp::socket socket_;
   boost::asio::streambuf buf_;
   boost::asio::deadline_timer timeout_;
+  boost::asio::deadline_timer watchdog_;
+  boost::posix_time::time_duration watchdog_duration_;
+
+  void clearWatchdog()
+  {
+    watchdog_.cancel();
+
+    timeout_.expires_from_now(watchdog_duration_);
+    timeout_.async_wait(
+        boost::bind(&ConnectionTcp::stop, this));
+  }
 
   void onReceive(const boost::system::error_code &error)
   {
@@ -136,9 +147,12 @@ protected:
   }
 
 public:
+  using Ptr = std::shared_ptr<ConnectionTcp>;
+
   ConnectionTcp(const std::string &ip, const uint16_t port)
     : socket_(io_)
     , timeout_(io_)
+    , watchdog_(io_)
   {
     boost::asio::ip::tcp::endpoint endpoint(
         boost::asio::ip::address::from_string(ip), port);
@@ -170,6 +184,11 @@ public:
         boost::bind(
             &ConnectionTcp::onSend,
             this, boost::asio::placeholders::error, cb));
+  }
+  void startWatchdog(const boost::posix_time::time_duration &duration)
+  {
+    watchdog_duration_ = duration;
+    clearWatchdog();
   }
 };
 
