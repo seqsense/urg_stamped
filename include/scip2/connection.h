@@ -56,6 +56,7 @@ public:
   virtual void spin() = 0;
   virtual void stop() = 0;
   virtual void send(const std::string &, CallbackSend = CallbackSend()) = 0;
+  virtual void startWatchdog(const boost::posix_time::time_duration &) = 0;
 
   void registerCloseCallback(CallbackClose cb)
   {

@@ -322,17 +322,7 @@ public:
 
     pub_scan_ = nh_.advertise<sensor_msgs::LaserScan>("scan", 10);
 
-    if (ip.size())
-    {
-      scip2::ConnectionTcp::Ptr connection_tcp(new scip2::ConnectionTcp(ip, port));
-      connection_tcp->startWatchdog(boost::posix_time::seconds(1));
-      device_ = connection_tcp;
-    }
-    else
-    {
-      throw std::runtime_error("Failed to detect connection type");
-    }
-
+    device_.reset(new scip2::ConnectionTcp(ip, port));
     device_->registerCloseCallback(ros::shutdown);
     device_->registerConnectCallback(
         boost::bind(&UrgStampedNode::cbConnect, this));
@@ -379,6 +369,7 @@ public:
   {
     boost::thread thread(
         boost::bind(&scip2::Connection::spin, device_.get()));
+    device_->startWatchdog(boost::posix_time::seconds(1));
     ros::spin();
     scip_->sendCommand("QT");
     device_->stop();
