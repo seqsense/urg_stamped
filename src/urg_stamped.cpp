@@ -88,6 +88,17 @@ protected:
   {
     const uint64_t walltime_device = walltime_.update(scan.timestamp_);
 
+    if (scan.ranges_.size() != step_max_ - step_min_ + 1)
+    {
+      ROS_INFO("Size of the received scan data is wrong (expected: %d, received: %lu); refreshing",
+               step_max_ - step_min_ + 1, scan.ranges_.size());
+      scip_->sendCommand(
+          (publish_intensity_ ? "ME" : "MD") +
+          (boost::format("%04d%04d") % step_min_ % step_max_).str() +
+          "00000");
+      return;
+    }
+
     sensor_msgs::LaserScan msg(msg_base_);
     msg.header.stamp = device_time_origin_.origin_ +
                        ros::Duration().fromNSec(walltime_device * 1e6 * device_time_origin_.gain_) +
@@ -107,6 +118,17 @@ protected:
       const scip2::ScanData &scan)
   {
     const uint64_t walltime_device = walltime_.update(scan.timestamp_);
+
+    if (scan.ranges_.size() != step_max_ - step_min_ + 1)
+    {
+      ROS_INFO("Size of the received scan data is wrong (expected: %d, received: %lu); refreshing",
+               step_max_ - step_min_ + 1, scan.ranges_.size());
+      scip_->sendCommand(
+          (publish_intensity_ ? "ME" : "MD") +
+          (boost::format("%04d%04d") % step_min_ % step_max_).str() +
+          "00000");
+      return;
+    }
 
     sensor_msgs::LaserScan msg(msg_base_);
     msg.header.stamp = device_time_origin_.origin_ +
