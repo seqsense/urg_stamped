@@ -272,7 +272,7 @@ protected:
       }
       const uint32_t time_device =
           time->second.size() == 6 ?
-              std::stoi(time->second) :
+              std::stoi(time->second, nullptr, 16) :
               *(scip2::Decoder<4>(time->second).begin());
 
       const uint64_t walltime_device = walltime_.update(time_device);
