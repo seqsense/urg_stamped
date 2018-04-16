@@ -278,7 +278,7 @@ protected:
         ros::Time::fromBoost(time_read) -
         ros::Time::fromBoost(time_ii_request);
 
-    if ((estimated_communication_delay_ - delay).toSec() < 0.002)
+    if (delay.toSec() < 0.002)
     {
       const auto time = params.find("TIME");
       if (time == params.end())
@@ -350,8 +350,8 @@ public:
     pnh_.param("ip_port", port, 10940);
     pnh_.param("frame_id", msg_base_.header.frame_id, std::string("laser"));
     pnh_.param("publish_intensity", publish_intensity_, true);
-    pnh_.param("sync_interval_min", sync_interval_min, 8.0);
-    pnh_.param("sync_interval_max", sync_interval_max, 12.0);
+    pnh_.param("sync_interval_min", sync_interval_min, 1.0);
+    pnh_.param("sync_interval_max", sync_interval_max, 1.5);
     sync_interval_ = std::uniform_real_distribution<double>(sync_interval_min, sync_interval_max);
 
     pub_scan_ = nh_.advertise<sensor_msgs::LaserScan>("scan", 10);
