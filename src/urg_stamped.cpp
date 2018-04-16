@@ -76,10 +76,7 @@ protected:
       uint64_t device_timestamp,
       ros::Time &time_at_device_timestamp)
   {
-    const auto delay =
-        ros::Time::fromBoost(time_response) -
-        ros::Time::fromBoost(time_request);
-    time_at_device_timestamp = ros::Time::fromBoost(time_request) + delay * 0.5;
+    time_at_device_timestamp = ros::Time::fromBoost(time_response) - estimated_communication_delay_;
 
     return time_at_device_timestamp - ros::Duration().fromNSec(device_timestamp * 1e6);
   }
@@ -278,7 +275,7 @@ protected:
         ros::Time::fromBoost(time_read) -
         ros::Time::fromBoost(time_ii_request);
 
-    if (delay.toSec() < 0.002)
+    if (delay.toSec() < 0.010)
     {
       const auto time = params.find("TIME");
       if (time == params.end())
