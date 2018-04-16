@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <map>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -26,6 +27,7 @@ protected:
   ros::NodeHandle nh_;
   ros::NodeHandle pnh_;
   ros::Publisher pub_scan_;
+  ros::Timer timer_sync_;
 
   sensor_msgs::LaserScan msg_base_;
   uint32_t step_min_;
@@ -34,8 +36,6 @@ protected:
   scip2::Connection::Ptr device_;
   scip2::Protocol::Ptr scip_;
 
-  size_t scan_count;
-  int on_scan_sync_interval;
   bool publish_intensity_;
 
   boost::posix_time::ptime time_tm_request;
@@ -47,6 +47,10 @@ protected:
   std::vector<ros::Duration> on_scan_communication_delays_;
 
   scip2::Walltime<24> walltime_;
+
+  std::default_random_engine random_engine_;
+  std::uniform_real_distribution<double> sync_interval_;
+  ros::Time last_sync_time_;
 
   class DriftedTime
   {
@@ -109,7 +113,6 @@ protected:
       msg.ranges.push_back(r * 1e-3);
 
     pub_scan_.publish(msg);
-    onScanTimeSync();
   }
   void cbME(
       const boost::posix_time::ptime &time_read,
@@ -143,7 +146,6 @@ protected:
       msg.intensities.push_back(r);
 
     pub_scan_.publish(msg);
-    onScanTimeSync();
   }
   void cbTMSend(const boost::posix_time::ptime &time_send)
   {
@@ -257,17 +259,14 @@ protected:
   {
     time_ii_request = time_send;
   }
-  void onScanTimeSync()
+  void timeSync(const ros::TimerEvent &event = ros::TimerEvent())
   {
-    if (on_scan_sync_interval == 0)
-      return;
-    ++scan_count;
-    if (scan_count % on_scan_sync_interval == 0)
-    {
-      scip_->sendCommand(
-          "II",
-          boost::bind(&UrgStampedNode::cbIISend, this, boost::placeholders::_1));
-    }
+    scip_->sendCommand(
+        "II",
+        boost::bind(&UrgStampedNode::cbIISend, this, boost::placeholders::_1));
+    timer_sync_ = nh_.createTimer(
+        ros::Duration(sync_interval_(random_engine_)),
+        &UrgStampedNode::timeSync, this, true);
   }
   void cbII(
       const boost::posix_time::ptime &time_read,
@@ -303,11 +302,17 @@ protected:
       const auto origin = calculateDeviceTimeOrigin(
           time_read, time_ii_request, walltime_device, time_at_device_timestamp);
 
+      const auto now = ros::Time::fromBoost(time_read);
+      if (last_sync_time_ == ros::Time(0))
+        last_sync_time_ = now;
+      const double dt = (now - last_sync_time_).toSec();
+      last_sync_time_ = now;
+
       const double gain =
           (time_at_device_timestamp - device_time_origin_.origin_).toSec() /
           (time_at_device_timestamp - origin).toSec();
       const double exp_lpf_alpha =
-          (msg_base_.scan_time * on_scan_sync_interval) * (1.0 / 30.0);  // 30 seconds exponential LPF
+          dt * (1.0 / 30.0);  // 30 seconds exponential LPF
       const double updated_gain =
           (1.0 - exp_lpf_alpha) * device_time_origin_.gain_ + exp_lpf_alpha * gain;
       device_time_origin_.gain_ = updated_gain;
@@ -328,20 +333,26 @@ protected:
   {
     scip_->sendCommand("PP");
     device_->startWatchdog(boost::posix_time::seconds(1));
+    timeSync();
   }
 
 public:
   UrgStampedNode()
     : nh_("")
     , pnh_("~")
+    , last_sync_time_(0)
   {
     std::string ip;
     int port;
+    double sync_interval_min;
+    double sync_interval_max;
     pnh_.param("ip_address", ip, std::string("192.168.0.10"));
     pnh_.param("ip_port", port, 10940);
     pnh_.param("frame_id", msg_base_.header.frame_id, std::string("laser"));
-    pnh_.param("on_scan_sync_interval", on_scan_sync_interval, 400);
     pnh_.param("publish_intensity", publish_intensity_, true);
+    pnh_.param("sync_interval_min", sync_interval_min, 8.0);
+    pnh_.param("sync_interval_max", sync_interval_max, 12.0);
+    sync_interval_ = std::uniform_real_distribution<double>(sync_interval_min, sync_interval_max);
 
     pub_scan_ = nh_.advertise<sensor_msgs::LaserScan>("scan", 10);
 
