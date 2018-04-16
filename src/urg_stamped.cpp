@@ -70,13 +70,24 @@ protected:
   };
   DriftedTime device_time_origin_;
 
-  ros::Time calculateDeviceTimeOrigin(
+  ros::Time calculateDeviceTimeOriginByAverage(
       const boost::posix_time::ptime &time_request,
+      const boost::posix_time::ptime &time_response,
+      uint64_t device_timestamp)
+  {
+    const auto delay =
+        ros::Time::fromBoost(time_response) -
+        ros::Time::fromBoost(time_request);
+    const ros::Time time_at_device_timestamp = ros::Time::fromBoost(time_request) + delay * 0.5;
+
+    return time_at_device_timestamp - ros::Duration().fromNSec(device_timestamp * 1e6);
+  }
+  ros::Time calculateDeviceTimeOrigin(
       const boost::posix_time::ptime &time_response,
       uint64_t device_timestamp,
       ros::Time &time_at_device_timestamp)
   {
-    time_at_device_timestamp = ros::Time::fromBoost(time_response) - estimated_communication_delay_;
+    time_at_device_timestamp = ros::Time::fromBoost(time_response) - estimated_communication_delay_ * 0.5;
 
     return time_at_device_timestamp - ros::Duration().fromNSec(device_timestamp * 1e6);
   }
@@ -173,9 +184,8 @@ protected:
             ros::Time::fromBoost(time_read) -
             ros::Time::fromBoost(time_tm_request);
         communication_delays_.push_back(delay);
-        ros::Time time_at_device_timestamp;
-        const auto origin = calculateDeviceTimeOrigin(
-            time_read, time_tm_request, walltime_device, time_at_device_timestamp);
+        const auto origin = calculateDeviceTimeOriginByAverage(
+            time_tm_request, time_read, walltime_device);
         device_time_origins_.push_back(origin);
 
         if (communication_delays_.size() > 20)
@@ -297,7 +307,7 @@ protected:
 
       ros::Time time_at_device_timestamp;
       const auto origin = calculateDeviceTimeOrigin(
-          time_read, time_ii_request, walltime_device, time_at_device_timestamp);
+          time_read, walltime_device, time_at_device_timestamp);
 
       const auto now = ros::Time::fromBoost(time_read);
       if (last_sync_time_ == ros::Time(0))
