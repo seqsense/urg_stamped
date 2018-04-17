@@ -328,6 +328,13 @@ protected:
                 delay.toSec());
     }
   }
+  void cbQT(
+      const boost::posix_time::ptime &time_read,
+      const std::string &echo_back,
+      const std::string &status)
+  {
+    scip_->sendCommand("TM0");
+  }
   void cbConnect()
   {
     scip_->sendCommand("PP");
@@ -346,7 +353,7 @@ protected:
   }
   void delayEstimation(const ros::TimerEvent &event = ros::TimerEvent())
   {
-    scip_->sendCommand("TM0");
+    scip_->sendCommand("QT");
   }
 
 public:
@@ -414,6 +421,11 @@ public:
                     boost::placeholders::_2,
                     boost::placeholders::_3,
                     boost::placeholders::_4));
+    scip_->registerCallback<scip2::ResponseQT>(
+        boost::bind(&UrgStampedNode::cbQT, this,
+                    boost::placeholders::_1,
+                    boost::placeholders::_2,
+                    boost::placeholders::_3));
 
     if (delay_estim_interval > 0.0)
     {
