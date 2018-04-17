@@ -293,7 +293,7 @@ protected:
         ros::Time::fromBoost(time_read) -
         ros::Time::fromBoost(time_ii_request);
 
-    if (delay.toSec() < 0.010)
+    if (delay.toSec() < 0.002)
     {
       const auto time = params.find("TIME");
       if (time == params.end())
