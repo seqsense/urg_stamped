@@ -29,6 +29,7 @@ protected:
   ros::Publisher pub_scan_;
   ros::Timer timer_sync_;
   ros::Timer timer_delay_estim_;
+  ros::Timer timer_try_tm_;
 
   sensor_msgs::LaserScan msg_base_;
   uint32_t step_min_;
@@ -166,6 +167,10 @@ protected:
       const std::string &status,
       const scip2::Timestamp &time_device)
   {
+    if (status != "00")
+      return;
+
+    timer_try_tm_.stop();
     switch (echo_back[2])
     {
       case '0':
@@ -355,8 +360,13 @@ protected:
   {
     timer_sync_.stop();
     ROS_INFO("Starting communication delay estimation");
-    scip_->sendCommand("");  // Workaround for missing QT response
     scip_->sendCommand("QT");
+    timer_try_tm_ = nh_.createTimer(
+        ros::Duration(0.05),
+        &UrgStampedNode::tryTM, this);
+  }
+  void tryTM(const ros::TimerEvent &event = ros::TimerEvent())
+  {
     scip_->sendCommand("TM0");
   }
 
