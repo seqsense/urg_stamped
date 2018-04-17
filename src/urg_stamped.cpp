@@ -204,7 +204,7 @@ protected:
         }
         else
         {
-          ros::Duration(0.01).sleep();
+          ros::Duration(0.005).sleep();
           scip_->sendCommand(
               "TM1",
               boost::bind(&UrgStampedNode::cbTMSend, this, boost::placeholders::_1));
@@ -353,6 +353,7 @@ protected:
   }
   void delayEstimation(const ros::TimerEvent &event = ros::TimerEvent())
   {
+    ROS_INFO("Starting communication delay estimation");
     scip_->sendCommand("QT");
   }
 
