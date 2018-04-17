@@ -217,6 +217,7 @@ protected:
             (publish_intensity_ ? "ME" : "MD") +
             (boost::format("%04d%04d") % step_min_ % step_max_).str() +
             "00000");
+        timeSync();
         break;
       }
     }
@@ -339,7 +340,6 @@ protected:
   {
     scip_->sendCommand("PP");
     device_->startWatchdog(boost::posix_time::seconds(1));
-    timeSync();
   }
 
   void timeSync(const ros::TimerEvent &event = ros::TimerEvent())
@@ -353,6 +353,7 @@ protected:
   }
   void delayEstimation(const ros::TimerEvent &event = ros::TimerEvent())
   {
+    timer_sync_.stop();
     ROS_INFO("Starting communication delay estimation");
     scip_->sendCommand("QT");
   }
