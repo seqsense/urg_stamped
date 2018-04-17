@@ -387,7 +387,7 @@ public:
     , pnh_("~")
     , tm_iter_num_(5)
     , estimated_communication_delay_init_(false)
-    , communication_delay_filter_alpha_(0.2)
+    , communication_delay_filter_alpha_(0.3)
     , last_sync_time_(0)
   {
     std::string ip;
@@ -403,7 +403,7 @@ public:
     pnh_.param("sync_interval_min", sync_interval_min, 1.0);
     pnh_.param("sync_interval_max", sync_interval_max, 1.5);
     sync_interval_ = std::uniform_real_distribution<double>(sync_interval_min, sync_interval_max);
-    pnh_.param("delay_estim_interval", delay_estim_interval, 30.0);
+    pnh_.param("delay_estim_interval", delay_estim_interval, 20.0);
 
     pub_scan_ = nh_.advertise<sensor_msgs::LaserScan>("scan", 10);
 
