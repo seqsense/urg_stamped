@@ -335,7 +335,6 @@ protected:
       const std::string &status)
   {
     ROS_DEBUG("Scan data stopped");
-    scip_->sendCommand("TM0");
   }
   void cbConnect()
   {
@@ -358,6 +357,7 @@ protected:
     ROS_INFO("Starting communication delay estimation");
     scip_->sendCommand("");  // Workaround for missing QT response
     scip_->sendCommand("QT");
+    scip_->sendCommand("TM0");
   }
 
 public:
