@@ -73,7 +73,7 @@ protected:
   ros::Time calculateDeviceTimeOriginByAverage(
       const boost::posix_time::ptime &time_request,
       const boost::posix_time::ptime &time_response,
-      uint64_t device_timestamp)
+      const uint64_t &device_timestamp)
   {
     const auto delay =
         ros::Time::fromBoost(time_response) -
@@ -84,7 +84,7 @@ protected:
   }
   ros::Time calculateDeviceTimeOrigin(
       const boost::posix_time::ptime &time_response,
-      uint64_t device_timestamp,
+      const uint64_t &device_timestamp,
       ros::Time &time_at_device_timestamp)
   {
     time_at_device_timestamp = ros::Time::fromBoost(time_response) - estimated_communication_delay_ * 0.5;
