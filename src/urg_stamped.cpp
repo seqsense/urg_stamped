@@ -377,6 +377,7 @@ protected:
   }
   void tryTM(const ros::TimerEvent &event = ros::TimerEvent())
   {
+    scip_->sendCommand("QT");
     scip_->sendCommand("TM0");
   }
 
