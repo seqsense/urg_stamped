@@ -384,10 +384,10 @@ public:
   UrgStampedNode()
     : nh_("")
     , pnh_("~")
-    , last_sync_time_(0)
     , tm_iter_num_(5)
     , estimated_communication_delay_init_(false)
     , communication_delay_filter_alpha_(0.2)
+    , last_sync_time_(0)
   {
     std::string ip;
     int port;
