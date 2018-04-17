@@ -44,6 +44,9 @@ protected:
   std::vector<ros::Duration> communication_delays_;
   std::vector<ros::Time> device_time_origins_;
   ros::Duration estimated_communication_delay_;
+  size_t tm_iter_num_;
+  bool estimated_communication_delay_init_;
+  double communication_delay_filter_alpha_;
 
   boost::posix_time::ptime time_ii_request;
   std::vector<ros::Duration> on_scan_communication_delays_;
@@ -194,13 +197,20 @@ protected:
             time_tm_request, time_read, walltime_device);
         device_time_origins_.push_back(origin);
 
-        if (communication_delays_.size() > 20)
+        if (communication_delays_.size() >= tm_iter_num_)
         {
           sort(communication_delays_.begin(), communication_delays_.end());
           sort(device_time_origins_.begin(), device_time_origins_.end());
 
-          estimated_communication_delay_ = communication_delays_[10];
-          device_time_origin_ = DriftedTime(device_time_origins_[10], 1.0);
+          if (!estimated_communication_delay_init_)
+            estimated_communication_delay_ = communication_delays_[tm_iter_num_ / 2];
+          else
+            estimated_communication_delay_ =
+                estimated_communication_delay_ * (1.0 - communication_delay_filter_alpha_) +
+                communication_delays_[tm_iter_num_ / 2] * communication_delay_filter_alpha_;
+
+          estimated_communication_delay_init_ = true;
+          device_time_origin_ = DriftedTime(device_time_origins_[tm_iter_num_ / 2], 1.0);
           ROS_DEBUG("delay: %0.6f, device timestamp: %ld, device time origin: %0.6f",
                     estimated_communication_delay_.toSec(),
                     walltime_device,
@@ -375,6 +385,9 @@ public:
     : nh_("")
     , pnh_("~")
     , last_sync_time_(0)
+    , tm_iter_num_(5)
+    , estimated_communication_delay_init_(false)
+    , communication_delay_filter_alpha_(0.2)
   {
     std::string ip;
     int port;
