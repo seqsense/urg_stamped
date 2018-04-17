@@ -442,6 +442,7 @@ public:
     boost::thread thread(
         boost::bind(&scip2::Connection::spin, device_.get()));
     ros::spin();
+    timer_sync_.stop();
     scip_->sendCommand("QT");
     device_->stop();
   }
