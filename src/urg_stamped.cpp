@@ -28,6 +28,7 @@ protected:
   ros::NodeHandle pnh_;
   ros::Publisher pub_scan_;
   ros::Timer timer_sync_;
+  ros::Timer timer_delay_estim_;
 
   sensor_msgs::LaserScan msg_base_;
   uint32_t step_min_;
@@ -246,7 +247,7 @@ protected:
     msg_base_.angle_max =
         (std::stoi(amax->second) - std::stoi(afrt->second)) * msg_base_.angle_increment;
 
-    scip_->sendCommand("TM0");
+    delayEstimation();
   }
   void cbVV(
       const boost::posix_time::ptime &time_read,
@@ -258,15 +259,6 @@ protected:
   void cbIISend(const boost::posix_time::ptime &time_send)
   {
     time_ii_request = time_send;
-  }
-  void timeSync(const ros::TimerEvent &event = ros::TimerEvent())
-  {
-    scip_->sendCommand(
-        "II",
-        boost::bind(&UrgStampedNode::cbIISend, this, boost::placeholders::_1));
-    timer_sync_ = nh_.createTimer(
-        ros::Duration(sync_interval_(random_engine_)),
-        &UrgStampedNode::timeSync, this, true);
   }
   void cbII(
       const boost::posix_time::ptime &time_read,
@@ -336,6 +328,20 @@ protected:
     timeSync();
   }
 
+  void timeSync(const ros::TimerEvent &event = ros::TimerEvent())
+  {
+    scip_->sendCommand(
+        "II",
+        boost::bind(&UrgStampedNode::cbIISend, this, boost::placeholders::_1));
+    timer_sync_ = nh_.createTimer(
+        ros::Duration(sync_interval_(random_engine_)),
+        &UrgStampedNode::timeSync, this, true);
+  }
+  void delayEstimation(const ros::TimerEvent &event = ros::TimerEvent())
+  {
+    scip_->sendCommand("TM0");
+  }
+
 public:
   UrgStampedNode()
     : nh_("")
@@ -346,6 +352,8 @@ public:
     int port;
     double sync_interval_min;
     double sync_interval_max;
+    double delay_estim_interval;
+
     pnh_.param("ip_address", ip, std::string("192.168.0.10"));
     pnh_.param("ip_port", port, 10940);
     pnh_.param("frame_id", msg_base_.header.frame_id, std::string("laser"));
@@ -353,6 +361,7 @@ public:
     pnh_.param("sync_interval_min", sync_interval_min, 8.0);
     pnh_.param("sync_interval_max", sync_interval_max, 12.0);
     sync_interval_ = std::uniform_real_distribution<double>(sync_interval_min, sync_interval_max);
+    pnh_.param("delay_estim_interval", delay_estim_interval, 30.0);
 
     pub_scan_ = nh_.advertise<sensor_msgs::LaserScan>("scan", 10);
 
@@ -398,6 +407,12 @@ public:
                     boost::placeholders::_2,
                     boost::placeholders::_3,
                     boost::placeholders::_4));
+
+    if (delay_estim_interval > 0.0)
+    {
+      timer_delay_estim_ = nh_.createTimer(
+          ros::Duration(delay_estim_interval), &UrgStampedNode::delayEstimation, this);
+    }
   }
   void spin()
   {
