@@ -71,16 +71,24 @@ protected:
   };
   DriftedTime device_time_origin_;
 
-  ros::Time calculateDeviceTimeOrigin(
+  ros::Time calculateDeviceTimeOriginByAverage(
       const boost::posix_time::ptime &time_request,
       const boost::posix_time::ptime &time_response,
-      uint64_t device_timestamp,
-      ros::Time &time_at_device_timestamp)
+      const uint64_t &device_timestamp)
   {
     const auto delay =
         ros::Time::fromBoost(time_response) -
         ros::Time::fromBoost(time_request);
-    time_at_device_timestamp = ros::Time::fromBoost(time_request) + delay * 0.5;
+    const ros::Time time_at_device_timestamp = ros::Time::fromBoost(time_request) + delay * 0.5;
+
+    return time_at_device_timestamp - ros::Duration().fromNSec(device_timestamp * 1e6);
+  }
+  ros::Time calculateDeviceTimeOrigin(
+      const boost::posix_time::ptime &time_response,
+      const uint64_t &device_timestamp,
+      ros::Time &time_at_device_timestamp)
+  {
+    time_at_device_timestamp = ros::Time::fromBoost(time_response) - estimated_communication_delay_ * 0.5;
 
     return time_at_device_timestamp - ros::Duration().fromNSec(device_timestamp * 1e6);
   }
@@ -177,9 +185,8 @@ protected:
             ros::Time::fromBoost(time_read) -
             ros::Time::fromBoost(time_tm_request);
         communication_delays_.push_back(delay);
-        ros::Time time_at_device_timestamp;
-        const auto origin = calculateDeviceTimeOrigin(
-            time_read, time_tm_request, walltime_device, time_at_device_timestamp);
+        const auto origin = calculateDeviceTimeOriginByAverage(
+            time_tm_request, time_read, walltime_device);
         device_time_origins_.push_back(origin);
 
         if (communication_delays_.size() > 20)
@@ -270,7 +277,7 @@ protected:
         ros::Time::fromBoost(time_read) -
         ros::Time::fromBoost(time_ii_request);
 
-    if ((estimated_communication_delay_ - delay).toSec() < 0.002)
+    if (delay.toSec() < 0.010)
     {
       const auto time = params.find("TIME");
       if (time == params.end())
@@ -292,7 +299,7 @@ protected:
 
       ros::Time time_at_device_timestamp;
       const auto origin = calculateDeviceTimeOrigin(
-          time_read, time_ii_request, walltime_device, time_at_device_timestamp);
+          time_read, walltime_device, time_at_device_timestamp);
 
       const auto now = ros::Time::fromBoost(time_read);
       if (last_sync_time_ == ros::Time(0))
@@ -358,8 +365,8 @@ public:
     pnh_.param("ip_port", port, 10940);
     pnh_.param("frame_id", msg_base_.header.frame_id, std::string("laser"));
     pnh_.param("publish_intensity", publish_intensity_, true);
-    pnh_.param("sync_interval_min", sync_interval_min, 8.0);
-    pnh_.param("sync_interval_max", sync_interval_max, 12.0);
+    pnh_.param("sync_interval_min", sync_interval_min, 1.0);
+    pnh_.param("sync_interval_max", sync_interval_max, 1.5);
     sync_interval_ = std::uniform_real_distribution<double>(sync_interval_min, sync_interval_max);
     pnh_.param("delay_estim_interval", delay_estim_interval, 30.0);
 
