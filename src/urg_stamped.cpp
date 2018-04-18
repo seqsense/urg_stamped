@@ -28,6 +28,8 @@ protected:
   ros::NodeHandle pnh_;
   ros::Publisher pub_scan_;
   ros::Timer timer_sync_;
+  ros::Timer timer_delay_estim_;
+  ros::Timer timer_try_tm_;
 
   sensor_msgs::LaserScan msg_base_;
   uint32_t step_min_;
@@ -42,6 +44,9 @@ protected:
   std::vector<ros::Duration> communication_delays_;
   std::vector<ros::Time> device_time_origins_;
   ros::Duration estimated_communication_delay_;
+  size_t tm_iter_num_;
+  bool estimated_communication_delay_init_;
+  double communication_delay_filter_alpha_;
 
   boost::posix_time::ptime time_ii_request;
   std::vector<ros::Duration> on_scan_communication_delays_;
@@ -165,6 +170,10 @@ protected:
       const std::string &status,
       const scip2::Timestamp &time_device)
   {
+    if (status != "00")
+      return;
+
+    timer_try_tm_.stop();
     switch (echo_back[2])
     {
       case '0':
@@ -188,13 +197,20 @@ protected:
             time_tm_request, time_read, walltime_device);
         device_time_origins_.push_back(origin);
 
-        if (communication_delays_.size() > 20)
+        if (communication_delays_.size() >= tm_iter_num_)
         {
           sort(communication_delays_.begin(), communication_delays_.end());
           sort(device_time_origins_.begin(), device_time_origins_.end());
 
-          estimated_communication_delay_ = communication_delays_[10];
-          device_time_origin_ = DriftedTime(device_time_origins_[10], 1.0);
+          if (!estimated_communication_delay_init_)
+            estimated_communication_delay_ = communication_delays_[tm_iter_num_ / 2];
+          else
+            estimated_communication_delay_ =
+                estimated_communication_delay_ * (1.0 - communication_delay_filter_alpha_) +
+                communication_delays_[tm_iter_num_ / 2] * communication_delay_filter_alpha_;
+
+          estimated_communication_delay_init_ = true;
+          device_time_origin_ = DriftedTime(device_time_origins_[tm_iter_num_ / 2], 1.0);
           ROS_DEBUG("delay: %0.6f, device timestamp: %ld, device time origin: %0.6f",
                     estimated_communication_delay_.toSec(),
                     walltime_device,
@@ -203,7 +219,7 @@ protected:
         }
         else
         {
-          ros::Duration(0.01).sleep();
+          ros::Duration(0.005).sleep();
           scip_->sendCommand(
               "TM1",
               boost::bind(&UrgStampedNode::cbTMSend, this, boost::placeholders::_1));
@@ -216,6 +232,7 @@ protected:
             (publish_intensity_ ? "ME" : "MD") +
             (boost::format("%04d%04d") % step_min_ % step_max_).str() +
             "00000");
+        timeSync();
         break;
       }
     }
@@ -253,7 +270,7 @@ protected:
     msg_base_.angle_max =
         (std::stoi(amax->second) - std::stoi(afrt->second)) * msg_base_.angle_increment;
 
-    scip_->sendCommand("TM0");
+    delayEstimation();
   }
   void cbVV(
       const boost::posix_time::ptime &time_read,
@@ -266,15 +283,6 @@ protected:
   {
     time_ii_request = time_send;
   }
-  void timeSync(const ros::TimerEvent &event = ros::TimerEvent())
-  {
-    scip_->sendCommand(
-        "II",
-        boost::bind(&UrgStampedNode::cbIISend, this, boost::placeholders::_1));
-    timer_sync_ = nh_.createTimer(
-        ros::Duration(sync_interval_(random_engine_)),
-        &UrgStampedNode::timeSync, this, true);
-  }
   void cbII(
       const boost::posix_time::ptime &time_read,
       const std::string &echo_back,
@@ -285,7 +293,7 @@ protected:
         ros::Time::fromBoost(time_read) -
         ros::Time::fromBoost(time_ii_request);
 
-    if (delay.toSec() < 0.010)
+    if (delay.toSec() < 0.002)
     {
       const auto time = params.find("TIME");
       if (time == params.end())
@@ -336,23 +344,58 @@ protected:
                 delay.toSec());
     }
   }
+  void cbQT(
+      const boost::posix_time::ptime &time_read,
+      const std::string &echo_back,
+      const std::string &status)
+  {
+    ROS_DEBUG("Scan data stopped");
+  }
   void cbConnect()
   {
     scip_->sendCommand("PP");
     device_->startWatchdog(boost::posix_time::seconds(1));
-    timeSync();
+  }
+
+  void timeSync(const ros::TimerEvent &event = ros::TimerEvent())
+  {
+    scip_->sendCommand(
+        "II",
+        boost::bind(&UrgStampedNode::cbIISend, this, boost::placeholders::_1));
+    timer_sync_ = nh_.createTimer(
+        ros::Duration(sync_interval_(random_engine_)),
+        &UrgStampedNode::timeSync, this, true);
+  }
+  void delayEstimation(const ros::TimerEvent &event = ros::TimerEvent())
+  {
+    timer_sync_.stop();
+    ROS_INFO("Starting communication delay estimation");
+    scip_->sendCommand("QT");
+    timer_try_tm_ = nh_.createTimer(
+        ros::Duration(0.05),
+        &UrgStampedNode::tryTM, this);
+  }
+  void tryTM(const ros::TimerEvent &event = ros::TimerEvent())
+  {
+    scip_->sendCommand("QT");
+    scip_->sendCommand("TM0");
   }
 
 public:
   UrgStampedNode()
     : nh_("")
     , pnh_("~")
+    , tm_iter_num_(5)
+    , estimated_communication_delay_init_(false)
+    , communication_delay_filter_alpha_(0.3)
     , last_sync_time_(0)
   {
     std::string ip;
     int port;
     double sync_interval_min;
     double sync_interval_max;
+    double delay_estim_interval;
+
     pnh_.param("ip_address", ip, std::string("192.168.0.10"));
     pnh_.param("ip_port", port, 10940);
     pnh_.param("frame_id", msg_base_.header.frame_id, std::string("laser"));
@@ -360,6 +403,7 @@ public:
     pnh_.param("sync_interval_min", sync_interval_min, 1.0);
     pnh_.param("sync_interval_max", sync_interval_max, 1.5);
     sync_interval_ = std::uniform_real_distribution<double>(sync_interval_min, sync_interval_max);
+    pnh_.param("delay_estim_interval", delay_estim_interval, 20.0);
 
     pub_scan_ = nh_.advertise<sensor_msgs::LaserScan>("scan", 10);
 
@@ -405,12 +449,24 @@ public:
                     boost::placeholders::_2,
                     boost::placeholders::_3,
                     boost::placeholders::_4));
+    scip_->registerCallback<scip2::ResponseQT>(
+        boost::bind(&UrgStampedNode::cbQT, this,
+                    boost::placeholders::_1,
+                    boost::placeholders::_2,
+                    boost::placeholders::_3));
+
+    if (delay_estim_interval > 0.0)
+    {
+      timer_delay_estim_ = nh_.createTimer(
+          ros::Duration(delay_estim_interval), &UrgStampedNode::delayEstimation, this);
+    }
   }
   void spin()
   {
     boost::thread thread(
         boost::bind(&scip2::Connection::spin, device_.get()));
     ros::spin();
+    timer_sync_.stop();
     scip_->sendCommand("QT");
     device_->stop();
   }
