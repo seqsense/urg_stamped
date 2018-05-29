@@ -56,11 +56,12 @@ source /catkin_ws/devel/setup.bash
 
 result_text="
 \`\`\`
-`catkin_test_results --all || true`
+`catkin_test_results --all | grep -v Skipping || true`
 \`\`\`
 "
+errored_tests=`catkin_test_results --all | grep -v -e "^Skipping" -v -e "^Summary" | grep -e "[1-9][0-9]* errors" -e "[1-9][0-9]* failures" | cut -d":" -f1`
 result_text_detail="
-`find build/test_results/ -name *.xml | xargs -n 1 -- bash -c 'echo; echo \#\#\# $0; echo; echo \\\`\\\`\\\`; xmllint --format $0; echo \\\`\\\`\\\`;'`
+`echo ${errored_tests} | xargs -n 1 -- bash -c 'echo; echo \#\#\# $0; echo; echo \\\`\\\`\\\`xml; xmllint --format $0; echo \\\`\\\`\\\`;'`
 "
 catkin_test_results || (gh-pr-comment "${FAILED_MESSAGE}" "Test failed$result_text$result_text_detail"; false)
 
