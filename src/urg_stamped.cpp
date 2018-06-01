@@ -214,14 +214,17 @@ protected:
           sort(device_time_origins_.begin(), device_time_origins_.end());
 
           if (!estimated_communication_delay_init_)
+          {
             estimated_communication_delay_ = communication_delays_[tm_iter_num_ / 2];
+            device_time_origin_ = DriftedTime(device_time_origins_[tm_iter_num_ / 2], 1.0);
+          }
           else
+          {
             estimated_communication_delay_ =
                 estimated_communication_delay_ * (1.0 - communication_delay_filter_alpha_) +
                 communication_delays_[tm_iter_num_ / 2] * communication_delay_filter_alpha_;
-
+          }
           estimated_communication_delay_init_ = true;
-          device_time_origin_ = DriftedTime(device_time_origins_[tm_iter_num_ / 2], 1.0);
           ROS_DEBUG("delay: %0.6f, device timestamp: %ld, device time origin: %0.6f",
                     estimated_communication_delay_.toSec(),
                     walltime_device,
@@ -342,6 +345,8 @@ protected:
       const double updated_gain =
           (1.0 - exp_lpf_alpha) * device_time_origin_.gain_ + exp_lpf_alpha * gain;
       device_time_origin_.gain_ = updated_gain;
+      device_time_origin_.origin_ +=
+          ros::Duration(exp_lpf_alpha * (origin - device_time_origin_.origin_).toSec());
 
       ROS_DEBUG("on scan delay: %0.6f, device timestamp: %ld, device time origin: %0.3f, clock gain: %0.9f",
                 delay.toSec(),
@@ -398,7 +403,7 @@ public:
     , pnh_("~")
     , tm_iter_num_(5)
     , estimated_communication_delay_init_(false)
-    , communication_delay_filter_alpha_(0.3)
+    , communication_delay_filter_alpha_(0.2)
     , last_sync_time_(0)
   {
     std::string ip;
