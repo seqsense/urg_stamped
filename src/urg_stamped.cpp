@@ -341,14 +341,14 @@ protected:
       const auto now = ros::Time::fromBoost(time_read);
       if (last_sync_time_ == ros::Time(0))
         last_sync_time_ = now;
-      const double dt = std::min((now - last_sync_time_).toSec(), 20.0);
+      const double dt = std::min((now - last_sync_time_).toSec(), 10.0);
       last_sync_time_ = now;
 
       const double gain =
           (time_at_device_timestamp - device_time_origin_.origin_).toSec() /
           (time_at_device_timestamp - origin).toSec();
       const double exp_lpf_alpha =
-          dt * (1.0 / 60.0);  // exponential LPF
+          dt * (1.0 / 30.0);  // 30 seconds exponential LPF
       const double updated_gain =
           (1.0 - exp_lpf_alpha) * device_time_origin_.gain_ + exp_lpf_alpha * gain;
       device_time_origin_.gain_ = updated_gain;
@@ -411,7 +411,7 @@ public:
     , tm_iter_num_(5)
     , tm_median_window_(35)
     , estimated_communication_delay_init_(false)
-    , communication_delay_filter_alpha_(0.1)
+    , communication_delay_filter_alpha_(0.3)
     , last_sync_time_(0)
   {
     std::string ip;
