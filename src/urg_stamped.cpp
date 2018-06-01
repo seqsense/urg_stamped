@@ -228,7 +228,7 @@ protected:
           ROS_DEBUG("delay: %0.6f, device timestamp: %ld, device time origin: %0.6f",
                     estimated_communication_delay_.toSec(),
                     walltime_device,
-                    device_time_origin_.origin_.toSec());
+                    device_time_origins_[tm_iter_num_ / 2].toSec());
           scip_->sendCommand("TM2");
         }
         else
@@ -348,7 +348,7 @@ protected:
       device_time_origin_.origin_ +=
           ros::Duration(exp_lpf_alpha * (origin - device_time_origin_.origin_).toSec());
 
-      ROS_DEBUG("on scan delay: %0.6f, device timestamp: %ld, device time origin: %0.3f, clock gain: %0.9f",
+      ROS_DEBUG("on scan delay: %0.6f, device timestamp: %ld, device time origin: %0.6f, gain: %0.6f",
                 delay.toSec(),
                 walltime_device,
                 origin.toSec(),
