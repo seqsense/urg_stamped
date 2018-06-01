@@ -26,6 +26,7 @@
 #include <random>
 #include <string>
 #include <vector>
+#include <list>
 
 #include <scip2/scip2.h>
 #include <scip2/walltime.h>
@@ -52,10 +53,11 @@ protected:
   bool publish_intensity_;
 
   boost::posix_time::ptime time_tm_request;
-  std::vector<ros::Duration> communication_delays_;
-  std::vector<ros::Time> device_time_origins_;
+  std::list<ros::Duration> communication_delays_;
+  std::list<ros::Time> device_time_origins_;
   ros::Duration estimated_communication_delay_;
   size_t tm_iter_num_;
+  size_t tm_median_window_;
   bool estimated_communication_delay_init_;
   double communication_delay_filter_alpha_;
 
@@ -192,8 +194,6 @@ protected:
         scip_->sendCommand(
             "TM1",
             boost::bind(&UrgStampedNode::cbTMSend, this, boost::placeholders::_1));
-        communication_delays_.clear();
-        device_time_origins_.clear();
         break;
       }
       case '1':
@@ -204,31 +204,38 @@ protected:
             ros::Time::fromBoost(time_read) -
             ros::Time::fromBoost(time_tm_request);
         communication_delays_.push_back(delay);
+        if (communication_delays_.size() > tm_median_window_)
+          communication_delays_.pop_front();
+
         const auto origin = calculateDeviceTimeOriginByAverage(
             time_tm_request, time_read, walltime_device);
         device_time_origins_.push_back(origin);
+        if (device_time_origins_.size() > tm_median_window_)
+          device_time_origins_.pop_front();
 
         if (communication_delays_.size() >= tm_iter_num_)
         {
-          sort(communication_delays_.begin(), communication_delays_.end());
-          sort(device_time_origins_.begin(), device_time_origins_.end());
+          std::vector<ros::Duration> delays(communication_delays_.begin(), communication_delays_.end());
+          std::vector<ros::Time> origins(device_time_origins_.begin(), device_time_origins_.end());
+          sort(delays.begin(), delays.end());
+          sort(origins.begin(), origins.end());
 
           if (!estimated_communication_delay_init_)
           {
-            estimated_communication_delay_ = communication_delays_[tm_iter_num_ / 2];
-            device_time_origin_ = DriftedTime(device_time_origins_[tm_iter_num_ / 2], 1.0);
+            estimated_communication_delay_ = delays[tm_iter_num_ / 2];
+            device_time_origin_ = DriftedTime(origins[tm_iter_num_ / 2], 1.0);
           }
           else
           {
             estimated_communication_delay_ =
                 estimated_communication_delay_ * (1.0 - communication_delay_filter_alpha_) +
-                communication_delays_[tm_iter_num_ / 2] * communication_delay_filter_alpha_;
+                delays[tm_iter_num_ / 2] * communication_delay_filter_alpha_;
           }
           estimated_communication_delay_init_ = true;
           ROS_DEBUG("delay: %0.6f, device timestamp: %ld, device time origin: %0.6f",
                     estimated_communication_delay_.toSec(),
                     walltime_device,
-                    device_time_origins_[tm_iter_num_ / 2].toSec());
+                    origins[tm_iter_num_ / 2].toSec());
           scip_->sendCommand("TM2");
         }
         else
@@ -334,14 +341,14 @@ protected:
       const auto now = ros::Time::fromBoost(time_read);
       if (last_sync_time_ == ros::Time(0))
         last_sync_time_ = now;
-      const double dt = (now - last_sync_time_).toSec();
+      const double dt = std::min((now - last_sync_time_).toSec(), 20.0);
       last_sync_time_ = now;
 
       const double gain =
           (time_at_device_timestamp - device_time_origin_.origin_).toSec() /
           (time_at_device_timestamp - origin).toSec();
       const double exp_lpf_alpha =
-          dt * (1.0 / 30.0);  // 30 seconds exponential LPF
+          dt * (1.0 / 60.0);  // exponential LPF
       const double updated_gain =
           (1.0 - exp_lpf_alpha) * device_time_origin_.gain_ + exp_lpf_alpha * gain;
       device_time_origin_.gain_ = updated_gain;
@@ -402,8 +409,9 @@ public:
     : nh_("")
     , pnh_("~")
     , tm_iter_num_(5)
+    , tm_median_window_(35)
     , estimated_communication_delay_init_(false)
-    , communication_delay_filter_alpha_(0.2)
+    , communication_delay_filter_alpha_(0.1)
     , last_sync_time_(0)
   {
     std::string ip;
