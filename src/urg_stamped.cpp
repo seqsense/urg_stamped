@@ -110,11 +110,12 @@ protected:
     return time_at_device_timestamp - ros::Duration().fromNSec(device_timestamp * 1e6);
   }
 
-  void cbMD(
+  void cbM(
       const boost::posix_time::ptime &time_read,
       const std::string &echo_back,
       const std::string &status,
-      const scip2::ScanData &scan)
+      const scip2::ScanData &scan,
+      const bool has_intensity)
   {
     const uint64_t walltime_device = walltime_.update(scan.timestamp_);
 
@@ -123,7 +124,7 @@ protected:
       ROS_DEBUG("Size of the received scan data is wrong (expected: %d, received: %lu); refreshing",
                 step_max_ - step_min_ + 1, scan.ranges_.size());
       scip_->sendCommand(
-          (publish_intensity_ ? "ME" : "MD") +
+          (has_intensity ? "ME" : "MD") +
           (boost::format("%04d%04d") % step_min_ % step_max_).str() +
           "00000");
       return;
@@ -137,39 +138,12 @@ protected:
     msg.ranges.reserve(scan.ranges_.size());
     for (auto &r : scan.ranges_)
       msg.ranges.push_back(r * 1e-3);
-
-    pub_scan_.publish(msg);
-  }
-  void cbME(
-      const boost::posix_time::ptime &time_read,
-      const std::string &echo_back,
-      const std::string &status,
-      const scip2::ScanData &scan)
-  {
-    const uint64_t walltime_device = walltime_.update(scan.timestamp_);
-
-    if (scan.ranges_.size() != step_max_ - step_min_ + 1)
+    if (has_intensity)
     {
-      ROS_DEBUG("Size of the received scan data is wrong (expected: %d, received: %lu); refreshing",
-                step_max_ - step_min_ + 1, scan.ranges_.size());
-      scip_->sendCommand(
-          (publish_intensity_ ? "ME" : "MD") +
-          (boost::format("%04d%04d") % step_min_ % step_max_).str() +
-          "00000");
-      return;
+      msg.intensities.reserve(scan.intensities_.size());
+      for (auto &r : scan.intensities_)
+        msg.intensities.push_back(r);
     }
-
-    sensor_msgs::LaserScan msg(msg_base_);
-    msg.header.stamp = device_time_origin_.origin_ +
-                       ros::Duration().fromNSec(walltime_device * 1e6 * device_time_origin_.gain_) +
-                       ros::Duration(msg_base_.time_increment * step_min_);
-
-    msg.ranges.reserve(scan.ranges_.size());
-    for (auto &r : scan.ranges_)
-      msg.ranges.push_back(r * 1e-3);
-    msg.intensities.reserve(scan.intensities_.size());
-    for (auto &r : scan.intensities_)
-      msg.intensities.push_back(r);
 
     pub_scan_.publish(msg);
   }
@@ -456,17 +430,19 @@ public:
                     boost::placeholders::_3,
                     boost::placeholders::_4));
     scip_->registerCallback<scip2::ResponseMD>(
-        boost::bind(&UrgStampedNode::cbMD, this,
+        boost::bind(&UrgStampedNode::cbM, this,
                     boost::placeholders::_1,
                     boost::placeholders::_2,
                     boost::placeholders::_3,
-                    boost::placeholders::_4));
+                    boost::placeholders::_4,
+                    false));
     scip_->registerCallback<scip2::ResponseME>(
-        boost::bind(&UrgStampedNode::cbME, this,
+        boost::bind(&UrgStampedNode::cbM, this,
                     boost::placeholders::_1,
                     boost::placeholders::_2,
                     boost::placeholders::_3,
-                    boost::placeholders::_4));
+                    boost::placeholders::_4,
+                    true));
     scip_->registerCallback<scip2::ResponseTM>(
         boost::bind(&UrgStampedNode::cbTM, this,
                     boost::placeholders::_1,
