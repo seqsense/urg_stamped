@@ -120,8 +120,8 @@ protected:
 
     if (scan.ranges_.size() != step_max_ - step_min_ + 1)
     {
-      ROS_INFO("Size of the received scan data is wrong (expected: %d, received: %lu); refreshing",
-               step_max_ - step_min_ + 1, scan.ranges_.size());
+      ROS_DEBUG("Size of the received scan data is wrong (expected: %d, received: %lu); refreshing",
+                step_max_ - step_min_ + 1, scan.ranges_.size());
       scip_->sendCommand(
           (publish_intensity_ ? "ME" : "MD") +
           (boost::format("%04d%04d") % step_min_ % step_max_).str() +
@@ -150,8 +150,8 @@ protected:
 
     if (scan.ranges_.size() != step_max_ - step_min_ + 1)
     {
-      ROS_INFO("Size of the received scan data is wrong (expected: %d, received: %lu); refreshing",
-               step_max_ - step_min_ + 1, scan.ranges_.size());
+      ROS_DEBUG("Size of the received scan data is wrong (expected: %d, received: %lu); refreshing",
+                step_max_ - step_min_ + 1, scan.ranges_.size());
       scip_->sendCommand(
           (publish_intensity_ ? "ME" : "MD") +
           (boost::format("%04d%04d") % step_min_ % step_max_).str() +
@@ -319,12 +319,12 @@ protected:
       const auto time = params.find("TIME");
       if (time == params.end())
       {
-        ROS_WARN("II doesn't have timestamp");
+        ROS_DEBUG("II doesn't have timestamp");
         return;
       }
       if (time->second.size() != 6 && time->second.size() != 4)
       {
-        ROS_INFO("Timestamp in II is ill-formatted (%s)", time->second.c_str());
+        ROS_DEBUG("Timestamp in II is ill-formatted (%s)", time->second.c_str());
         return;
       }
       const uint32_t time_device =
