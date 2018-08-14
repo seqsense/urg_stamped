@@ -2,7 +2,12 @@ cmake_minimum_required(VERSION 2.8.3)
 project(urg_stamped)
 
 ## Find catkin and any catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp rostest sensor_msgs roslint)
+find_package(catkin REQUIRED
+  COMPONENTS
+    roscpp
+
+    sensor_msgs
+)
 find_package(Boost 1.53 REQUIRED system chrono thread)
 
 if(Boost_VERSION LESS 106000)
@@ -10,9 +15,11 @@ if(Boost_VERSION LESS 106000)
   add_definitions(-DUSE_OLD_BOOST_PLACEHOLDERS=1)
 endif()
 
-## Declare a catkin package
 catkin_package(
-    DEPENDS roscpp sensor_msgs
+  CATKIN_DEPENDS
+    roscpp
+
+    sensor_msgs
 )
 
 include(CheckCXXCompilerFlag)
@@ -31,9 +38,12 @@ include_directories(${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} include)
 add_executable(urg_stamped src/urg_stamped.cpp)
 target_link_libraries(urg_stamped ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
-roslint_cpp()
 
 if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  find_package(rosunit REQUIRED)
+  find_package(roslint REQUIRED)
+  roslint_cpp()
   roslint_add_test()
 
   catkin_add_gtest(test_decode test/src/test_decode.cpp)
@@ -43,7 +53,8 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_walltime ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 endif()
 
-install(TARGETS urg_stamped
+install(TARGETS
+    urg_stamped
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
