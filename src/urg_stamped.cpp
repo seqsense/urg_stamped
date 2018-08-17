@@ -32,6 +32,7 @@
 #include <scip2/walltime.h>
 
 #include <old_boost_fix.h>
+#include <filter.h>
 
 class UrgStampedNode
 {
@@ -88,6 +89,9 @@ protected:
   };
   DriftedTime device_time_origin_;
 
+  ros::Time t0_;
+  Filter<double> timestamp_lpf_, timestamp_hpf_;
+
   ros::Time calculateDeviceTimeOriginByAverage(
       const boost::posix_time::ptime &time_request,
       const boost::posix_time::ptime &time_response,
@@ -130,10 +134,25 @@ protected:
       return;
     }
 
+    const auto estimated_timestamp_dc =
+        device_time_origin_.origin_ +
+        ros::Duration().fromNSec(walltime_device * 1e6 * device_time_origin_.gain_) +
+        ros::Duration(msg_base_.time_increment * step_min_);
+
+    if (t0_ == ros::Time(0))
+      t0_ = estimated_timestamp_dc;
+
+    const auto receive_time =
+        ros::Time::fromBoost(time_read) -
+        estimated_communication_delay_ * 0.5 - ros::Duration(msg_base_.scan_time);
+    // TODO(at-wat): add outlier removal here
+
     sensor_msgs::LaserScan msg(msg_base_);
-    msg.header.stamp = device_time_origin_.origin_ +
-                       ros::Duration().fromNSec(walltime_device * 1e6 * device_time_origin_.gain_) +
-                       ros::Duration(msg_base_.time_increment * step_min_);
+    msg.header.stamp =
+        t0_ +
+        ros::Duration(
+            timestamp_lpf_.in((estimated_timestamp_dc - t0_).toSec()) +
+            timestamp_hpf_.in((receive_time - t0_).toSec()));
 
     msg.ranges.reserve(scan.ranges_.size());
     for (auto &r : scan.ranges_)
@@ -387,6 +406,8 @@ public:
     , estimated_communication_delay_init_(false)
     , communication_delay_filter_alpha_(0.3)
     , last_sync_time_(0)
+    , timestamp_lpf_(Filter<double>::LPF, 20)
+    , timestamp_hpf_(Filter<double>::HPF, 20)
   {
     std::string ip;
     int port;
