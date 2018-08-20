@@ -31,8 +31,9 @@
 #include <scip2/scip2.h>
 #include <scip2/walltime.h>
 
-#include <old_boost_fix.h>
 #include <filter.h>
+#include <old_boost_fix.h>
+#include <timestamp_outlier_remover.h>
 
 class UrgStampedNode
 {
@@ -91,6 +92,7 @@ protected:
 
   ros::Time t0_;
   Filter<double> timestamp_lpf_, timestamp_hpf_;
+  TimestampOutlierRemover timestamp_outlier_removal_;
 
   ros::Time calculateDeviceTimeOriginByAverage(
       const boost::posix_time::ptime &time_request,
@@ -143,16 +145,17 @@ protected:
       t0_ = estimated_timestamp_dc;
 
     const auto receive_time =
-        ros::Time::fromBoost(time_read) -
-        estimated_communication_delay_ * 0.5 - ros::Duration(msg_base_.scan_time);
-    // TODO(at-wat): add outlier removal here
+        timestamp_outlier_removal_.update(
+            ros::Time::fromBoost(time_read) -
+            estimated_communication_delay_ * 0.5 - ros::Duration(msg_base_.scan_time));
 
     sensor_msgs::LaserScan msg(msg_base_);
     msg.header.stamp =
         t0_ +
         ros::Duration(
-            timestamp_lpf_.in((estimated_timestamp_dc - t0_).toSec()) +
-            timestamp_hpf_.in((receive_time - t0_).toSec()));
+            timestamp_lpf_.update((estimated_timestamp_dc - t0_).toSec()) +
+            timestamp_hpf_.update((receive_time - t0_).toSec()));
+    std::cerr << (msg.header.stamp - ros::Time::fromBoost(time_read)).toSec() << std::endl;
 
     msg.ranges.reserve(scan.ranges_.size());
     for (auto &r : scan.ranges_)
@@ -247,6 +250,7 @@ protected:
             (boost::format("%04d%04d") % step_min_ % step_max_).str() +
             "00000");
         timeSync();
+        timestamp_outlier_removal_.reset();
         break;
       }
     }
@@ -284,6 +288,7 @@ protected:
     msg_base_.angle_max =
         (std::stoi(amax->second) - std::stoi(afrt->second)) * msg_base_.angle_increment;
 
+    timestamp_outlier_removal_.setInterval(ros::Duration(msg_base_.scan_time));
     delayEstimation();
   }
   void cbVV(
@@ -408,6 +413,7 @@ public:
     , last_sync_time_(0)
     , timestamp_lpf_(Filter<double>::LPF, 20)
     , timestamp_hpf_(Filter<double>::HPF, 20)
+    , timestamp_outlier_removal_(ros::Duration(0.001), ros::Duration())
   {
     std::string ip;
     int port;

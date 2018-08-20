@@ -53,7 +53,7 @@ public:
         break;
     }
   }
-  FLT in(const FLT in)
+  FLT update(const FLT in)
   {
     x_ = k_[0] * in + k_[1] * x_;
     const auto out = k_[2] * in + k_[3] * x_;
