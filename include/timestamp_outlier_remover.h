@@ -54,7 +54,7 @@ public:
     if (fabs(interval_remainder) > diff_max_.toSec())
     {
       stamp_ += interval_ * scan_num;
-      if (outlier_cnt_ > 1)
+      if (outlier_cnt_ >= 1)
         stamp_ = stamp;
 
       outlier_cnt_++;
