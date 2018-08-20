@@ -51,7 +51,7 @@ public:
     if (pos_ < window_size_)
       return stamp;
 
-    ros::Duration sum;
+    ros::Duration sum(0);
     for (const auto &b : buffer_)
     {
       sum += b - stamp;

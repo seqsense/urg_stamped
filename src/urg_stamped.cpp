@@ -149,7 +149,8 @@ protected:
     const auto receive_time =
         timestamp_outlier_removal_.update(
             ros::Time::fromBoost(time_read) -
-            estimated_communication_delay_ * 0.5 - ros::Duration(msg_base_.scan_time));
+            estimated_communication_delay_ * 0.5 -
+            ros::Duration(msg_base_.scan_time));
 
     sensor_msgs::LaserScan msg(msg_base_);
     msg.header.stamp =
@@ -254,6 +255,7 @@ protected:
         timeSync();
         timestamp_outlier_removal_.reset();
         timestamp_moving_average_.reset();
+        t0_ = ros::Time();
         break;
       }
     }
