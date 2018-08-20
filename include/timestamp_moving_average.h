@@ -20,6 +20,7 @@
 #include <ros/ros.h>
 
 #include <cmath>
+#include <vector>
 
 class TimestampMovingAverage
 {
