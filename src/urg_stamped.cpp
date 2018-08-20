@@ -127,17 +127,6 @@ protected:
   {
     const uint64_t walltime_device = walltime_.update(scan.timestamp_);
 
-    if (scan.ranges_.size() != step_max_ - step_min_ + 1)
-    {
-      ROS_DEBUG("Size of the received scan data is wrong (expected: %d, received: %lu); refreshing",
-                step_max_ - step_min_ + 1, scan.ranges_.size());
-      scip_->sendCommand(
-          (has_intensity ? "ME" : "MD") +
-          (boost::format("%04d%04d") % step_min_ % step_max_).str() +
-          "00000");
-      return;
-    }
-
     const auto estimated_timestamp_dc =
         device_time_origin_.origin_ +
         ros::Duration().fromNSec(walltime_device * 1e6 * device_time_origin_.gain_) +
@@ -159,6 +148,17 @@ protected:
             ros::Duration(
                 timestamp_lpf_.update((estimated_timestamp_dc - t0_).toSec()) +
                 timestamp_hpf_.update((receive_time - t0_).toSec())));
+
+    if (scan.ranges_.size() != step_max_ - step_min_ + 1)
+    {
+      ROS_DEBUG("Size of the received scan data is wrong (expected: %d, received: %lu); refreshing",
+                step_max_ - step_min_ + 1, scan.ranges_.size());
+      scip_->sendCommand(
+          (has_intensity ? "ME" : "MD") +
+          (boost::format("%04d%04d") % step_min_ % step_max_).str() +
+          "00000");
+      return;
+    }
 
     msg.ranges.reserve(scan.ranges_.size());
     for (auto &r : scan.ranges_)
