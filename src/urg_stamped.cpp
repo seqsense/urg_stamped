@@ -33,6 +33,7 @@
 
 #include <filter.h>
 #include <old_boost_fix.h>
+#include <timestamp_moving_average.h>
 #include <timestamp_outlier_remover.h>
 
 class UrgStampedNode
@@ -93,6 +94,7 @@ protected:
   ros::Time t0_;
   Filter<double> timestamp_lpf_, timestamp_hpf_;
   TimestampOutlierRemover timestamp_outlier_removal_;
+  TimestampMovingAverage timestamp_moving_average_;
 
   ros::Time calculateDeviceTimeOriginByAverage(
       const boost::posix_time::ptime &time_request,
@@ -151,11 +153,11 @@ protected:
 
     sensor_msgs::LaserScan msg(msg_base_);
     msg.header.stamp =
-        t0_ +
-        ros::Duration(
-            timestamp_lpf_.update((estimated_timestamp_dc - t0_).toSec()) +
-            timestamp_hpf_.update((receive_time - t0_).toSec()));
-    std::cerr << (msg.header.stamp - ros::Time::fromBoost(time_read)).toSec() << std::endl;
+        timestamp_moving_average_.update(
+            t0_ +
+            ros::Duration(
+                timestamp_lpf_.update((estimated_timestamp_dc - t0_).toSec()) +
+                timestamp_hpf_.update((receive_time - t0_).toSec())));
 
     msg.ranges.reserve(scan.ranges_.size());
     for (auto &r : scan.ranges_)
@@ -251,6 +253,7 @@ protected:
             "00000");
         timeSync();
         timestamp_outlier_removal_.reset();
+        timestamp_moving_average_.reset();
         break;
       }
     }
@@ -289,6 +292,7 @@ protected:
         (std::stoi(amax->second) - std::stoi(afrt->second)) * msg_base_.angle_increment;
 
     timestamp_outlier_removal_.setInterval(ros::Duration(msg_base_.scan_time));
+    timestamp_moving_average_.setInterval(ros::Duration(msg_base_.scan_time));
     delayEstimation();
   }
   void cbVV(
@@ -414,6 +418,7 @@ public:
     , timestamp_lpf_(Filter<double>::LPF, 20)
     , timestamp_hpf_(Filter<double>::HPF, 20)
     , timestamp_outlier_removal_(ros::Duration(0.001), ros::Duration())
+    , timestamp_moving_average_(5, ros::Duration())
   {
     std::string ip;
     int port;
