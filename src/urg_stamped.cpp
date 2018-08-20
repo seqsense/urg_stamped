@@ -127,13 +127,13 @@ protected:
   {
     const uint64_t walltime_device = walltime_.update(scan.timestamp_);
 
-    const auto estimated_timestamp_dc =
+    const auto estimated_timestamp_lf =
         device_time_origin_.origin_ +
         ros::Duration().fromNSec(walltime_device * 1e6 * device_time_origin_.gain_) +
         ros::Duration(msg_base_.time_increment * step_min_);
 
     if (t0_ == ros::Time(0))
-      t0_ = estimated_timestamp_dc;
+      t0_ = estimated_timestamp_lf;
 
     const auto receive_time =
         timestamp_outlier_removal_.update(
@@ -146,7 +146,7 @@ protected:
         timestamp_moving_average_.update(
             t0_ +
             ros::Duration(
-                timestamp_lpf_.update((estimated_timestamp_dc - t0_).toSec()) +
+                timestamp_lpf_.update((estimated_timestamp_lf - t0_).toSec()) +
                 timestamp_hpf_.update((receive_time - t0_).toSec())));
 
     if (scan.ranges_.size() != step_max_ - step_min_ + 1)
