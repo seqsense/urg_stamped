@@ -18,7 +18,7 @@
 
 #include <timestamp_moving_average.h>
 
-TEST(TimestampMovingAverage, MovingAverageWithoutNoise)
+TEST(TimestampMovingAverage, ResetAndGo)
 {
   TimestampMovingAverage ma(3, ros::Duration(0.1));
   for (double t = 10.0; t < 11.0; t += 0.1)
@@ -41,6 +41,20 @@ TEST(TimestampMovingAverage, MovingAverage)
   ASSERT_EQ(ma.update(ros::Time(10.300)), ros::Time(10.301));
   ASSERT_EQ(ma.update(ros::Time(10.400)), ros::Time(10.401));
   ASSERT_EQ(ma.update(ros::Time(10.500)), ros::Time(10.500));
+}
+
+TEST(TimestampMovingAverage, SkippedInput)
+{
+  TimestampMovingAverage ma(3, ros::Duration(0.1));
+  for (double t = 10.0; t < 11.0; t += 0.1)
+  {
+    ASSERT_EQ(ma.update(ros::Time(t)), ros::Time(t));
+  }
+  // skip 0.5 sec.
+  for (double t = 11.5; t < 12.0; t += 0.1)
+  {
+    ASSERT_EQ(ma.update(ros::Time(t)), ros::Time(t));
+  }
 }
 
 int main(int argc, char **argv)

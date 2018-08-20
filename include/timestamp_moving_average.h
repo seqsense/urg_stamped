@@ -54,10 +54,9 @@ public:
     ros::Duration sum(0);
     for (const auto &b : buffer_)
     {
-      sum += b - stamp;
+      sum += ros::Duration(remainder((b - stamp).toSec(), interval_.toSec()));
     }
-    const ros::Time average = stamp + sum * (1.0 / window_size_);
-    return average + interval_ * ((window_size_ - 1) / 2.0);
+    return stamp + sum * (1.0 / window_size_);
   }
   void reset()
   {
