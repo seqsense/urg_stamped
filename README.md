@@ -15,6 +15,29 @@ The estimation is structured by following threefold:
 - Observe data packet arrival time that is correlated to the true measurement time.
 - Fuse accurate but low-resolution timestamp and noisy but high-resolution arrival time by the complementary filter.
 
+## Usages
+
+Topics and major parameters are designed to be compatible with [urg_node](http://wiki.ros.org/urg_node).
+
+### Published Topics
+
+- **scan** (sensor_msgs::LaserScan)
+
+### Parameters
+
+#### urg_node compatible parameters
+
+- **ip_address** (string): device IP address
+- **ip_port** (int): device TCP/IP port
+- **frame_id** (string): frame_id of published scans
+- **publish_intensity** (bool): fill intensity field if true
+
+#### urg_stamped specific parameters
+
+- **sync_interval_min** (double): minimum interval to try observing sensor internal timestamp in seconds
+- **sync_interval_max** (double): maximum interval to try observing sensor internal timestamp in seconds
+- **delay_estim_interval** (double): communication delay estimation interval in seconds (dropping 2 or 3 scans during delay estimation)
+
 ## Known Limitations
 
 - Timestamp estimation is designed for sensors connected by ethernet interface.
