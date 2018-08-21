@@ -41,19 +41,19 @@ PASSED_MESSAGE="[#${TRAVIS_BUILD_NUMBER}] PASSED on ROS ${ROS_DISTRO}"
 
 (set -o pipefail; catkin_make ${CM_OPTIONS} 2>&1 | tee ${LOG}) \
   || (gh-pr-comment "${FAILED_MESSAGE}" \
-      "<details><summary>catkin_make failed</summary>\n$(error_log)\n</details>"; false)
+      "<details><summary>catkin_make failed</summary>$(error_log)</details>"; false)
 (set -o pipefail; catkin_make install ${CM_OPTIONS} 2>&1 | tee ${LOG}) \
   || (gh-pr-comment "${FAILED_MESSAGE}" \
-      "<details><summary>catkin_make install failed</summary>\n$(error_log)\n</details>"; false)
+      "<details><summary>catkin_make install failed</summary>$(error_log)</details>"; false)
 
 source /catkin_ws/devel/setup.bash
 
 (set -o pipefail; catkin_make tests ${CM_OPTIONS} 2>&1 | tee ${LOG}) \
   || (gh-pr-comment "${FAILED_MESSAGE}" \
-      "<details><summary>catkin_make tests failed</summary>\n$(error_log)\n</details>"; false)
+      "<details><summary>catkin_make tests failed</summary>$(error_log)</details>"; false)
 (set -o pipefail; catkin_make run_tests ${CM_OPTIONS} 2>&1 | tee ${LOG}) \
   || (gh-pr-comment "${FAILED_MESSAGE}" \
-      "<details><summary>catkin_make run_tests failed</summary>\n$(error_log)\n</details>"; false)
+      "<details><summary>catkin_make run_tests failed</summary>$(error_log)</details>"; false)
 
 result_text="
 \`\`\`
@@ -65,6 +65,6 @@ result_text_detail="
 `echo ${errored_tests} | xargs -n 1 -- bash -c 'echo; echo \#\#\# $0; echo; echo \\\`\\\`\\\`xml; xmllint --format $0; echo \\\`\\\`\\\`;'`
 "
 catkin_test_results \
-  || (gh-pr-comment "${FAILED_MESSAGE}" "<details><summary>Test failed</summary>\n$result_text$result_text_detail\n</details>"; false)
+  || (gh-pr-comment "${FAILED_MESSAGE}" "<details><summary>Test failed</summary>$result_text$result_text_detail</details>"; false)
 
-gh-pr-comment "${PASSED_MESSAGE}" "<details><summary>All tests passed</summary>\n$result_text\n</details>"
+gh-pr-comment "${PASSED_MESSAGE}" "<details><summary>All tests passed</summary>$result_text</details>"
