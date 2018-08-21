@@ -32,7 +32,7 @@ function error_log() {
     echo '--'
     echo "error log exceeded 30 lines (total $ERR_LINES lines)"
   fi
-  echo -e '```\n'
+  echo -e '```\n '
 }
 
 pip install gh-pr-comment
