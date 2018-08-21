@@ -28,7 +28,7 @@ The estimation is structured by following threefold:
 Three UTM-30LX-EWs are mounted on a velocity controlled turntable, as shown below, to reconstruct 3-D point cloud from 2-D scans.
 The accuracy of the timestamp affects offset and precision of the timestamp affects the distribution of the pointcloud.
 
-![SQ-LIDAR](doc/images/sqlidar.png)
+![SQ-LIDAR](doc/images/sqlidar.jpg)
 
 ### Results
 
@@ -39,8 +39,8 @@ The image below shows point cloud with 1 rad/s of the turntable which can be ass
 urg_node has large error even if calibrate_time and synchronize_time options are enabled (captioned as urg_node (sync)).
 urg_stamped has better timestamp characteristics comparing with urg_node.
 
-                | 10 rad/s                                                        | 20 rad/s
----             | ---                                                             | ---
-urg_stamped     | ![urg_stamped 10 rad/s](doc/images/urg_stamped_10radps.png)     | ![urg_stamped 20 rad/s](doc/images/urg_stamped_20radps.png)
-urg_node        | ![urg_node 10 rad/s](doc/images/urg_node_10radps.png)           | ![urg_node 20 rad/s](doc/images/urg_node_20radps.png)
-urg_node (sync) | ![urg_node sync 10 rad/s](doc/images/urg_node_sync_10radps.png) | ![urg_node sync_20 rad/s](doc/images/urg_node_sync_20radps.png)
+&nbsp;             | 10 rad/s                                                        | 20 rad/s
+---                | ---                                                             | ---
+urg_stamped        | ![urg_stamped 10 rad/s](doc/images/urg_stamped_10radps.png)     | ![urg_stamped 20 rad/s](doc/images/urg_stamped_20radps.png)
+urg_node           | ![urg_node 10 rad/s](doc/images/urg_node_10radps.png)           | ![urg_node 20 rad/s](doc/images/urg_node_20radps.png)
+urg_node<br>(sync) | ![urg_node sync 10 rad/s](doc/images/urg_node_sync_10radps.png) | ![urg_node sync_20 rad/s](doc/images/urg_node_sync_20radps.png)
