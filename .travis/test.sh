@@ -24,7 +24,7 @@ CM_OPTIONS=""
 LOG=/tmp/catkin_make.log
 function error_log() {
   grep -A5 error ${LOG} > ${LOG}.error
-  echo -e '\n```'
+  echo -e '\n\n```'
   head -n30 ${LOG}.error
   ERR_LINES=`cat ${LOG}.error | wc -l`
   if [ $ERR_LINES -gt 30 ]
@@ -56,6 +56,7 @@ source /catkin_ws/devel/setup.bash
       "<details><summary>catkin_make run_tests failed</summary>$(error_log)</details>"; false)
 
 result_text="
+
 \`\`\`
 `catkin_test_results --all | grep -v Skipping || true`
 \`\`\`
