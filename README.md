@@ -34,6 +34,7 @@ The accuracy of the timestamp affects offset and precision of the timestamp affe
 
 The image below shows point cloud with 1 rad/s of the turntable which can be assumed as a reference.
 (decay time of the point cloud: 10 seconds)
+
 ![urg_stamped 1 rad/s](doc/images/urg_stamped_1radps.png)
 
 urg_node has large error even if calibrate_time and synchronize_time options are enabled (captioned as urg_node (sync)).
