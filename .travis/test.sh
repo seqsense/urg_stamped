@@ -6,6 +6,7 @@ source /opt/ros/${ROS_DISTRO}/setup.bash
 
 set -o verbose
 
+cd /catkin_ws/src && catkin_init_workspace
 cd /catkin_ws
 
 apt-get -qq update
