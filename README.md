@@ -21,7 +21,7 @@ The estimation is structured by following threefold:
   - Tested only for UTM-30LX-EW and UST-20LX at now.
 - Some scans are dropped due to the clock synchronization and delay estimation.
 
-## Comparizon with urg_node
+## Comparison with urg_node
 
 ### Configurations
 
