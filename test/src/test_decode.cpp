@@ -21,21 +21,25 @@
 TEST(DecoderTest, testChecksumValidation)
 {
   // Checksum example shown in SCIP2.0 Specification
-  scip2::Decoder<1> dec("Hokuyo");
+  const std::string line("Hokuyo");
+  scip2::Decoder<1> dec(line);
   ASSERT_EQ((dec.getChecksum() & 0x3F) + 0x30, 'o');
 }
 
 TEST(DecoderTest, testDecodeSingle)
 {
   // Examples shown in SCIP2.0 Specification
-  scip2::Decoder<2> dec2("CB");
-  ASSERT_EQ(*dec2.begin(), 1234);
+  const std::string line2("CB");
+  scip2::Decoder<2> dec2(line2);
+  ASSERT_EQ(*dec2.begin(), 1234u);
 
-  scip2::Decoder<3> dec3("1Dh");
-  ASSERT_EQ(*dec3.begin(), 5432);
+  const std::string line3("1Dh");
+  scip2::Decoder<3> dec3(line3);
+  ASSERT_EQ(*dec3.begin(), 5432u);
 
-  scip2::Decoder<4> dec4("m2@0");
-  ASSERT_EQ(*dec4.begin(), 16000000);
+  const std::string line4("m2@0");
+  scip2::Decoder<4> dec4(line4);
+  ASSERT_EQ(*dec4.begin(), 16000000u);
 }
 
 int main(int argc, char **argv)
