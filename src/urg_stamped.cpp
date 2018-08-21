@@ -388,6 +388,7 @@ public:
     , communication_delay_filter_alpha_(0.3)
     , last_sync_time_(0)
   {
+    aaa;
     std::string ip;
     int port;
     double sync_interval_min;
