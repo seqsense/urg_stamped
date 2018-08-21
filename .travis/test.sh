@@ -1,17 +1,17 @@
 #!/bin/bash
 
 set -o errexit
-set -o verbose
 
 source /opt/ros/${ROS_DISTRO}/setup.bash
 
+set -o verbose
+
 cd /catkin_ws
 
-apt-get -qq update && \
-apt-get install libxml2-utils && \
-rosdep install --from-paths src/${PACKAGE_NAME} --skip-keys=joystick_interrupt \
-  --ignore-src --rosdistro=${ROS_DISTRO} -y && \
-apt-get clean && \
+apt-get -qq update
+apt-get install libxml2-utils
+rosdep install --from-paths src/${PACKAGE_NAME} --ignore-src --rosdistro=${ROS_DISTRO} -y
+apt-get clean
 rm -rf /var/lib/apt/lists/*
 
 sed -i -e '5a set(CMAKE_C_FLAGS "-Wall -Werror")' \
@@ -35,8 +35,8 @@ function error_log() {
 }
 
 pip install gh-pr-comment
-FAILED_MESSAGE="FAILED on ROS ${ROS_DISTRO}"
-PASSED_MESSAGE="PASSED on ROS ${ROS_DISTRO}"
+FAILED_MESSAGE="[#${TRAVIS_BUILD_NUMBER}] FAILED on ROS ${ROS_DISTRO}"
+PASSED_MESSAGE="[#${TRAVIS_BUILD_NUMBER}] PASSED on ROS ${ROS_DISTRO}"
 
 (set -o pipefail; catkin_make ${CM_OPTIONS} 2>&1 | tee ${LOG}) \
   || (gh-pr-comment "${FAILED_MESSAGE}" \
@@ -66,7 +66,3 @@ result_text_detail="
 catkin_test_results || (gh-pr-comment "${FAILED_MESSAGE}" "Test failed$result_text$result_text_detail"; false)
 
 gh-pr-comment "${PASSED_MESSAGE}" "All tests passed$result_text"
-
-
-cd ..
-rm -rf /catkin_ws || true
