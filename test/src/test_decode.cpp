@@ -16,6 +16,8 @@
 
 #include <gtest/gtest.h>
 
+#include <string>
+
 #include <scip2/decode.h>
 
 TEST(DecoderTest, testChecksumValidation)
