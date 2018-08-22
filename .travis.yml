@@ -1,5 +1,8 @@
-sudo: required
 services: docker
+addons:
+  apt:
+    packages:
+      - python-pip
 
 cache:
   directories:
@@ -7,18 +10,29 @@ cache:
 env:
   global:
     - PACKAGE_NAME=urg_stamped
-    - DOCKER_CACHE_FILE=/home/travis/docker/cache.tar.lz4
-    - DOCKER_CACHE_TARGETS="${PACKAGE_NAME}:latest"
+    - DOCKER_CACHE_TARGET=urg-stamped-test
+  matrix:
+    - ROS_DISTRO_TARGET=melodic
+    - ROS_DISTRO_TARGET=kinetic
+    - ROS_DISTRO_TARGET=indigo
 branches:
   only:
     - master
 
 before_install:
-  - .travis/load_cache.sh
+  - pip install --user gh-pr-comment
 
 install: true
 
 script:
-  - docker build -t ${PACKAGE_NAME}:latest --pull=true ${TRAVIS_BUILD_DIR}
-  - docker run --rm -it -e TRAVIS_PULL_REQUEST -e TRAVIS_REPO_SLUG -e TRAVIS_BOT_GITHUB_TOKEN -e PACKAGE_NAME ${PACKAGE_NAME}:latest /catkin_ws/src/${PACKAGE_NAME}/.travis/test.sh
-  - .travis/save_cache.sh
+  - docker build
+    -t ${DOCKER_CACHE_TARGET}:${ROS_DISTRO_TARGET}
+    -f Dockerfile.${ROS_DISTRO_TARGET}
+    --pull=true ${TRAVIS_BUILD_DIR} || (gh-pr-comment "[#${TRAVIS_BUILD_NUMBER}] FAILED on ${ROS_DISTRO_TARGET}" "docker build failed"; false)
+  - docker run --rm -it
+    -e TRAVIS_PULL_REQUEST
+    -e TRAVIS_REPO_SLUG
+    -e TRAVIS_BOT_GITHUB_TOKEN
+    -e GITHUB_API_URL_BASE
+    -e TRAVIS_BUILD_NUMBER
+    ${DOCKER_CACHE_TARGET}:${ROS_DISTRO_TARGET} /catkin_ws/src/${PACKAGE_NAME}/.travis/test.sh
