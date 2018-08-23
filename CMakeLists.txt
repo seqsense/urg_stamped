@@ -49,6 +49,14 @@ if(CATKIN_ENABLE_TESTING)
   catkin_add_gtest(test_decode test/src/test_decode.cpp)
   target_link_libraries(test_decode ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
+  catkin_add_gtest(test_first_order_filter test/src/test_first_order_filter.cpp)
+
+  catkin_add_gtest(test_timestamp_moving_average test/src/test_timestamp_moving_average.cpp)
+  target_link_libraries(test_timestamp_moving_average ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
+  catkin_add_gtest(test_timestamp_outlier_remover test/src/test_timestamp_outlier_remover.cpp)
+  target_link_libraries(test_timestamp_outlier_remover ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
   catkin_add_gtest(test_walltime test/src/test_walltime.cpp)
   target_link_libraries(test_walltime ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 endif()
