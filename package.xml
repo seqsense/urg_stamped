@@ -5,7 +5,7 @@
   <description>Precisely stamped URG driver for ROS</description>
 
   <maintainer email="atsushi.w@ieee.org">Atsushi Watanabe</maintainer>
-  <license>TBA</license>
+  <license>Apache 2.0</license>
   <author email="atsushi.w@ieee.org">Atsushi Watanabe</author>
 
   <buildtool_depend>catkin</buildtool_depend>
