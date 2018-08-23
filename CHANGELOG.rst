@@ -2,8 +2,8 @@
 Changelog for package urg_stamped
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.2 (2018-08-23)
+------------------
 * Fix license in manifest (`#39 <https://github.com/seqsense/urg_stamped/issues/39>`_)
 * Update README (`#36 <https://github.com/seqsense/urg_stamped/issues/36>`_)
 * Estimate sub-millisecond timestamp (`#35 <https://github.com/seqsense/urg_stamped/issues/35>`_)
