@@ -31,7 +31,7 @@
 #include <scip2/scip2.h>
 #include <scip2/walltime.h>
 
-#include <filter.h>
+#include <first_order_filter.h>
 #include <old_boost_fix.h>
 #include <timestamp_moving_average.h>
 #include <timestamp_outlier_remover.h>
@@ -92,7 +92,8 @@ protected:
   DriftedTime device_time_origin_;
 
   ros::Time t0_;
-  Filter<double> timestamp_lpf_, timestamp_hpf_;
+  FirstOrderLPF<double> timestamp_lpf_;
+  FirstOrderHPF<double> timestamp_hpf_;
   TimestampOutlierRemover timestamp_outlier_removal_;
   TimestampMovingAverage timestamp_moving_average_;
 
@@ -417,8 +418,8 @@ public:
     , estimated_communication_delay_init_(false)
     , communication_delay_filter_alpha_(0.3)
     , last_sync_time_(0)
-    , timestamp_lpf_(Filter<double>::LPF, 20)
-    , timestamp_hpf_(Filter<double>::HPF, 20)
+    , timestamp_lpf_(20)
+    , timestamp_hpf_(20)
     , timestamp_outlier_removal_(ros::Duration(0.001), ros::Duration())
     , timestamp_moving_average_(5, ros::Duration())
   {
