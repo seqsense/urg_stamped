@@ -16,32 +16,37 @@
 
 #include <gtest/gtest.h>
 
-#include <string>
+#include <cmath>
 
-#include <scip2/decode.h>
+#include <first_order_filter.h>
 
-TEST(DecoderTest, testChecksumValidation)
+TEST(FirstOrderFilter, PassThrough)
 {
-  // Checksum example shown in SCIP2.0 Specification
-  const std::string line("Hokuyo");
-  scip2::Decoder<1> dec(line);
-  ASSERT_EQ((dec.getChecksum() & 0x3F) + 0x30, 'o');
+  FirstOrderFilter<double> flt;
+
+  ASSERT_EQ(flt.update(0.0), 0.0);
+  ASSERT_EQ(flt.update(1.0), 1.0);
+  ASSERT_EQ(flt.update(2.0), 2.0);
 }
 
-TEST(DecoderTest, testDecodeSingle)
+TEST(FirstOrderFilter, LPF)
 {
-  // Examples shown in SCIP2.0 Specification
-  const std::string line2("CB");
-  scip2::Decoder<2> dec2(line2);
-  ASSERT_EQ(*dec2.begin(), 1234u);
+  FirstOrderLPF<double> flt(100);
 
-  const std::string line3("1Dh");
-  scip2::Decoder<3> dec3(line3);
-  ASSERT_EQ(*dec3.begin(), 5432u);
+  ASSERT_EQ(flt.update(0.0), 0.0);
+  for (size_t i = 0; i < 100 - 1; ++i)
+    flt.update(1.0);
+  ASSERT_NEAR(flt.update(1.0), 1.0 - 1.0 / std::exp(1), 1e-2);
+}
 
-  const std::string line4("m2@0");
-  scip2::Decoder<4> dec4(line4);
-  ASSERT_EQ(*dec4.begin(), 16000000u);
+TEST(FirstOrderFilter, HPF)
+{
+  FirstOrderHPF<double> flt(100);
+
+  ASSERT_EQ(flt.update(0.0), 0.0);
+  for (size_t i = 0; i < 100 - 2; ++i)
+    flt.update(1.0);
+  ASSERT_NEAR(flt.update(1.0), 1.0 / std::exp(1), 1e-2);
 }
 
 int main(int argc, char **argv)

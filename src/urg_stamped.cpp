@@ -31,7 +31,10 @@
 #include <scip2/scip2.h>
 #include <scip2/walltime.h>
 
+#include <first_order_filter.h>
 #include <old_boost_fix.h>
+#include <timestamp_moving_average.h>
+#include <timestamp_outlier_remover.h>
 
 class UrgStampedNode
 {
@@ -88,6 +91,12 @@ protected:
   };
   DriftedTime device_time_origin_;
 
+  ros::Time t0_;
+  FirstOrderLPF<double> timestamp_lpf_;
+  FirstOrderHPF<double> timestamp_hpf_;
+  TimestampOutlierRemover timestamp_outlier_removal_;
+  TimestampMovingAverage timestamp_moving_average_;
+
   ros::Time calculateDeviceTimeOriginByAverage(
       const boost::posix_time::ptime &time_request,
       const boost::posix_time::ptime &time_response,
@@ -119,6 +128,28 @@ protected:
   {
     const uint64_t walltime_device = walltime_.update(scan.timestamp_);
 
+    const auto estimated_timestamp_lf =
+        device_time_origin_.origin_ +
+        ros::Duration().fromNSec(walltime_device * 1e6 * device_time_origin_.gain_) +
+        ros::Duration(msg_base_.time_increment * step_min_);
+
+    if (t0_ == ros::Time(0))
+      t0_ = estimated_timestamp_lf;
+
+    const auto receive_time =
+        timestamp_outlier_removal_.update(
+            ros::Time::fromBoost(time_read) -
+            estimated_communication_delay_ * 0.5 -
+            ros::Duration(msg_base_.scan_time));
+
+    sensor_msgs::LaserScan msg(msg_base_);
+    msg.header.stamp =
+        timestamp_moving_average_.update(
+            t0_ +
+            ros::Duration(
+                timestamp_lpf_.update((estimated_timestamp_lf - t0_).toSec()) +
+                timestamp_hpf_.update((receive_time - t0_).toSec())));
+
     if (scan.ranges_.size() != step_max_ - step_min_ + 1)
     {
       ROS_DEBUG("Size of the received scan data is wrong (expected: %d, received: %lu); refreshing",
@@ -129,11 +160,6 @@ protected:
           "00000");
       return;
     }
-
-    sensor_msgs::LaserScan msg(msg_base_);
-    msg.header.stamp = device_time_origin_.origin_ +
-                       ros::Duration().fromNSec(walltime_device * 1e6 * device_time_origin_.gain_) +
-                       ros::Duration(msg_base_.time_increment * step_min_);
 
     msg.ranges.reserve(scan.ranges_.size());
     for (auto &r : scan.ranges_)
@@ -228,6 +254,9 @@ protected:
             (boost::format("%04d%04d") % step_min_ % step_max_).str() +
             "00000");
         timeSync();
+        timestamp_outlier_removal_.reset();
+        timestamp_moving_average_.reset();
+        t0_ = ros::Time();
         break;
       }
     }
@@ -265,6 +294,8 @@ protected:
     msg_base_.angle_max =
         (std::stoi(amax->second) - std::stoi(afrt->second)) * msg_base_.angle_increment;
 
+    timestamp_outlier_removal_.setInterval(ros::Duration(msg_base_.scan_time));
+    timestamp_moving_average_.setInterval(ros::Duration(msg_base_.scan_time));
     delayEstimation();
   }
   void cbVV(
@@ -387,6 +418,10 @@ public:
     , estimated_communication_delay_init_(false)
     , communication_delay_filter_alpha_(0.3)
     , last_sync_time_(0)
+    , timestamp_lpf_(20)
+    , timestamp_hpf_(20)
+    , timestamp_outlier_removal_(ros::Duration(0.001), ros::Duration())
+    , timestamp_moving_average_(5, ros::Duration())
   {
     std::string ip;
     int port;

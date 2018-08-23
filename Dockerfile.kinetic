@@ -1,0 +1,14 @@
+FROM seqsense/ros-baremetal:kinetic-ros-baremetal
+
+RUN rosdep update
+
+COPY ./ /catkin_ws/src/urg_stamped
+RUN apt-get -qq update \
+  && apt-get install -y --no-install-recommends \
+    libgtest-dev \
+    python-pip \
+    sudo \
+  && cd /catkin_ws \
+  && rosdep install -y --from-paths src --ignore-src \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
