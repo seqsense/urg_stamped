@@ -34,7 +34,7 @@ protected:
   FLT k_[4];
 
 public:
-  Filter(const enum Type type, const FLT tc)
+  Filter(const enum Type type, const FLT &tc)
     : x_(0)
   {
     switch (type)
@@ -53,7 +53,7 @@ public:
         break;
     }
   }
-  FLT update(const FLT in)
+  FLT update(const FLT &in)
   {
     x_ = k_[0] * in + k_[1] * x_;
     const auto out = k_[2] * in + k_[3] * x_;
