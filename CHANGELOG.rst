@@ -9,6 +9,7 @@ Changelog for package urg_stamped
 * Estimate sub-millisecond timestamp (`#35 <https://github.com/seqsense/urg_stamped/issues/35>`_)
 
 * Estimate sub-millisecond timestamp by complementary filter fusing timestamp and packet arrival time
+
   * Add packet arrival time outlier removal
   * Add zero-delay moving average
   * Add unit tests for filters
@@ -22,7 +23,9 @@ Changelog for package urg_stamped
   * Fix test for latest g++
 
 * Merge pull request `#34 <https://github.com/seqsense/urg_stamped/issues/34>`_ from seqsense/update-manifest-format
+
   Update manifest format
+
 * Update manifest format
 * Receive both MD and ME response by one callback (`#33 <https://github.com/seqsense/urg_stamped/issues/33>`_)
 * Make some info messages debug level (`#30 <https://github.com/seqsense/urg_stamped/issues/30>`_)
@@ -44,8 +47,10 @@ Changelog for package urg_stamped
 
 * Randomize time sync timing (`#20 <https://github.com/seqsense/urg_stamped/issues/20>`_)
 * Tweak UTM behavior with intensity (`#18 <https://github.com/seqsense/urg_stamped/issues/18>`_)
+
   UTM returns half dropped broken scans after II command during streaming.
   This commit detects it and overwrites streaming start command to fix it.
+
 * Fix II response parsing on UTM (`#17 <https://github.com/seqsense/urg_stamped/issues/17>`_)
 * Add TCP connection watchdog (`#15 <https://github.com/seqsense/urg_stamped/issues/15>`_)
 * Handle device timestamp overflow (`#12 <https://github.com/seqsense/urg_stamped/issues/12>`_)
