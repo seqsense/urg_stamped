@@ -17,8 +17,6 @@
 #ifndef FIRST_ORDER_FILTER_H
 #define FIRST_ORDER_FILTER_H
 
-#include <cmath>
-
 template <typename FLT>
 class FirstOrderFilter
 {
