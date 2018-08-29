@@ -10,11 +10,6 @@ find_package(catkin REQUIRED
 )
 find_package(Boost 1.53 REQUIRED system chrono thread)
 
-if(Boost_VERSION LESS 106000)
-  message(STATUS "Using old boost version without namespaced placeholders")
-  add_definitions(-DUSE_OLD_BOOST_PLACEHOLDERS=1)
-endif()
-
 catkin_package(
   CATKIN_DEPENDS
     roscpp
