@@ -22,8 +22,6 @@
 
 #include <string>
 
-#include <old_boost_fix.h>
-
 namespace scip2
 {
 class Protocol;
