@@ -1,11 +1,11 @@
-FROM seqsense/ros-baremetal:indigo-ros-baremetal
+ARG ROS_DISTRO=kinetic
+FROM seqsense/ros-baremetal:${ROS_DISTRO}-ros-baremetal
 
 RUN rosdep update
 
 COPY ./ /catkin_ws/src/urg_stamped
 RUN apt-get -qq update \
   && apt-get install -y --no-install-recommends \
-    build-essential \
     libgtest-dev \
     python-pip \
     sudo \
