@@ -15,6 +15,7 @@ RUN apt-get -qq update \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 RUN cd /catkin_ws/src \
+  && . /opt/ros/${ROS_DISTRO}/setup.sh \
   && catkin_init_workspace
 RUN pip install gh-pr-comment
 
