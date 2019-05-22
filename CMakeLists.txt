@@ -1,20 +1,17 @@
 cmake_minimum_required(VERSION 3.1.3)
 project(urg_stamped)
 
-## Find catkin and any catkin packages
-find_package(catkin REQUIRED
-  COMPONENTS
-    roscpp
-
-    sensor_msgs
+set(CATKIN_DEPENDS
+  roscpp
+  sensor_msgs
 )
+
+## Find catkin and any catkin packages
+find_package(catkin REQUIRED COMPONENTS ${CATKIN_DEPENDS})
 find_package(Boost 1.53 REQUIRED system chrono thread)
 
 catkin_package(
-  CATKIN_DEPENDS
-    roscpp
-
-    sensor_msgs
+  CATKIN_DEPENDS ${CATKIN_DEPENDS}
 )
 
 set(CMAKE_CXX_STANDARD 11)
