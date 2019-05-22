@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1.3)
+cmake_minimum_required(VERSION 3.0.2)
 project(urg_stamped)
 
 set(CATKIN_DEPENDS
@@ -14,7 +14,7 @@ catkin_package(
   CATKIN_DEPENDS ${CATKIN_DEPENDS}
 )
 
-set(CMAKE_CXX_STANDARD 11)
+add_compile_options(-std=c++11)
 include_directories(${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} include)
 
 add_executable(urg_stamped src/urg_stamped.cpp)
