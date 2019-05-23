@@ -4,23 +4,12 @@ set -o errexit
 
 source /opt/ros/${ROS_DISTRO}/setup.bash
 
-set -o verbose
-
-cd /catkin_ws/src && catkin_init_workspace
-cd /catkin_ws
-
-apt-get -qq update
-apt-get install libxml2-utils
-rosdep install --from-paths src/${PACKAGE_NAME} --ignore-src --rosdistro=${ROS_DISTRO} -y
-apt-get clean
-rm -rf /var/lib/apt/lists/*
-
 sed -i -e '5a set(CMAKE_C_FLAGS "-Wall -Werror")' \
   /opt/ros/${ROS_DISTRO}/share/catkin/cmake/toplevel.cmake
 sed -i -e '5a set(CMAKE_CXX_FLAGS "-Wall -Werror")' \
   /opt/ros/${ROS_DISTRO}/share/catkin/cmake/toplevel.cmake
 
-CM_OPTIONS=""
+CM_OPTIONS=${CM_OPTIONS:-}
 LOG=/tmp/catkin_make.log
 function error_log() {
   grep -A5 error ${LOG} > ${LOG}.error
@@ -35,7 +24,6 @@ function error_log() {
   echo -e '```\n '
 }
 
-pip install gh-pr-comment
 FAILED_MESSAGE="[#${TRAVIS_BUILD_NUMBER}] FAILED on ROS ${ROS_DISTRO}"
 PASSED_MESSAGE="[#${TRAVIS_BUILD_NUMBER}] PASSED on ROS ${ROS_DISTRO}"
 
