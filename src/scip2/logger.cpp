@@ -55,12 +55,60 @@ DefaultStreamBuffer info_buf(&std::cout, " INFO");
 DefaultStreamBuffer warn_buf(&std::cout, " WARN");
 DefaultStreamBuffer error_buf(&std::cerr, "ERROR");
 DefaultStreamBuffer fatal_buf(&std::cerr, "FATAL");
+
+std::ostream default_debug(&debug_buf);
+std::ostream default_info(&info_buf);
+std::ostream default_warn(&warn_buf);
+std::ostream default_error(&error_buf);
+std::ostream default_fatal(&fatal_buf);
+
+std::ostream *current_debug(&default_debug);
+std::ostream *current_info(&default_info);
+std::ostream *current_warn(&default_warn);
+std::ostream *current_error(&default_error);
+std::ostream *current_fatal(&default_fatal);
 }  // namespace
 
-std::ostream debug(&debug_buf);
-std::ostream info(&info_buf);
-std::ostream warn(&warn_buf);
-std::ostream error(&error_buf);
-std::ostream fatal(&fatal_buf);
+void setDebugLogger(std::ostream *l)
+{
+  current_debug = l;
+}
+void setInfoLogger(std::ostream *l)
+{
+  current_info = l;
+}
+void setWarnLogger(std::ostream *l)
+{
+  current_warn = l;
+}
+void setErrorLogger(std::ostream *l)
+{
+  current_error = l;
+}
+void setFatalLogger(std::ostream *l)
+{
+  current_fatal = l;
+}
+
+std::ostream &debug()
+{
+  return *current_debug;
+}
+std::ostream &info()
+{
+  return *current_info;
+}
+std::ostream &warn()
+{
+  return *current_warn;
+}
+std::ostream &error()
+{
+  return *current_error;
+}
+std::ostream &fatal()
+{
+  return *current_fatal;
+}
 }  // namespace logger
 }  // namespace scip2

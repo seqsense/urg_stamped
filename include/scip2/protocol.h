@@ -43,13 +43,13 @@ protected:
     std::string echo_back;
     if (!std::getline(stream, echo_back))
     {
-      logger::error << "Failed to get echo back" << std::endl;
+      logger::error() << "Failed to get echo back" << std::endl;
       return;
     }
     std::string status;
     if (!std::getline(stream, status))
     {
-      logger::error << "Failed to get status" << std::endl;
+      logger::error() << "Failed to get status" << std::endl;
       return;
     }
     status.pop_back();  // remove checksum

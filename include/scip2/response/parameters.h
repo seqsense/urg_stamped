@@ -52,7 +52,7 @@ public:
     {
       if (cb_)
         cb_(time_read, echo_back, status, params);
-      logger::error << echo_back << " errored with " << status << std::endl;
+      logger::error() << echo_back << " errored with " << status << std::endl;
       return;
     }
     std::string line;
@@ -63,13 +63,13 @@ public:
       const auto delm = std::find(line.begin(), line.end(), ':');
       if (delm == line.end())
       {
-        logger::error << "Parameter decode error" << std::endl;
+        logger::error() << "Parameter decode error" << std::endl;
         return;
       }
       const auto end = std::find(line.begin(), line.end(), ';');
       if (end == line.end())
       {
-        logger::error << "Parameter decode error" << std::endl;
+        logger::error() << "Parameter decode error" << std::endl;
         return;
       }
       const uint8_t checksum = line.back();
@@ -80,7 +80,7 @@ public:
       }
       if ((sum & 0x3F) + 0x30 != checksum)
       {
-        logger::error << "Checksum mismatch; parameters dropped" << std::endl;
+        logger::error() << "Checksum mismatch; parameters dropped" << std::endl;
         return;
       }
       const std::string key(line.begin(), delm);

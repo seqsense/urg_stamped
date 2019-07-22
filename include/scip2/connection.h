@@ -110,7 +110,7 @@ protected:
   {
     if (!error)
     {
-      logger::fatal << "Watchdog timeout" << std::endl;
+      logger::fatal() << "Watchdog timeout" << std::endl;
       close();
     }
   }
@@ -120,7 +120,7 @@ protected:
     const auto time_read = boost::posix_time::microsec_clock::universal_time();
     if (error)
     {
-      logger::fatal << "Receive error" << std::endl;
+      logger::fatal() << "Receive error" << std::endl;
       close();
       return;
     }
@@ -133,7 +133,7 @@ protected:
     const auto time_send = boost::posix_time::microsec_clock::universal_time();
     if (error)
     {
-      logger::fatal << "Send error" << std::endl;
+      logger::fatal() << "Send error" << std::endl;
       close();
       return;
     }
@@ -151,7 +151,7 @@ protected:
   {
     if (error)
     {
-      logger::fatal << "Connection error" << std::endl;
+      logger::fatal() << "Connection error" << std::endl;
       close();
       return;
     }
@@ -163,7 +163,7 @@ protected:
   {
     if (!error)
     {
-      logger::fatal << "Connection timeout" << std::endl;
+      logger::fatal() << "Connection timeout" << std::endl;
       close();
       return;
     }

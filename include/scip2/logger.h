@@ -23,11 +23,16 @@ namespace scip2
 {
 namespace logger
 {
-extern std::ostream debug;
-extern std::ostream info;
-extern std::ostream warn;
-extern std::ostream error;
-extern std::ostream fatal;
+void setDebugLogger(std::ostream *l);
+void setInfoLogger(std::ostream *l);
+void setWarnLogger(std::ostream *l);
+void setErrorLogger(std::ostream *l);
+void setFatalLogger(std::ostream *l);
+std::ostream &debug();
+std::ostream &info();
+std::ostream &warn();
+std::ostream &error();
+std::ostream &fatal();
 }  // namespace logger
 }  // namespace scip2
 
