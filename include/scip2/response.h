@@ -61,7 +61,7 @@ public:
     const auto response = responses_.find(command_code);
     if (response == responses_.end())
     {
-      logger::info() << "Unknown response " << command_code << std::endl;
+      logger::debug() << "Unknown response " << command_code << std::endl;
       return;
     }
     (*(response->second))(time_read, echo_back, status, stream);
