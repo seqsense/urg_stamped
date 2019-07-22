@@ -22,6 +22,7 @@
 
 #include <scip2/connection.h>
 #include <scip2/response.h>
+#include <scip2/logger.h>
 
 #include <map>
 #include <string>
@@ -42,13 +43,13 @@ protected:
     std::string echo_back;
     if (!std::getline(stream, echo_back))
     {
-      std::cerr << "Failed to get echo back" << std::endl;
+      logger::error << "Failed to get echo back" << std::endl;
       return;
     }
     std::string status;
     if (!std::getline(stream, status))
     {
-      std::cerr << "Failed to get status" << std::endl;
+      logger::error << "Failed to get status" << std::endl;
       return;
     }
     status.pop_back();  // remove checksum

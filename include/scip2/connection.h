@@ -22,6 +22,8 @@
 
 #include <string>
 
+#include <scip2/logger.h>
+
 namespace scip2
 {
 class Protocol;
@@ -108,7 +110,7 @@ protected:
   {
     if (!error)
     {
-      std::cerr << "Watchdog timeout" << std::endl;
+      logger::fatal << "Watchdog timeout" << std::endl;
       close();
     }
   }
@@ -118,7 +120,7 @@ protected:
     const auto time_read = boost::posix_time::microsec_clock::universal_time();
     if (error)
     {
-      std::cerr << "Receive error" << std::endl;
+      logger::fatal << "Receive error" << std::endl;
       close();
       return;
     }
@@ -131,7 +133,7 @@ protected:
     const auto time_send = boost::posix_time::microsec_clock::universal_time();
     if (error)
     {
-      std::cerr << "Send error" << std::endl;
+      logger::fatal << "Send error" << std::endl;
       close();
       return;
     }
@@ -149,7 +151,7 @@ protected:
   {
     if (error)
     {
-      std::cerr << "Connection error" << std::endl;
+      logger::fatal << "Connection error" << std::endl;
       close();
       return;
     }
@@ -161,7 +163,7 @@ protected:
   {
     if (!error)
     {
-      std::cerr << "Connection timeout" << std::endl;
+      logger::fatal << "Connection timeout" << std::endl;
       close();
       return;
     }

@@ -396,7 +396,7 @@ protected:
   void delayEstimation(const ros::TimerEvent &event = ros::TimerEvent())
   {
     timer_sync_.stop();
-    ROS_INFO("Starting communication delay estimation");
+    ROS_DEBUG("Starting communication delay estimation");
     scip_->sendCommand("QT");
     timer_try_tm_ = nh_.createTimer(
         ros::Duration(0.05),
