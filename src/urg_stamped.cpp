@@ -34,6 +34,7 @@
 #include <first_order_filter.h>
 #include <timestamp_moving_average.h>
 #include <timestamp_outlier_remover.h>
+#include <ros_logger.h>
 
 class UrgStampedNode
 {
@@ -509,6 +510,8 @@ public:
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "urg_stamped");
+  urg_stamped::setROSLogger();
+
   UrgStampedNode node;
   node.spin();
 
