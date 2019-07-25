@@ -17,7 +17,7 @@ catkin_package(
 add_compile_options(-std=c++11)
 include_directories(${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} include)
 
-add_executable(urg_stamped src/urg_stamped.cpp)
+add_executable(urg_stamped src/urg_stamped.cpp src/scip2/logger.cpp src/ros_logger.cpp)
 target_link_libraries(urg_stamped ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 

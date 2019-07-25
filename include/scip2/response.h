@@ -27,6 +27,7 @@
 #include <scip2/response/stream.h>
 #include <scip2/response/time_sync.h>
 #include <scip2/response/quit.h>
+#include <scip2/logger.h>
 
 namespace scip2
 {
@@ -60,7 +61,7 @@ public:
     const auto response = responses_.find(command_code);
     if (response == responses_.end())
     {
-      std::cerr << "Unknown response " << command_code << std::endl;
+      logger::debug() << "Unknown response " << command_code << std::endl;
       return;
     }
     (*(response->second))(time_read, echo_back, status, stream);

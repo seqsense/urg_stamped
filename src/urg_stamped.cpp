@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 The urg_stamped Authors
+ * Copyright 2018-2019 The urg_stamped Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@
 #include <first_order_filter.h>
 #include <timestamp_moving_average.h>
 #include <timestamp_outlier_remover.h>
+#include <ros_logger.h>
 
 class UrgStampedNode
 {
@@ -396,7 +397,7 @@ protected:
   void delayEstimation(const ros::TimerEvent &event = ros::TimerEvent())
   {
     timer_sync_.stop();
-    ROS_INFO("Starting communication delay estimation");
+    ROS_DEBUG("Starting communication delay estimation");
     scip_->sendCommand("QT");
     timer_try_tm_ = nh_.createTimer(
         ros::Duration(0.05),
@@ -509,6 +510,8 @@ public:
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "urg_stamped");
+  urg_stamped::setROSLogger();
+
   UrgStampedNode node;
   node.spin();
 

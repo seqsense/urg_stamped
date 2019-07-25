@@ -23,6 +23,7 @@
 #include <map>
 
 #include <scip2/response/abstract.h>
+#include <scip2/logger.h>
 
 namespace scip2
 {
@@ -65,7 +66,7 @@ public:
     {
       if (cb_)
         cb_(time_read, echo_back, status, timestamp);
-      std::cout << echo_back << " errored with " << status << std::endl;
+      logger::error() << echo_back << " errored with " << status << std::endl;
       return;
     }
     if (echo_back[2] == '1')
@@ -73,14 +74,14 @@ public:
       std::string stamp;
       if (!std::getline(stream, stamp))
       {
-        std::cerr << "Failed to get timestamp" << std::endl;
+        logger::error() << "Failed to get timestamp" << std::endl;
         return;
       }
       const uint8_t checksum = stamp.back();
       stamp.pop_back();  // remove checksum
       if (stamp.size() < 4)
       {
-        std::cerr << "Wrong timestamp format" << std::endl;
+        logger::error() << "Wrong timestamp format" << std::endl;
         return;
       }
 
@@ -89,7 +90,7 @@ public:
       timestamp.timestamp_ = *it;
       if ((dec.getChecksum() & 0x3F) + 0x30 != checksum)
       {
-        std::cerr << "Checksum mismatch" << std::endl;
+        logger::error() << "Checksum mismatch" << std::endl;
         return;
       }
     }

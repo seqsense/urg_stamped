@@ -25,6 +25,7 @@
 
 #include <scip2/decode.h>
 #include <scip2/response/abstract.h>
+#include <scip2/logger.h>
 
 namespace scip2
 {
@@ -71,20 +72,20 @@ public:
     {
       if (cb_)
         cb_(time_read, echo_back, status, scan);
-      std::cout << echo_back << " errored with " << status << std::endl;
+      logger::error() << echo_back << " errored with " << status << std::endl;
       return false;
     }
     std::string stamp;
     if (!std::getline(stream, stamp))
     {
-      std::cerr << "Failed to get timestamp" << std::endl;
+      logger::error() << "Failed to get timestamp" << std::endl;
       return false;
     }
     const uint8_t checksum = stamp.back();
     stamp.pop_back();  // remove checksum
     if (stamp.size() < 4)
     {
-      std::cerr << "Wrong timestamp format" << std::endl;
+      logger::error() << "Wrong timestamp format" << std::endl;
       return false;
     }
 
@@ -93,7 +94,7 @@ public:
     scan.timestamp_ = *it;
     if ((dec.getChecksum() & 0x3F) + 0x30 != checksum)
     {
-      std::cerr << "Checksum mismatch" << std::endl;
+      logger::error() << "Checksum mismatch" << std::endl;
       return false;
     }
     return true;
@@ -133,7 +134,7 @@ public:
       line.pop_back();  // remove checksum
       if (line.size() < 3)
       {
-        std::cerr << "Wrong stream format" << std::endl;
+        logger::error() << "Wrong stream format" << std::endl;
         return;
       }
       auto dec = Decoder<3>(line, remain);
@@ -145,8 +146,8 @@ public:
       remain = it.getRemain();
       if ((dec.getChecksum() & 0x3F) + 0x30 != checksum)
       {
-        std::cerr << "Checksum mismatch; scan dropped" << std::endl
-                  << line << std::endl;
+        logger::error() << "Checksum mismatch; scan dropped" << std::endl
+                        << line << std::endl;
         return;
       }
     }
@@ -185,7 +186,7 @@ public:
       line.pop_back();  // remove checksum
       if (line.size() < 3)
       {
-        std::cerr << "Wrong stream format" << std::endl;
+        logger::error() << "Wrong stream format" << std::endl;
         return;
       }
       auto dec = Decoder<6>(line, remain);
@@ -198,8 +199,8 @@ public:
       remain = it.getRemain();
       if ((dec.getChecksum() & 0x3F) + 0x30 != checksum)
       {
-        std::cerr << "Checksum mismatch; scan dropped" << std::endl
-                  << line << std::endl;
+        logger::error() << "Checksum mismatch; scan dropped" << std::endl
+                        << line << std::endl;
         return;
       }
     }
