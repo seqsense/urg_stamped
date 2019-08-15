@@ -2,8 +2,8 @@
 Changelog for package urg_stamped
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.3 (2019-08-15)
+------------------
 * Run prerelease-test on release- branch (`#49 <https://github.com/seqsense/urg_stamped/issues/49>`_)
 * Refactor logging (`#48 <https://github.com/seqsense/urg_stamped/issues/48>`_)
 * Drop ROS Indigo and Ubuntu Trusty support (`#47 <https://github.com/seqsense/urg_stamped/issues/47>`_)
