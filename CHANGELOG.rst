@@ -2,6 +2,14 @@
 Changelog for package urg_stamped
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.0.3 (2019-08-15)
+------------------
+* Run prerelease-test on release- branch (`#49 <https://github.com/seqsense/urg_stamped/issues/49>`_)
+* Refactor logging (`#48 <https://github.com/seqsense/urg_stamped/issues/48>`_)
+* Drop ROS Indigo and Ubuntu Trusty support (`#47 <https://github.com/seqsense/urg_stamped/issues/47>`_)
+* Remove old_boost_fix.h (`#42 <https://github.com/seqsense/urg_stamped/issues/42>`_)
+* Contributors: Atsushi Watanabe
+
 0.0.2 (2018-08-23)
 ------------------
 * Fix license in manifest (`#39 <https://github.com/seqsense/urg_stamped/issues/39>`_)
