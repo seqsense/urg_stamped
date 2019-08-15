@@ -1,3 +1,4 @@
+dist: xenial
 services: docker
 language: bash
 addons:
@@ -38,3 +39,4 @@ script:
     -e GITHUB_API_URL_BASE
     -e TRAVIS_BUILD_NUMBER
     ${DOCKER_CACHE_TARGET}:${ROS_DISTRO_TARGET} /catkin_ws/src/${PACKAGE_NAME}/.travis/test.sh
+  - .travis/prerelease_test.sh
