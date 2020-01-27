@@ -64,15 +64,8 @@ public:
       std::istream& stream,
       ScanData& scan)
   {
-    if (status == "00")
+    if (status == "00" || status != "99")
     {
-      return false;
-    }
-    if (status != "99")
-    {
-      if (cb_)
-        cb_(time_read, echo_back, status, scan);
-      logger::error() << echo_back << " errored with " << status << std::endl;
       return false;
     }
     std::string stamp;
@@ -120,7 +113,11 @@ public:
   {
     ScanData scan;
     if (!readTimestamp(time_read, echo_back, status, stream, scan))
+    {
+      if (cb_)
+        cb_(time_read, echo_back, status, scan);
       return;
+    }
     scan.ranges_.reserve(512);
 
     std::string line;
@@ -171,7 +168,11 @@ public:
   {
     ScanData scan;
     if (!readTimestamp(time_read, echo_back, status, stream, scan))
+    {
+      if (cb_)
+        cb_(time_read, echo_back, status, scan);
       return;
+    }
     scan.ranges_.reserve(512);
     scan.intensities_.reserve(512);
 

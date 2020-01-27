@@ -66,7 +66,6 @@ public:
     {
       if (cb_)
         cb_(time_read, echo_back, status, timestamp);
-      logger::error() << echo_back << " errored with " << status << std::endl;
       return;
     }
     if (echo_back[2] == '1')

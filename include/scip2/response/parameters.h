@@ -52,7 +52,6 @@ public:
     {
       if (cb_)
         cb_(time_read, echo_back, status, params);
-      logger::error() << echo_back << " errored with " << status << std::endl;
       return;
     }
     std::string line;
