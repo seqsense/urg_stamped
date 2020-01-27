@@ -64,7 +64,7 @@ public:
       std::istream& stream,
       ScanData& scan)
   {
-    if (status == "00" || status != "99")
+    if (status != "99")
     {
       return false;
     }
