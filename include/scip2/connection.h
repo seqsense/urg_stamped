@@ -35,9 +35,9 @@ protected:
   using CallbackConnect = boost::function<void(void)>;
   using CallbackClose = boost::function<void(void)>;
   using CallbackReceive = boost::function<void(
-      boost::asio::streambuf &, const boost::posix_time::ptime &)>;
+      boost::asio::streambuf&, const boost::posix_time::ptime&)>;
   using CallbackSend = boost::function<void(
-      const boost::posix_time::ptime &)>;
+      const boost::posix_time::ptime&)>;
 
   CallbackConnect cb_connect_;
   CallbackClose cb_close_;
@@ -54,8 +54,8 @@ protected:
       cb_connect_();
   }
   void receive(
-      boost::asio::streambuf &buf,
-      const boost::posix_time::ptime &time_read)
+      boost::asio::streambuf& buf,
+      const boost::posix_time::ptime& time_read)
   {
     if (cb_receive_)
       cb_receive_(buf, time_read);
@@ -66,8 +66,8 @@ public:
 
   virtual void spin() = 0;
   virtual void stop() = 0;
-  virtual void send(const std::string &, CallbackSend = CallbackSend()) = 0;
-  virtual void startWatchdog(const boost::posix_time::time_duration &) = 0;
+  virtual void send(const std::string&, CallbackSend = CallbackSend()) = 0;
+  virtual void startWatchdog(const boost::posix_time::time_duration&) = 0;
 
   void registerCloseCallback(CallbackClose cb)
   {
@@ -106,7 +106,7 @@ protected:
     watchdog_.async_wait(
         boost::bind(&ConnectionTcp::onWatchdog, this, boost::asio::placeholders::error));
   }
-  void onWatchdog(const boost::system::error_code &error)
+  void onWatchdog(const boost::system::error_code& error)
   {
     if (!error)
     {
@@ -115,7 +115,7 @@ protected:
     }
   }
 
-  void onReceive(const boost::system::error_code &error)
+  void onReceive(const boost::system::error_code& error)
   {
     const auto time_read = boost::posix_time::microsec_clock::universal_time();
     if (error)
@@ -128,7 +128,7 @@ protected:
     receive(buf_, time_read);
     asyncRead();
   }
-  void onSend(const boost::system::error_code &error, CallbackSend cb)
+  void onSend(const boost::system::error_code& error, CallbackSend cb)
   {
     const auto time_send = boost::posix_time::microsec_clock::universal_time();
     if (error)
@@ -147,7 +147,7 @@ protected:
         socket_, buf_, "\n\n",
         boost::bind(&ConnectionTcp::onReceive, this, boost::asio::placeholders::error));
   }
-  void onConnect(const boost::system::error_code &error)
+  void onConnect(const boost::system::error_code& error)
   {
     if (error)
     {
@@ -159,7 +159,7 @@ protected:
     connect();
     asyncRead();
   }
-  void onConnectTimeout(const boost::system::error_code &error)
+  void onConnectTimeout(const boost::system::error_code& error)
   {
     if (!error)
     {
@@ -172,7 +172,7 @@ protected:
 public:
   using Ptr = std::shared_ptr<ConnectionTcp>;
 
-  ConnectionTcp(const std::string &ip, const uint16_t port)
+  ConnectionTcp(const std::string& ip, const uint16_t port)
     : socket_(io_)
     , timeout_(io_)
     , watchdog_(io_)
@@ -199,7 +199,7 @@ public:
   {
     io_.stop();
   }
-  void send(const std::string &data, CallbackSend cb = CallbackSend())
+  void send(const std::string& data, CallbackSend cb = CallbackSend())
   {
     boost::shared_ptr<std::string> buf(new std::string(data));
     boost::asio::async_write(
@@ -208,7 +208,7 @@ public:
             &ConnectionTcp::onSend,
             this, boost::asio::placeholders::error, cb));
   }
-  void startWatchdog(const boost::posix_time::time_duration &duration)
+  void startWatchdog(const boost::posix_time::time_duration& duration)
   {
     watchdog_duration_ = duration;
     clearWatchdog();

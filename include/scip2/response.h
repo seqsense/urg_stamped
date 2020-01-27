@@ -52,10 +52,10 @@ public:
     registerResponse(Response::Ptr(new ResponseQT));
   }
   void operator()(
-      const boost::posix_time::ptime &time_read,
-      const std::string &echo_back,
-      const std::string &status,
-      std::istream &stream) const
+      const boost::posix_time::ptime& time_read,
+      const std::string& echo_back,
+      const std::string& status,
+      std::istream& stream) const
   {
     const std::string command_code(echo_back.substr(0, 2));
     const auto response = responses_.find(command_code);

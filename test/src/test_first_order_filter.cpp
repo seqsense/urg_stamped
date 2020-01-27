@@ -49,7 +49,7 @@ TEST(FirstOrderFilter, HPF)
   ASSERT_NEAR(flt.update(1.0), 1.0 / std::exp(1), 1e-2);
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   testing::InitGoogleTest(&argc, argv);
 

@@ -41,7 +41,7 @@ TEST(TimestampOutlierRemoval, MoreThanTwoOutlier)
   ASSERT_EQ(remover.update(ros::Time(10.440)), ros::Time(10.440));  // fix only first outlier
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   testing::InitGoogleTest(&argc, argv);
 

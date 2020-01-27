@@ -30,11 +30,11 @@ class DefaultStreamBuffer : public std::stringbuf
 {
 private:
   bool active_;
-  std::ostream *raw_;
+  std::ostream* raw_;
   std::string type_;
 
 public:
-  DefaultStreamBuffer(std::ostream *raw, const char *type)
+  DefaultStreamBuffer(std::ostream* raw, const char* type)
     : raw_(raw)
     , type_(type)
   {
@@ -62,51 +62,51 @@ std::ostream default_warn(&warn_buf);
 std::ostream default_error(&error_buf);
 std::ostream default_fatal(&fatal_buf);
 
-std::ostream *current_debug(&default_debug);
-std::ostream *current_info(&default_info);
-std::ostream *current_warn(&default_warn);
-std::ostream *current_error(&default_error);
-std::ostream *current_fatal(&default_fatal);
+std::ostream* current_debug(&default_debug);
+std::ostream* current_info(&default_info);
+std::ostream* current_warn(&default_warn);
+std::ostream* current_error(&default_error);
+std::ostream* current_fatal(&default_fatal);
 }  // namespace
 
-void setDebugLogger(std::ostream *l)
+void setDebugLogger(std::ostream* l)
 {
   current_debug = l;
 }
-void setInfoLogger(std::ostream *l)
+void setInfoLogger(std::ostream* l)
 {
   current_info = l;
 }
-void setWarnLogger(std::ostream *l)
+void setWarnLogger(std::ostream* l)
 {
   current_warn = l;
 }
-void setErrorLogger(std::ostream *l)
+void setErrorLogger(std::ostream* l)
 {
   current_error = l;
 }
-void setFatalLogger(std::ostream *l)
+void setFatalLogger(std::ostream* l)
 {
   current_fatal = l;
 }
 
-std::ostream &debug()
+std::ostream& debug()
 {
   return *current_debug;
 }
-std::ostream &info()
+std::ostream& info()
 {
   return *current_info;
 }
-std::ostream &warn()
+std::ostream& warn()
 {
   return *current_warn;
 }
-std::ostream &error()
+std::ostream& error()
 {
   return *current_error;
 }
-std::ostream &fatal()
+std::ostream& fatal()
 {
   return *current_fatal;
 }

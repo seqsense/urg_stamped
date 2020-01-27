@@ -31,18 +31,18 @@ protected:
 
 public:
   TimestampOutlierRemover(
-      const ros::Duration &diff_max,
-      const ros::Duration &interval)
+      const ros::Duration& diff_max,
+      const ros::Duration& interval)
     : diff_max_(diff_max)
     , interval_(interval)
     , outlier_cnt_(0)
   {
   }
-  void setInterval(const ros::Duration &interval)
+  void setInterval(const ros::Duration& interval)
   {
     interval_ = interval;
   }
-  ros::Time update(const ros::Time &stamp)
+  ros::Time update(const ros::Time& stamp)
   {
     if (stamp_ == ros::Time())
       stamp_ = stamp - interval_;

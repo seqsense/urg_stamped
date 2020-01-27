@@ -32,7 +32,7 @@ public:
     k_[0] = k_[1] = k_[3] = 0;
     k_[2] = 1;
   }
-  FLT update(const FLT &in)
+  FLT update(const FLT& in)
   {
     x_ = k_[0] * in + k_[1] * x_;
     const auto out = k_[2] * in + k_[3] * x_;
@@ -45,7 +45,7 @@ template <typename FLT>
 class FirstOrderLPF : public FirstOrderFilter<FLT>
 {
 public:
-  explicit FirstOrderLPF(const FLT &time_constant)
+  explicit FirstOrderLPF(const FLT& time_constant)
   {
     this->k_[3] = -1 / (1.0 + 2 * time_constant);
     this->k_[2] = -this->k_[3];
@@ -58,7 +58,7 @@ template <typename FLT>
 class FirstOrderHPF : public FirstOrderFilter<FLT>
 {
 public:
-  explicit FirstOrderHPF(const FLT &time_constant)
+  explicit FirstOrderHPF(const FLT& time_constant)
   {
     this->k_[3] = -1 / (1.0 + 2 * time_constant);
     this->k_[2] = -this->k_[3] * 2 * time_constant;

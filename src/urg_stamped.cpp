@@ -98,9 +98,9 @@ protected:
   TimestampMovingAverage timestamp_moving_average_;
 
   ros::Time calculateDeviceTimeOriginByAverage(
-      const boost::posix_time::ptime &time_request,
-      const boost::posix_time::ptime &time_response,
-      const uint64_t &device_timestamp)
+      const boost::posix_time::ptime& time_request,
+      const boost::posix_time::ptime& time_response,
+      const uint64_t& device_timestamp)
   {
     const auto delay =
         ros::Time::fromBoost(time_response) -
@@ -110,9 +110,9 @@ protected:
     return time_at_device_timestamp - ros::Duration().fromNSec(device_timestamp * 1e6);
   }
   ros::Time calculateDeviceTimeOrigin(
-      const boost::posix_time::ptime &time_response,
-      const uint64_t &device_timestamp,
-      ros::Time &time_at_device_timestamp)
+      const boost::posix_time::ptime& time_response,
+      const uint64_t& device_timestamp,
+      ros::Time& time_at_device_timestamp)
   {
     time_at_device_timestamp = ros::Time::fromBoost(time_response) - estimated_communication_delay_ * 0.5;
 
@@ -120,10 +120,10 @@ protected:
   }
 
   void cbM(
-      const boost::posix_time::ptime &time_read,
-      const std::string &echo_back,
-      const std::string &status,
-      const scip2::ScanData &scan,
+      const boost::posix_time::ptime& time_read,
+      const std::string& echo_back,
+      const std::string& status,
+      const scip2::ScanData& scan,
       const bool has_intensity)
   {
     const uint64_t walltime_device = walltime_.update(scan.timestamp_);
@@ -162,26 +162,26 @@ protected:
     }
 
     msg.ranges.reserve(scan.ranges_.size());
-    for (auto &r : scan.ranges_)
+    for (auto& r : scan.ranges_)
       msg.ranges.push_back(r * 1e-3);
     if (has_intensity)
     {
       msg.intensities.reserve(scan.intensities_.size());
-      for (auto &r : scan.intensities_)
+      for (auto& r : scan.intensities_)
         msg.intensities.push_back(r);
     }
 
     pub_scan_.publish(msg);
   }
-  void cbTMSend(const boost::posix_time::ptime &time_send)
+  void cbTMSend(const boost::posix_time::ptime& time_send)
   {
     time_tm_request = time_send;
   }
   void cbTM(
-      const boost::posix_time::ptime &time_read,
-      const std::string &echo_back,
-      const std::string &status,
-      const scip2::Timestamp &time_device)
+      const boost::posix_time::ptime& time_read,
+      const std::string& echo_back,
+      const std::string& status,
+      const scip2::Timestamp& time_device)
   {
     if (status != "00")
       return;
@@ -262,10 +262,10 @@ protected:
     }
   }
   void cbPP(
-      const boost::posix_time::ptime &time_read,
-      const std::string &echo_back,
-      const std::string &status,
-      const std::map<std::string, std::string> &params)
+      const boost::posix_time::ptime& time_read,
+      const std::string& echo_back,
+      const std::string& status,
+      const std::map<std::string, std::string>& params)
   {
     const auto amin = params.find("AMIN");
     const auto amax = params.find("AMAX");
@@ -299,21 +299,21 @@ protected:
     delayEstimation();
   }
   void cbVV(
-      const boost::posix_time::ptime &time_read,
-      const std::string &echo_back,
-      const std::string &status,
-      const std::map<std::string, std::string> &params)
+      const boost::posix_time::ptime& time_read,
+      const std::string& echo_back,
+      const std::string& status,
+      const std::map<std::string, std::string>& params)
   {
   }
-  void cbIISend(const boost::posix_time::ptime &time_send)
+  void cbIISend(const boost::posix_time::ptime& time_send)
   {
     time_ii_request = time_send;
   }
   void cbII(
-      const boost::posix_time::ptime &time_read,
-      const std::string &echo_back,
-      const std::string &status,
-      const std::map<std::string, std::string> &params)
+      const boost::posix_time::ptime& time_read,
+      const std::string& echo_back,
+      const std::string& status,
+      const std::map<std::string, std::string>& params)
   {
     const auto delay =
         ros::Time::fromBoost(time_read) -
@@ -373,9 +373,9 @@ protected:
     }
   }
   void cbQT(
-      const boost::posix_time::ptime &time_read,
-      const std::string &echo_back,
-      const std::string &status)
+      const boost::posix_time::ptime& time_read,
+      const std::string& echo_back,
+      const std::string& status)
   {
     ROS_DEBUG("Scan data stopped");
   }
@@ -385,7 +385,7 @@ protected:
     device_->startWatchdog(boost::posix_time::seconds(1));
   }
 
-  void timeSync(const ros::TimerEvent &event = ros::TimerEvent())
+  void timeSync(const ros::TimerEvent& event = ros::TimerEvent())
   {
     scip_->sendCommand(
         "II",
@@ -394,7 +394,7 @@ protected:
         ros::Duration(sync_interval_(random_engine_)),
         &UrgStampedNode::timeSync, this, true);
   }
-  void delayEstimation(const ros::TimerEvent &event = ros::TimerEvent())
+  void delayEstimation(const ros::TimerEvent& event = ros::TimerEvent())
   {
     timer_sync_.stop();
     ROS_DEBUG("Starting communication delay estimation");
@@ -403,7 +403,7 @@ protected:
         ros::Duration(0.05),
         &UrgStampedNode::tryTM, this);
   }
-  void tryTM(const ros::TimerEvent &event = ros::TimerEvent())
+  void tryTM(const ros::TimerEvent& event = ros::TimerEvent())
   {
     scip_->sendCommand("QT");
     scip_->sendCommand("TM0");
@@ -507,7 +507,7 @@ public:
   }
 };
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   ros::init(argc, argv, "urg_stamped");
   urg_stamped::setROSLogger();

@@ -30,7 +30,7 @@ protected:
   uint64_t walltime_device_base_;
 
 public:
-  uint64_t update(const uint32_t &time_device)
+  uint64_t update(const uint32_t& time_device)
   {
     if (!initialized_)
     {
