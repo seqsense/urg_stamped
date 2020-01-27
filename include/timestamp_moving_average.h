@@ -33,18 +33,18 @@ protected:
 public:
   TimestampMovingAverage(
       const size_t window_size,
-      const ros::Duration &interval)
+      const ros::Duration& interval)
     : window_size_(window_size)
     , interval_(interval)
     , pos_(0)
   {
     buffer_.resize(window_size);
   }
-  void setInterval(const ros::Duration &interval)
+  void setInterval(const ros::Duration& interval)
   {
     interval_ = interval;
   }
-  ros::Time update(const ros::Time &stamp)
+  ros::Time update(const ros::Time& stamp)
   {
     buffer_[pos_ % window_size_] = stamp;
     pos_++;
@@ -52,7 +52,7 @@ public:
       return stamp;
 
     ros::Duration sum(0);
-    for (const ros::Time &b : buffer_)
+    for (const ros::Time& b : buffer_)
     {
       sum += ros::Duration(remainder((b - stamp).toSec(), interval_.toSec()));
     }

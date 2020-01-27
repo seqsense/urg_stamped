@@ -29,10 +29,10 @@ public:
   using Ptr = std::shared_ptr<Response>;
   virtual std::string getCommandCode() const = 0;
   virtual void operator()(
-      const boost::posix_time::ptime &,
-      const std::string &,
-      const std::string &,
-      std::istream &) = 0;
+      const boost::posix_time::ptime&,
+      const std::string&,
+      const std::string&,
+      std::istream&) = 0;
 };
 
 }  // namespace scip2

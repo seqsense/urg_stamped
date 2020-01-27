@@ -44,7 +44,7 @@ TEST(DecoderTest, testDecodeSingle)
   ASSERT_EQ(*dec4.begin(), 16000000u);
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   testing::InitGoogleTest(&argc, argv);
 

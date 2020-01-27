@@ -41,10 +41,10 @@ class ResponseStream : public Response
 {
 public:
   using Callback = boost::function<void(
-      const boost::posix_time::ptime &,
-      const std::string &,
-      const std::string &,
-      const ScanData &)>;
+      const boost::posix_time::ptime&,
+      const std::string&,
+      const std::string&,
+      const ScanData&)>;
 
 protected:
   Callback cb_;
@@ -52,17 +52,17 @@ protected:
 public:
   virtual std::string getCommandCode() const = 0;
   virtual void operator()(
-      const boost::posix_time::ptime &,
-      const std::string &,
-      const std::string &,
-      std::istream &) = 0;
+      const boost::posix_time::ptime&,
+      const std::string&,
+      const std::string&,
+      std::istream&) = 0;
 
   bool readTimestamp(
-      const boost::posix_time::ptime &time_read,
-      const std::string &echo_back,
-      const std::string &status,
-      std::istream &stream,
-      ScanData &scan)
+      const boost::posix_time::ptime& time_read,
+      const std::string& echo_back,
+      const std::string& status,
+      std::istream& stream,
+      ScanData& scan)
   {
     if (status == "00")
     {
@@ -113,10 +113,10 @@ public:
     return std::string("MD");
   }
   void operator()(
-      const boost::posix_time::ptime &time_read,
-      const std::string &echo_back,
-      const std::string &status,
-      std::istream &stream) override
+      const boost::posix_time::ptime& time_read,
+      const std::string& echo_back,
+      const std::string& status,
+      std::istream& stream) override
   {
     ScanData scan;
     if (!readTimestamp(time_read, echo_back, status, stream, scan))
@@ -164,10 +164,10 @@ public:
     return std::string("ME");
   }
   void operator()(
-      const boost::posix_time::ptime &time_read,
-      const std::string &echo_back,
-      const std::string &status,
-      std::istream &stream) override
+      const boost::posix_time::ptime& time_read,
+      const std::string& echo_back,
+      const std::string& status,
+      std::istream& stream) override
   {
     ScanData scan;
     if (!readTimestamp(time_read, echo_back, status, stream, scan))

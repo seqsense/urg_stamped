@@ -32,7 +32,7 @@ public:
     , chars_(0)
   {
   }
-  DecoderRemain(const uint64_t &buf, const uint32_t &chars)
+  DecoderRemain(const uint64_t& buf, const uint32_t& chars)
     : buf_(buf)
     , chars_(chars)
   {
@@ -57,19 +57,19 @@ public:
 
   public:
     Iterator(
-        const std::string::const_iterator &pos,
-        const std::string::const_iterator &end,
-        const DecoderRemain &remain = DecoderRemain())
+        const std::string::const_iterator& pos,
+        const std::string::const_iterator& end,
+        const DecoderRemain& remain = DecoderRemain())
       : pos_(pos)
       , end_(end)
       , remain_(remain)
     {
     }
-    bool operator==(const Iterator &it) const
+    bool operator==(const Iterator& it) const
     {
       return pos_ == it.pos_;
     }
-    bool operator!=(const Iterator &it) const
+    bool operator!=(const Iterator& it) const
     {
       return !operator==(it);
     }
@@ -106,7 +106,7 @@ public:
     }
   };
 
-  explicit Decoder(const std::string &line, const DecoderRemain &remain = DecoderRemain())
+  explicit Decoder(const std::string& line, const DecoderRemain& remain = DecoderRemain())
     : begin_(line.begin())
     , end_(line.end())
     , remain_(remain)

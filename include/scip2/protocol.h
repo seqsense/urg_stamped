@@ -36,8 +36,8 @@ protected:
   ResponseProcessor response_processor_;
 
   void cbReceive(
-      boost::asio::streambuf &buf,
-      const boost::posix_time::ptime &time_read)
+      boost::asio::streambuf& buf,
+      const boost::posix_time::ptime& time_read)
   {
     std::istream stream(&buf);
     std::string echo_back;
@@ -73,7 +73,7 @@ public:
   }
 
   void sendCommand(
-      const std::string &command,
+      const std::string& command,
       Connection::CallbackSend cb = Connection::CallbackSend())
   {
     connection_->send(command + "\n", cb);

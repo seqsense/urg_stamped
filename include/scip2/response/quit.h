@@ -30,9 +30,9 @@ class ResponseQT : public Response
 {
 public:
   using Callback = boost::function<void(
-      const boost::posix_time::ptime &,
-      const std::string &,
-      const std::string &)>;
+      const boost::posix_time::ptime&,
+      const std::string&,
+      const std::string&)>;
 
 protected:
   Callback cb_;
@@ -43,10 +43,10 @@ public:
     return std::string("QT");
   }
   void operator()(
-      const boost::posix_time::ptime &time_read,
-      const std::string &echo_back,
-      const std::string &status,
-      std::istream &stream)
+      const boost::posix_time::ptime& time_read,
+      const std::string& echo_back,
+      const std::string& status,
+      std::istream& stream)
   {
     if (cb_)
       cb_(time_read, echo_back, status);
