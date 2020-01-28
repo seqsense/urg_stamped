@@ -46,6 +46,9 @@ protected:
   ros::Timer timer_delay_estim_;
   ros::Timer timer_try_tm_;
 
+  int error_count_;
+  int error_count_max_;
+
   sensor_msgs::LaserScan msg_base_;
   uint32_t step_min_;
   uint32_t step_max_;
@@ -131,9 +134,12 @@ protected:
       if (status != "00")
       {
         ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
+        errorCountIncrement();
       }
       return;
     }
+    error_count_ = 0;
+
     const uint64_t walltime_device = walltime_.update(scan.timestamp_);
 
     const auto estimated_timestamp_lf =
@@ -194,6 +200,7 @@ protected:
     if (status != "00")
     {
       ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
+      errorCountIncrement();
       return;
     }
 
@@ -281,6 +288,7 @@ protected:
     if (status != "00")
     {
       ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
+      errorCountIncrement();
       return;
     }
 
@@ -324,6 +332,7 @@ protected:
     if (status != "00")
     {
       ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
+      errorCountIncrement();
       return;
     }
   }
@@ -340,6 +349,7 @@ protected:
     if (status != "00")
     {
       ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
+      errorCountIncrement();
       return;
     }
 
@@ -408,6 +418,7 @@ protected:
     if (status != "00")
     {
       ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
+      errorCountIncrement();
       return;
     }
 
@@ -443,12 +454,25 @@ protected:
     scip_->sendCommand("TM0");
   }
 
+  void errorCountIncrement()
+  {
+    ++error_count_;
+    if (error_count_ > error_count_max_)
+    {
+      ROS_ERROR("Error count exceeded limit, resetting the sensor and exiting.");
+      scip_->sendCommand("RS");
+      ros::Duration(0.05).sleep();
+      ros::shutdown();
+    }
+  }
+
 public:
   UrgStampedNode()
     : nh_("")
     , pnh_("~")
     , tm_iter_num_(5)
     , tm_median_window_(35)
+    , error_count_(0)
     , estimated_communication_delay_init_(false)
     , communication_delay_filter_alpha_(0.3)
     , last_sync_time_(0)
@@ -471,6 +495,7 @@ public:
     pnh_.param("sync_interval_max", sync_interval_max, 1.5);
     sync_interval_ = std::uniform_real_distribution<double>(sync_interval_min, sync_interval_max);
     pnh_.param("delay_estim_interval", delay_estim_interval, 20.0);
+    pnh_.param("error_limit", error_count_max_, 4);
 
     pub_scan_ = nh_.advertise<sensor_msgs::LaserScan>("scan", 10);
 
