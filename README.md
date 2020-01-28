@@ -30,7 +30,7 @@ Topics and major parameters are designed to be compatible with [urg_node](http:/
 - **ip_address** (string): device IP address
 - **ip_port** (int): device TCP/IP port
 - **frame_id** (string): frame_id of published scans
-- **publish_intensity** (bool): fill intensity field if truea
+- **publish_intensity** (bool): fill intensity field if true
 - **error_limit** (int): reset the sensor and exit if errors occur more than this count
 
 #### urg_stamped specific parameters
@@ -38,7 +38,6 @@ Topics and major parameters are designed to be compatible with [urg_node](http:/
 - **sync_interval_min** (double): minimum interval to try observing sensor internal timestamp in seconds
 - **sync_interval_max** (double): maximum interval to try observing sensor internal timestamp in seconds
 - **delay_estim_interval** (double): communication delay estimation interval in seconds (dropping 2 or 3 scans during delay estimation)
-
 
 ## Known Limitations
 
