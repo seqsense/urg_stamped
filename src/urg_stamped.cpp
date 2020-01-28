@@ -126,6 +126,14 @@ protected:
       const scip2::ScanData& scan,
       const bool has_intensity)
   {
+    if (status != "99")
+    {
+      if (status != "00")
+      {
+        ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
+      }
+      return;
+    }
     const uint64_t walltime_device = walltime_.update(scan.timestamp_);
 
     const auto estimated_timestamp_lf =
@@ -184,7 +192,10 @@ protected:
       const scip2::Timestamp& time_device)
   {
     if (status != "00")
+    {
+      ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
       return;
+    }
 
     timer_try_tm_.stop();
     switch (echo_back[2])
@@ -267,6 +278,12 @@ protected:
       const std::string& status,
       const std::map<std::string, std::string>& params)
   {
+    if (status != "00")
+    {
+      ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
+      return;
+    }
+
     const auto amin = params.find("AMIN");
     const auto amax = params.find("AMAX");
     const auto dmin = params.find("DMIN");
@@ -304,6 +321,11 @@ protected:
       const std::string& status,
       const std::map<std::string, std::string>& params)
   {
+    if (status != "00")
+    {
+      ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
+      return;
+    }
   }
   void cbIISend(const boost::posix_time::ptime& time_send)
   {
@@ -315,6 +337,12 @@ protected:
       const std::string& status,
       const std::map<std::string, std::string>& params)
   {
+    if (status != "00")
+    {
+      ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
+      return;
+    }
+
     const auto delay =
         ros::Time::fromBoost(time_read) -
         ros::Time::fromBoost(time_ii_request);
@@ -377,6 +405,12 @@ protected:
       const std::string& echo_back,
       const std::string& status)
   {
+    if (status != "00")
+    {
+      ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
+      return;
+    }
+
     ROS_DEBUG("Scan data stopped");
   }
   void cbConnect()
