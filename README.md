@@ -31,6 +31,7 @@ Topics and major parameters are designed to be compatible with [urg_node](http:/
 - **ip_port** (int): device TCP/IP port
 - **frame_id** (string): frame_id of published scans
 - **publish_intensity** (bool): fill intensity field if true
+- **error_limit** (int): reset the sensor and exit if errors occur more than this count
 
 #### urg_stamped specific parameters
 
