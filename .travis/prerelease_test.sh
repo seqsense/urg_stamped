@@ -29,6 +29,16 @@ sudo pip3 install git+https://github.com/ros/catkin
 mkdir -p /tmp/prerelease_job
 cd /tmp/prerelease_job
 
+
+# Use us-east-1 mirror of ubuntu repository to speed-up.
+git clone \
+  --depth 1 \
+  -b apt-get-us-east-1 \
+  https://github.com/at-wat/ros_buildfarm.git ros_buildfarm
+
+sudo pip3 install ./ros_buildfarm
+
+
 generate_prerelease_script.py \
   https://raw.githubusercontent.com/ros-infrastructure/ros_buildfarm_config/production/index.yaml \
   ${ROS_DISTRO_TARGET} default ubuntu ${UBUNTU_DIST_TARGET} amd64 \
@@ -37,6 +47,6 @@ generate_prerelease_script.py \
   --level 1 \
   --output-dir ./
 
-./prerelease.sh \
+yes | ./prerelease.sh \
   && gh-pr-comment "[#${TRAVIS_BUILD_NUMBER}-prerelease] PASSED on ${ROS_DISTRO_TARGET}" "" \
   || (gh-pr-comment "[#${TRAVIS_BUILD_NUMBER}-prerelease] FAILED on ${ROS_DISTRO_TARGET}" ""; false)

@@ -2,6 +2,14 @@
 Changelog for package urg_stamped
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.0.4 (2020-01-29)
+------------------
+* Automate bloom release (`#58 <https://github.com/seqsense/urg_stamped/issues/58>`_)
+* Add error count check (`#57 <https://github.com/seqsense/urg_stamped/issues/57>`_)
+* Fix response status check (`#56 <https://github.com/seqsense/urg_stamped/issues/56>`_)
+* Format pointer alignment (`#55 <https://github.com/seqsense/urg_stamped/issues/55>`_)
+* Contributors: Atsushi Watanabe
+
 0.0.3 (2019-08-15)
 ------------------
 * Run prerelease-test on release- branch (`#49 <https://github.com/seqsense/urg_stamped/issues/49>`_)
