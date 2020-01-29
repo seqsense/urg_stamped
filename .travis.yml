@@ -39,4 +39,18 @@ script:
     -e GITHUB_API_URL_BASE
     -e TRAVIS_BUILD_NUMBER
     ${DOCKER_CACHE_TARGET}:${ROS_DISTRO_TARGET} /catkin_ws/src/${PACKAGE_NAME}/.travis/test.sh
-  - .travis/prerelease_test.sh
+
+jobs:
+  include:
+    - stage: prerelease-test
+      if: head_branch =~ ^release-.*$
+      env:
+        - ROS_DISTRO_TARGET=kinetic
+      before_install: pip install --user gh-pr-comment
+      script: .travis/prerelease_test.sh
+    - stage: prerelease-test
+      if: head_branch =~ ^release-.*$
+      env:
+        - ROS_DISTRO_TARGET=melodic
+      before_install: pip install --user gh-pr-comment
+      script: .travis/prerelease_test.sh
