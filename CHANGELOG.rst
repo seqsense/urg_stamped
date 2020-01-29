@@ -2,8 +2,8 @@
 Changelog for package urg_stamped
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.4 (2020-01-29)
+------------------
 * Automate bloom release (`#58 <https://github.com/seqsense/urg_stamped/issues/58>`_)
 * Add error count check (`#57 <https://github.com/seqsense/urg_stamped/issues/57>`_)
 * Fix response status check (`#56 <https://github.com/seqsense/urg_stamped/issues/56>`_)
