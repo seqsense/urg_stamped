@@ -17,9 +17,10 @@
 #ifndef SCIP2_RESPONSE_ABSTRACT_H
 #define SCIP2_RESPONSE_ABSTRACT_H
 
-#include <boost/asio.hpp>
-
+#include <memory>
 #include <string>
+
+#include <boost/asio.hpp>
 
 namespace scip2
 {

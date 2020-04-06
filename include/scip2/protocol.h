@@ -17,15 +17,16 @@
 #ifndef SCIP2_PROTOCOL_H
 #define SCIP2_PROTOCOL_H
 
+#include <map>
+#include <memory>
+#include <string>
+
 #include <boost/asio.hpp>
 #include <boost/bind/bind.hpp>
 
 #include <scip2/connection.h>
 #include <scip2/response.h>
 #include <scip2/logger.h>
-
-#include <map>
-#include <string>
 
 namespace scip2
 {
