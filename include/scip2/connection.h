@@ -17,10 +17,11 @@
 #ifndef SCIP2_CONNECTION_H
 #define SCIP2_CONNECTION_H
 
+#include <memory>
+#include <string>
+
 #include <boost/asio.hpp>
 #include <boost/bind/bind.hpp>
-
-#include <string>
 
 #include <scip2/logger.h>
 
