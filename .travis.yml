@@ -38,7 +38,7 @@ script:
     -e TRAVIS_REPO_SLUG
     -e TRAVIS_BOT_GITHUB_TOKEN
     -e GITHUB_API_URL_BASE
-    -e BUILD_LINK
+    -e BUILD_LINK=${BUILD_LINK}
     ${DOCKER_CACHE_TARGET}:${ROS_DISTRO_TARGET} /catkin_ws/src/${PACKAGE_NAME}/.travis/test.sh
 
 jobs:
@@ -52,9 +52,9 @@ jobs:
           docker run -it --rm \
             -v $(pwd):/src/$(basename $(pwd)):ro \
             alpineros/ros-abuild:3.11-noetic \
-            && gh-pr-comment "${BUILD_LINK} PASSED on ${ROS_DISTRO_TARGET}" \
+            && gh-pr-comment "${BUILD_LINK} PASSED on ROS ${ROS_DISTRO_TARGET}" \
               "Tested on Alpine ROS" \
-            || (gh-pr-comment "${BUILD_LINK} FAILED on ${ROS_DISTRO_TARGET}" \
+            || (gh-pr-comment "${BUILD_LINK} FAILED on ROS ${ROS_DISTRO_TARGET}" \
               "Tested on Alpine ROS"; false) \
     - stage: prerelease-test
       if: head_branch =~ ^release-.*$
