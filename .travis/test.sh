@@ -24,8 +24,8 @@ function error_log() {
   echo -e '```\n '
 }
 
-FAILED_MESSAGE="[#${TRAVIS_BUILD_NUMBER}] FAILED on ROS ${ROS_DISTRO}"
-PASSED_MESSAGE="[#${TRAVIS_BUILD_NUMBER}] PASSED on ROS ${ROS_DISTRO}"
+FAILED_MESSAGE="${BUILD_LINK} FAILED on ROS ${ROS_DISTRO}"
+PASSED_MESSAGE="${BUILD_LINK} PASSED on ROS ${ROS_DISTRO}"
 
 (set -o pipefail; catkin_make ${CM_OPTIONS} 2>&1 | tee ${LOG}) \
   || (gh-pr-comment "${FAILED_MESSAGE}" \
