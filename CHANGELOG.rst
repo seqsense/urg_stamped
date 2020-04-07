@@ -2,6 +2,11 @@
 Changelog for package urg_stamped
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.0.5 (2020-04-07)
+------------------
+* Support Noetic (`#61 <https://github.com/seqsense/urg_stamped/issues/61>`_)
+* Contributors: Atsushi Watanabe
+
 0.0.4 (2020-01-29)
 ------------------
 * Automate bloom release (`#58 <https://github.com/seqsense/urg_stamped/issues/58>`_)
