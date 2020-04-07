@@ -2,8 +2,8 @@
 Changelog for package urg_stamped
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.5 (2020-04-07)
+------------------
 * Support Noetic (`#61 <https://github.com/seqsense/urg_stamped/issues/61>`_)
 * Contributors: Atsushi Watanabe
 
