@@ -45,7 +45,10 @@ public:
         time_device - time_device_prev_ > middle_bits)
     {
       logger::warn() << "Device time jumped." << std::endl;
+      time_device_prev_ = (1 << DEVICE_TIMESTAMP_BITS) - time_device;
+      return walltime_device_base_ - time_device_prev_;
     }
+
     if (time_device < middle_bits &&
         middle_bits < time_device_prev_)
     {
