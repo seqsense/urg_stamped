@@ -36,7 +36,7 @@ TEST(WalltimeTest, testTimestampOverflow)
   }
 }
 
-TEST(WalltimeTest, testDeviceTimeBitsBoundary)
+TEST(WalltimeTest, testDeviceTimeBoundary)
 {
   scip2::Walltime<24> walltime;
 
