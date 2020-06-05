@@ -486,9 +486,9 @@ protected:
       const boost::posix_time::ptime& time_response,
       const uint64_t& device_timestamp) const
   {
-    const ros::Duration diff_device_to_response =
-        ros::Time().fromNSec(device_timestamp * 1e6) - ros::Time::fromBoost(time_response);
-    const bool jumped = std::abs(diff_device_to_response.toSec()) > allowed_stamp_diff_;
+    const ros::Duration time_diff =
+        ros::Time::fromBoost(time_response) - ros::Time().fromNSec(device_timestamp * 1e6);
+    const bool jumped = std::abs(time_diff.toSec()) > allowed_stamp_diff_;
 
     if (jumped)
     {
