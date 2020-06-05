@@ -17,7 +17,7 @@
 #ifndef SCIP2_WALLTIME_H
 #define SCIP2_WALLTIME_H
 
-#include <string>
+#include <scip2/logger.h>
 
 namespace scip2
 {
@@ -29,6 +29,8 @@ protected:
   uint32_t time_device_prev_;
   uint64_t walltime_device_base_;
 
+  constexpr static uint32_t middle_bits_ = (1 << DEVICE_TIMESTAMP_BITS) / 2;
+
 public:
   uint64_t update(const uint32_t& time_device)
   {
@@ -38,13 +40,35 @@ public:
       initialized_ = true;
     }
 
-    if (time_device < (1 << DEVICE_TIMESTAMP_BITS) / 2 &&
-        (1 << DEVICE_TIMESTAMP_BITS) / 2 < time_device_prev_)
+    if (detectDeviceTimeUnderflow(time_device))
+    {
+      if (walltime_device_base_ >= (1 << DEVICE_TIMESTAMP_BITS))
+      {
+        time_device_prev_ = (1 << DEVICE_TIMESTAMP_BITS) - time_device;
+        return walltime_device_base_ - time_device_prev_;
+      }
+      logger::warn() << "Device time jumped. prev: " << time_device_prev_
+                     << ", current: " << time_device << std::endl;
+    }
+
+    if (time_device < middle_bits_ &&
+        middle_bits_ < time_device_prev_)
+    {
       walltime_device_base_ += 1 << DEVICE_TIMESTAMP_BITS;
+    }
+
     time_device_prev_ = time_device;
 
     return walltime_device_base_ + time_device;
   }
+
+  bool detectDeviceTimeUnderflow(const uint32_t& time_device)
+  {
+    return (time_device_prev_ < middle_bits_ &&
+            middle_bits_ < time_device &&
+            time_device - time_device_prev_ > middle_bits_);
+  }
+
   Walltime()
     : initialized_(false)
     , time_device_prev_(0)

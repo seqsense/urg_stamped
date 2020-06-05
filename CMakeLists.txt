@@ -39,7 +39,7 @@ if(CATKIN_ENABLE_TESTING)
   catkin_add_gtest(test_timestamp_outlier_remover test/src/test_timestamp_outlier_remover.cpp)
   target_link_libraries(test_timestamp_outlier_remover ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
-  catkin_add_gtest(test_walltime test/src/test_walltime.cpp)
+  catkin_add_gtest(test_walltime test/src/test_walltime.cpp src/scip2/logger.cpp)
   target_link_libraries(test_walltime ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 endif()
 

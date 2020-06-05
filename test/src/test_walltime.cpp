@@ -36,6 +36,27 @@ TEST(WalltimeTest, testTimestampOverflow)
   }
 }
 
+TEST(WalltimeTest, testDeviceTimeBoundary)
+{
+  scip2::Walltime<24> walltime;
+
+  uint64_t device_time = (1 << 24) - 1;
+  uint32_t device_timestamp = device_time & 0xFFFFFF;
+  ASSERT_EQ(walltime.update(device_timestamp), device_time);
+
+  device_time = 0;
+  device_timestamp = device_time & 0xFFFFFF;
+  ASSERT_EQ(walltime.update(device_timestamp), (1 << 24) + device_time);
+
+  device_time = (1 << 24) - 1;
+  device_timestamp = device_time & 0xFFFFFF;
+  ASSERT_EQ(walltime.update(device_timestamp), device_time);
+
+  device_time = 0;
+  device_timestamp = device_time & 0xFFFFFF;
+  ASSERT_EQ(walltime.update(device_timestamp), (1 << 24) + device_time);
+}
+
 int main(int argc, char** argv)
 {
   testing::InitGoogleTest(&argc, argv);
