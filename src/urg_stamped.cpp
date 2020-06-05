@@ -71,6 +71,7 @@ protected:
   std::vector<ros::Duration> on_scan_communication_delays_;
 
   scip2::Walltime<24> walltime_;
+  double allowed_stamp_diff_;
 
   std::default_random_engine random_engine_;
   std::uniform_real_distribution<double> sync_interval_;
@@ -138,9 +139,14 @@ protected:
       }
       return;
     }
-    error_count_ = 0;
 
     const uint64_t walltime_device = walltime_.update(scan.timestamp_);
+    if (detectTimestampJump(time_read, walltime_device))
+    {
+      errorCountIncrement();
+      return;
+    }
+    error_count_ = 0;
 
     const auto estimated_timestamp_lf =
         device_time_origin_.origin_ +
@@ -217,6 +223,11 @@ protected:
       case '1':
       {
         const uint64_t walltime_device = walltime_.update(time_device.timestamp_);
+        if (detectTimestampJump(time_read, walltime_device))
+        {
+          errorCountIncrement();
+          break;
+        }
 
         const auto delay =
             ros::Time::fromBoost(time_read) -
@@ -376,6 +387,11 @@ protected:
               *(scip2::Decoder<4>(time->second).begin());
 
       const uint64_t walltime_device = walltime_.update(time_device);
+      if (detectTimestampJump(time_read, walltime_device))
+      {
+        errorCountIncrement();
+        return;
+      }
 
       ros::Time time_at_device_timestamp;
       const auto origin = calculateDeviceTimeOrigin(
@@ -466,6 +482,24 @@ protected:
     }
   }
 
+  bool detectTimestampJump(
+      const boost::posix_time::ptime& time_response,
+      const uint64_t& device_timestamp) const
+  {
+    const ros::Duration diff_device_to_response =
+        ros::Time().fromNSec(device_timestamp * 1e6) - ros::Time::fromBoost(time_response);
+    const bool jumped = std::abs(diff_device_to_response.toSec()) > allowed_stamp_diff_;
+
+    if (jumped)
+    {
+      ROS_ERROR_STREAM(
+          "Device time jumped. Device time:"
+          << ros::Time().fromNSec(device_timestamp * 1e6)
+          << ", response time:" << ros::Time::fromBoost(time_response));
+    }
+    return jumped;
+  }
+
 public:
   UrgStampedNode()
     : nh_("")
@@ -496,6 +530,7 @@ public:
     sync_interval_ = std::uniform_real_distribution<double>(sync_interval_min, sync_interval_max);
     pnh_.param("delay_estim_interval", delay_estim_interval, 20.0);
     pnh_.param("error_limit", error_count_max_, 4);
+    pnh_.param("allowed_stamp_diff_between_device_and_response", allowed_stamp_diff_, 1.0);
 
     pub_scan_ = nh_.advertise<sensor_msgs::LaserScan>("scan", 10);
 
