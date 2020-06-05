@@ -141,7 +141,7 @@ protected:
     }
 
     const uint64_t walltime_device = walltime_.update(scan.timestamp_);
-    if (detectTimestampJump(time_read, walltime_device))
+    if (detectDeviceTimeJump(time_read, walltime_device))
     {
       errorCountIncrement();
       return;
@@ -223,7 +223,7 @@ protected:
       case '1':
       {
         const uint64_t walltime_device = walltime_.update(time_device.timestamp_);
-        if (detectTimestampJump(time_read, walltime_device))
+        if (detectDeviceTimeJump(time_read, walltime_device))
         {
           errorCountIncrement();
           break;
@@ -387,7 +387,7 @@ protected:
               *(scip2::Decoder<4>(time->second).begin());
 
       const uint64_t walltime_device = walltime_.update(time_device);
-      if (detectTimestampJump(time_read, walltime_device))
+      if (detectDeviceTimeJump(time_read, walltime_device))
       {
         errorCountIncrement();
         return;
@@ -482,14 +482,14 @@ protected:
     }
   }
 
-  bool detectTimestampJump(
+  bool detectDeviceTimeJump(
       const boost::posix_time::ptime& time_response,
       const uint64_t& device_timestamp) const
   {
     const ros::Duration time_diff =
         ros::Time::fromBoost(time_response) - ros::Time().fromNSec(device_timestamp * 1e6);
-    const bool jumped = std::abs(time_diff.toSec()) > allowed_stamp_diff_;
 
+    const bool jumped = std::abs(time_diff.toSec()) > allowed_stamp_diff_;
     if (jumped)
     {
       ROS_ERROR_STREAM(
