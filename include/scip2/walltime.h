@@ -40,7 +40,7 @@ public:
       initialized_ = true;
     }
 
-    if (detectDeviceTimeJump(time_device))
+    if (detectDeviceTimeUnderflow(time_device))
     {
       if (walltime_device_base_ >= (1 << DEVICE_TIMESTAMP_BITS))
       {
@@ -62,7 +62,7 @@ public:
     return walltime_device_base_ + time_device;
   }
 
-  bool detectDeviceTimeJump(const uint32_t& time_device)
+  bool detectDeviceTimeUnderflow(const uint32_t& time_device)
   {
     return (time_device_prev_ < middle_bits_ &&
             middle_bits_ < time_device &&
