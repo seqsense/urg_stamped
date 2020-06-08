@@ -22,7 +22,6 @@
 #include <boost/thread.hpp>
 
 #include <algorithm>
-#include <cmath>
 #include <list>
 #include <map>
 #include <random>
@@ -32,6 +31,7 @@
 #include <scip2/scip2.h>
 #include <scip2/walltime.h>
 
+#include <device_time_origin.h>
 #include <first_order_filter.h>
 #include <timestamp_moving_average.h>
 #include <timestamp_outlier_remover.h>
@@ -71,58 +71,20 @@ protected:
   boost::posix_time::ptime time_ii_request;
   std::vector<ros::Duration> on_scan_communication_delays_;
 
-  scip2::Walltime<24> walltime_;
+  DriftedTime device_time_origin_;
   double allowed_device_time_origin_diff_;
+
+  scip2::Walltime<24> walltime_;
 
   std::default_random_engine random_engine_;
   std::uniform_real_distribution<double> sync_interval_;
   ros::Time last_sync_time_;
-
-  class DriftedTime
-  {
-  public:
-    ros::Time origin_;
-    double gain_;
-
-    DriftedTime()
-      : gain_(1.0)
-    {
-    }
-    DriftedTime(const ros::Time origin, const float gain)
-      : origin_(origin)
-      , gain_(gain)
-    {
-    }
-  };
-  DriftedTime device_time_origin_;
 
   ros::Time t0_;
   FirstOrderLPF<double> timestamp_lpf_;
   FirstOrderHPF<double> timestamp_hpf_;
   TimestampOutlierRemover timestamp_outlier_removal_;
   TimestampMovingAverage timestamp_moving_average_;
-
-  ros::Time calculateDeviceTimeOriginByAverage(
-      const boost::posix_time::ptime& time_request,
-      const boost::posix_time::ptime& time_response,
-      const uint64_t& device_timestamp)
-  {
-    const auto delay =
-        ros::Time::fromBoost(time_response) -
-        ros::Time::fromBoost(time_request);
-    const ros::Time time_at_device_timestamp = ros::Time::fromBoost(time_request) + delay * 0.5;
-
-    return time_at_device_timestamp - ros::Duration().fromNSec(device_timestamp * 1e6);
-  }
-  ros::Time calculateDeviceTimeOrigin(
-      const boost::posix_time::ptime& time_response,
-      const uint64_t& device_timestamp,
-      ros::Time& time_at_device_timestamp)
-  {
-    time_at_device_timestamp = ros::Time::fromBoost(time_response) - estimated_communication_delay_ * 0.5;
-
-    return time_at_device_timestamp - ros::Duration().fromNSec(device_timestamp * 1e6);
-  }
 
   void cbM(
       const boost::posix_time::ptime& time_read,
@@ -237,7 +199,7 @@ protected:
         if (communication_delays_.size() > tm_median_window_)
           communication_delays_.pop_front();
 
-        const auto origin = calculateDeviceTimeOriginByAverage(
+        const auto origin = DeviceTimeOriginEstimator::estimateOriginByAverage(
             time_tm_request, time_read, walltime_device);
         device_time_origins_.push_back(origin);
         if (device_time_origins_.size() > tm_median_window_)
@@ -395,8 +357,8 @@ protected:
       }
 
       ros::Time time_at_device_timestamp;
-      const auto origin = calculateDeviceTimeOrigin(
-          time_read, walltime_device, time_at_device_timestamp);
+      const auto origin = DeviceTimeOriginEstimator::estimateOrigin(
+          time_read, walltime_device, estimated_communication_delay_, time_at_device_timestamp);
 
       const auto now = ros::Time::fromBoost(time_read);
       if (last_sync_time_ == ros::Time(0))
@@ -487,21 +449,22 @@ protected:
       const boost::posix_time::ptime& time_response,
       const uint64_t& device_timestamp)
   {
-    if (device_time_origin_.origin_ == ros::Time(0))
-      return false;
-
     ros::Time time_at_device_timestamp;
-    const ros::Time origin = calculateDeviceTimeOrigin(
-        time_response, device_timestamp, time_at_device_timestamp);
-    const ros::Duration origin_diff = device_time_origin_.origin_ - origin;
+    const ros::Time current_origin =
+        DeviceTimeOriginEstimator::estimateOrigin(
+            time_response, device_timestamp, estimated_communication_delay_, time_at_device_timestamp);
 
-    const bool jumped = std::abs(origin_diff.toSec()) > allowed_device_time_origin_diff_;
+    const bool jumped = DeviceTimeOriginJumpDetector::detectTimeJump(
+        device_time_origin_.origin_, current_origin, allowed_device_time_origin_diff_);
+
     if (jumped)
     {
       ROS_ERROR(
           "Device time origin jumped.\n"
-          "last origin: %0.3f, current origin: %0.3f, device_timestamp: %ld",
-          device_time_origin_.origin_.toSec(), origin.toSec(), device_timestamp);
+          "last origin: %0.3f, current origin: %0.3f, "
+          "allowed_device_time_origin_diff: %0.3f, device_timestamp: %ld",
+          device_time_origin_.origin_.toSec(), current_origin.toSec(),
+          allowed_device_time_origin_diff_, device_timestamp);
     }
     return jumped;
   }
