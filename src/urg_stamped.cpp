@@ -484,18 +484,19 @@ protected:
 
   bool detectDeviceTimeJump(
       const boost::posix_time::ptime& time_response,
-      const uint64_t& device_timestamp) const
+      const uint64_t& device_timestamp)
   {
-    const ros::Time t_response = ros::Time::fromBoost(time_response);
-    const ros::Time t_device = ros::Time().fromNSec(device_timestamp * 1e6);
-    const ros::Duration time_diff = t_response - t_device;
+    ros::Time time_at_device_timestamp;
+    const ros::Time origin = calculateDeviceTimeOrigin(
+        time_response, device_timestamp, time_at_device_timestamp);
+    const ros::Duration origin_diff = device_time_origin_.origin_ - origin;
 
-    const bool jumped = std::abs(time_diff.toSec()) > allowed_device_stamp_diff_;
+    const bool jumped = std::abs(origin_diff.toSec()) > allowed_device_stamp_diff_;
     if (jumped)
     {
       ROS_ERROR(
-          "Device time jumped. Device time: %.3f, response time: %.3f",
-          t_device.toSec(), t_response.toSec());
+          "Device time jumped. Device time origin: [last: %0.3f, current: %0.3f]",
+          device_time_origin_.origin_.toSec(), origin.toSec());
     }
     return jumped;
   }
