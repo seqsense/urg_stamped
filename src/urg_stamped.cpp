@@ -22,11 +22,12 @@
 #include <boost/thread.hpp>
 
 #include <algorithm>
+#include <cmath>
+#include <list>
 #include <map>
 #include <random>
 #include <string>
 #include <vector>
-#include <list>
 
 #include <scip2/scip2.h>
 #include <scip2/walltime.h>
@@ -498,8 +499,9 @@ protected:
     if (jumped)
     {
       ROS_ERROR(
-          "Device time jumped. Device time origin: [last: %0.3f, current: %0.3f]",
-          device_time_origin_.origin_.toSec(), origin.toSec());
+          "Device time origin jumped.\n"
+          "last origin: %0.3f, current origin: %0.3f, device_timestamp: %ld",
+          device_time_origin_.origin_.toSec(), origin.toSec(), device_timestamp);
     }
     return jumped;
   }
