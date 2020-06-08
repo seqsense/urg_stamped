@@ -486,16 +486,16 @@ protected:
       const boost::posix_time::ptime& time_response,
       const uint64_t& device_timestamp) const
   {
-    const ros::Duration time_diff =
-        ros::Time::fromBoost(time_response) - ros::Time().fromNSec(device_timestamp * 1e6);
+    const ros::Time t_response = ros::Time::fromBoost(time_response);
+    const ros::Time t_device = ros::Time().fromNSec(device_timestamp * 1e6);
+    const ros::Duration time_diff = t_response - t_device;
 
     const bool jumped = std::abs(time_diff.toSec()) > allowed_stamp_diff_;
     if (jumped)
     {
-      ROS_ERROR_STREAM(
-          "Device time jumped. Device time:"
-          << ros::Time().fromNSec(device_timestamp * 1e6)
-          << ", response time:" << ros::Time::fromBoost(time_response));
+      ROS_ERROR(
+          "Device time jumped. Device time: %.3f, response time: %.3f",
+          t_device.toSec(), t_response.toSec());
     }
     return jumped;
   }
