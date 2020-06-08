@@ -71,7 +71,7 @@ protected:
   std::vector<ros::Duration> on_scan_communication_delays_;
 
   scip2::Walltime<24> walltime_;
-  double allowed_device_stamp_diff_;
+  double allowed_device_time_origin_diff_;
 
   std::default_random_engine random_engine_;
   std::uniform_real_distribution<double> sync_interval_;
@@ -491,7 +491,7 @@ protected:
         time_response, device_timestamp, time_at_device_timestamp);
     const ros::Duration origin_diff = device_time_origin_.origin_ - origin;
 
-    const bool jumped = std::abs(origin_diff.toSec()) > allowed_device_stamp_diff_;
+    const bool jumped = std::abs(origin_diff.toSec()) > allowed_device_time_origin_diff_;
     if (jumped)
     {
       ROS_ERROR(
@@ -531,7 +531,7 @@ public:
     sync_interval_ = std::uniform_real_distribution<double>(sync_interval_min, sync_interval_max);
     pnh_.param("delay_estim_interval", delay_estim_interval, 20.0);
     pnh_.param("error_limit", error_count_max_, 4);
-    pnh_.param("allowed_device_stamp_diff_between_device_and_response", allowed_device_stamp_diff_, 1.0);
+    pnh_.param("allowed_device_time_origin_diff", allowed_device_time_origin_diff_, 1.0);
 
     pub_scan_ = nh_.advertise<sensor_msgs::LaserScan>("scan", 10);
 
