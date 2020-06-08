@@ -486,6 +486,9 @@ protected:
       const boost::posix_time::ptime& time_response,
       const uint64_t& device_timestamp)
   {
+    if (device_time_origin_.origin_ == ros::Time(0))
+      return false;
+
     ros::Time time_at_device_timestamp;
     const ros::Time origin = calculateDeviceTimeOrigin(
         time_response, device_timestamp, time_at_device_timestamp);
