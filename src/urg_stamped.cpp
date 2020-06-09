@@ -71,7 +71,7 @@ protected:
   boost::posix_time::ptime time_ii_request;
   std::vector<ros::Duration> on_scan_communication_delays_;
 
-  DriftedTime device_time_origin_;
+  device_time_origin::DriftedTime device_time_origin_;
   double allowed_device_time_origin_diff_;
 
   scip2::Walltime<24> walltime_;
@@ -199,7 +199,7 @@ protected:
         if (communication_delays_.size() > tm_median_window_)
           communication_delays_.pop_front();
 
-        const auto origin = DeviceTimeOriginEstimator::estimateOriginByAverage(
+        const auto origin = device_time_origin::estimator::estimateOriginByAverage(
             time_tm_request, time_read, walltime_device);
         device_time_origins_.push_back(origin);
         if (device_time_origins_.size() > tm_median_window_)
@@ -215,7 +215,7 @@ protected:
           if (!estimated_communication_delay_init_)
           {
             estimated_communication_delay_ = delays[tm_iter_num_ / 2];
-            device_time_origin_ = DriftedTime(origins[tm_iter_num_ / 2], 1.0);
+            device_time_origin_ = device_time_origin::DriftedTime(origins[tm_iter_num_ / 2], 1.0);
           }
           else
           {
@@ -357,7 +357,7 @@ protected:
       }
 
       ros::Time time_at_device_timestamp;
-      const auto origin = DeviceTimeOriginEstimator::estimateOrigin(
+      const auto origin = device_time_origin::estimator::estimateOrigin(
           time_read, walltime_device, estimated_communication_delay_, time_at_device_timestamp);
 
       const auto now = ros::Time::fromBoost(time_read);
@@ -451,10 +451,10 @@ protected:
   {
     ros::Time time_at_device_timestamp;
     const ros::Time current_origin =
-        DeviceTimeOriginEstimator::estimateOrigin(
+        device_time_origin::estimator::estimateOrigin(
             time_response, device_timestamp, estimated_communication_delay_, time_at_device_timestamp);
 
-    const bool jumped = DeviceTimeOriginJumpDetector::detectTimeJump(
+    const bool jumped = device_time_origin::jump_detector::detectTimeJump(
         device_time_origin_.origin_, current_origin, allowed_device_time_origin_diff_);
 
     if (jumped)
