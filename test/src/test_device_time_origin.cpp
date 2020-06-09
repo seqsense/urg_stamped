@@ -29,7 +29,7 @@ TEST(DeviceTimeOriginTest, testEstimateOriginByAverage)
   const boost::posix_time::ptime time_res = time_req + delay;
   const uint64_t device_timestamp = 12345 * 1e3;  // msec
 
-  const ros::Time actual = DeviceTimeOriginEstimator::estimateOriginByAverage(
+  const ros::Time actual = device_time_origin::estimator::estimateOriginByAverage(
       time_req, time_res, device_timestamp);
   const ros::Time expected = ros::Time::fromBoost(
       time_req - boost::posix_time::milliseconds(device_timestamp) + delay / 2);
@@ -45,7 +45,7 @@ TEST(DeviceTimeOriginTest, testEstimateOrigin)
   const uint64_t device_timestamp = 12345 * 1e3;  // msec
 
   ros::Time time_at_device_timestamp;
-  const ros::Time actual = DeviceTimeOriginEstimator::estimateOrigin(
+  const ros::Time actual = device_time_origin::estimator::estimateOrigin(
       time_res, device_timestamp, ros::Duration(ros::Time::fromBoost(delay).toSec()), time_at_device_timestamp);
   const ros::Time expected = ros::Time::fromBoost(
       time_req - boost::posix_time::milliseconds(device_timestamp) + delay / 2);
@@ -59,14 +59,14 @@ TEST(DeviceTimeOriginTest, testDetectTimeJump)
   const ros::Time last_origin = ros::Time(100000);
 
   ASSERT_FALSE(
-      DeviceTimeOriginJumpDetector::detectTimeJump(last_origin, last_origin + ros::Duration(1.00), 1.0));
+      device_time_origin::jump_detector::detectTimeJump(last_origin, last_origin + ros::Duration(1.00), 1.0));
   ASSERT_TRUE(
-      DeviceTimeOriginJumpDetector::detectTimeJump(last_origin, last_origin + ros::Duration(1.01), 1.0));
+      device_time_origin::jump_detector::detectTimeJump(last_origin, last_origin + ros::Duration(1.01), 1.0));
 
   const ros::Time last_origin_not_init = ros::Time(0);
 
   ASSERT_FALSE(
-      DeviceTimeOriginJumpDetector::detectTimeJump(
+      device_time_origin::jump_detector::detectTimeJump(
           last_origin_not_init, last_origin_not_init + ros::Duration(1.01), 1.0));
 }
 
