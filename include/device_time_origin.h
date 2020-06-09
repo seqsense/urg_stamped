@@ -42,7 +42,7 @@ public:
 
 namespace estimator
 {
-inline static ros::Time estimateOriginByAverage(
+inline ros::Time estimateOriginByAverage(
     const boost::posix_time::ptime& time_request,
     const boost::posix_time::ptime& time_response,
     const uint64_t& device_timestamp)
@@ -54,7 +54,7 @@ inline static ros::Time estimateOriginByAverage(
 
   return time_at_device_timestamp - ros::Duration().fromNSec(device_timestamp * 1e6);
 }
-inline static ros::Time estimateOrigin(
+inline ros::Time estimateOrigin(
     const boost::posix_time::ptime& time_response,
     const uint64_t& device_timestamp,
     const ros::Duration& communication_delay,
@@ -68,7 +68,7 @@ inline static ros::Time estimateOrigin(
 
 namespace jump_detector
 {
-inline static bool detectTimeJump(
+inline bool detectTimeJump(
     const ros::Time& last_device_time_origin,
     const ros::Time& current_device_time_origin,
     const double allowed_device_time_origin_diff)
