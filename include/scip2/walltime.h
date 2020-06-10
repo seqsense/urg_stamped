@@ -62,7 +62,7 @@ public:
     return walltime_device_base_ + time_device;
   }
 
-  bool detectDeviceTimeUnderflow(const uint32_t& time_device)
+  bool detectDeviceTimeUnderflow(const uint32_t& time_device) const
   {
     return (time_device_prev_ < middle_bits_ &&
             middle_bits_ < time_device &&

@@ -22,15 +22,16 @@
 #include <boost/thread.hpp>
 
 #include <algorithm>
+#include <list>
 #include <map>
 #include <random>
 #include <string>
 #include <vector>
-#include <list>
 
 #include <scip2/scip2.h>
 #include <scip2/walltime.h>
 
+#include <device_time_origin.h>
 #include <first_order_filter.h>
 #include <timestamp_moving_average.h>
 #include <timestamp_outlier_remover.h>
@@ -70,57 +71,20 @@ protected:
   boost::posix_time::ptime time_ii_request;
   std::vector<ros::Duration> on_scan_communication_delays_;
 
+  device_time_origin::DriftedTime device_time_origin_;
+  double allowed_device_time_origin_diff_;
+
   scip2::Walltime<24> walltime_;
 
   std::default_random_engine random_engine_;
   std::uniform_real_distribution<double> sync_interval_;
   ros::Time last_sync_time_;
 
-  class DriftedTime
-  {
-  public:
-    ros::Time origin_;
-    double gain_;
-
-    DriftedTime()
-      : gain_(1.0)
-    {
-    }
-    DriftedTime(const ros::Time origin, const float gain)
-      : origin_(origin)
-      , gain_(gain)
-    {
-    }
-  };
-  DriftedTime device_time_origin_;
-
   ros::Time t0_;
   FirstOrderLPF<double> timestamp_lpf_;
   FirstOrderHPF<double> timestamp_hpf_;
   TimestampOutlierRemover timestamp_outlier_removal_;
   TimestampMovingAverage timestamp_moving_average_;
-
-  ros::Time calculateDeviceTimeOriginByAverage(
-      const boost::posix_time::ptime& time_request,
-      const boost::posix_time::ptime& time_response,
-      const uint64_t& device_timestamp)
-  {
-    const auto delay =
-        ros::Time::fromBoost(time_response) -
-        ros::Time::fromBoost(time_request);
-    const ros::Time time_at_device_timestamp = ros::Time::fromBoost(time_request) + delay * 0.5;
-
-    return time_at_device_timestamp - ros::Duration().fromNSec(device_timestamp * 1e6);
-  }
-  ros::Time calculateDeviceTimeOrigin(
-      const boost::posix_time::ptime& time_response,
-      const uint64_t& device_timestamp,
-      ros::Time& time_at_device_timestamp)
-  {
-    time_at_device_timestamp = ros::Time::fromBoost(time_response) - estimated_communication_delay_ * 0.5;
-
-    return time_at_device_timestamp - ros::Duration().fromNSec(device_timestamp * 1e6);
-  }
 
   void cbM(
       const boost::posix_time::ptime& time_read,
@@ -138,9 +102,14 @@ protected:
       }
       return;
     }
-    error_count_ = 0;
 
     const uint64_t walltime_device = walltime_.update(scan.timestamp_);
+    if (detectDeviceTimeJump(time_read, walltime_device))
+    {
+      errorCountIncrement();
+      return;
+    }
+    error_count_ = 0;
 
     const auto estimated_timestamp_lf =
         device_time_origin_.origin_ +
@@ -217,6 +186,11 @@ protected:
       case '1':
       {
         const uint64_t walltime_device = walltime_.update(time_device.timestamp_);
+        if (detectDeviceTimeJump(time_read, walltime_device))
+        {
+          errorCountIncrement();
+          break;
+        }
 
         const auto delay =
             ros::Time::fromBoost(time_read) -
@@ -225,7 +199,7 @@ protected:
         if (communication_delays_.size() > tm_median_window_)
           communication_delays_.pop_front();
 
-        const auto origin = calculateDeviceTimeOriginByAverage(
+        const auto origin = device_time_origin::estimator::estimateOriginByAverage(
             time_tm_request, time_read, walltime_device);
         device_time_origins_.push_back(origin);
         if (device_time_origins_.size() > tm_median_window_)
@@ -241,7 +215,7 @@ protected:
           if (!estimated_communication_delay_init_)
           {
             estimated_communication_delay_ = delays[tm_iter_num_ / 2];
-            device_time_origin_ = DriftedTime(origins[tm_iter_num_ / 2], 1.0);
+            device_time_origin_ = device_time_origin::DriftedTime(origins[tm_iter_num_ / 2], 1.0);
           }
           else
           {
@@ -376,10 +350,15 @@ protected:
               *(scip2::Decoder<4>(time->second).begin());
 
       const uint64_t walltime_device = walltime_.update(time_device);
+      if (detectDeviceTimeJump(time_read, walltime_device))
+      {
+        errorCountIncrement();
+        return;
+      }
 
       ros::Time time_at_device_timestamp;
-      const auto origin = calculateDeviceTimeOrigin(
-          time_read, walltime_device, time_at_device_timestamp);
+      const auto origin = device_time_origin::estimator::estimateOrigin(
+          time_read, walltime_device, estimated_communication_delay_, time_at_device_timestamp);
 
       const auto now = ros::Time::fromBoost(time_read);
       if (last_sync_time_ == ros::Time(0))
@@ -466,6 +445,30 @@ protected:
     }
   }
 
+  bool detectDeviceTimeJump(
+      const boost::posix_time::ptime& time_response,
+      const uint64_t& device_timestamp)
+  {
+    ros::Time time_at_device_timestamp;
+    const ros::Time current_origin =
+        device_time_origin::estimator::estimateOrigin(
+            time_response, device_timestamp, estimated_communication_delay_, time_at_device_timestamp);
+
+    const bool jumped = device_time_origin::jump_detector::detectTimeJump(
+        device_time_origin_.origin_, current_origin, allowed_device_time_origin_diff_);
+
+    if (jumped)
+    {
+      ROS_ERROR(
+          "Device time origin jumped.\n"
+          "last origin: %0.3f, current origin: %0.3f, "
+          "allowed_device_time_origin_diff: %0.3f, device_timestamp: %ld",
+          device_time_origin_.origin_.toSec(), current_origin.toSec(),
+          allowed_device_time_origin_diff_, device_timestamp);
+    }
+    return jumped;
+  }
+
 public:
   UrgStampedNode()
     : nh_("")
@@ -496,6 +499,7 @@ public:
     sync_interval_ = std::uniform_real_distribution<double>(sync_interval_min, sync_interval_max);
     pnh_.param("delay_estim_interval", delay_estim_interval, 20.0);
     pnh_.param("error_limit", error_count_max_, 4);
+    pnh_.param("allowed_device_time_origin_diff", allowed_device_time_origin_diff_, 1.0);
 
     pub_scan_ = nh_.advertise<sensor_msgs::LaserScan>("scan", 10);
 
