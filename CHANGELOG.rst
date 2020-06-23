@@ -2,8 +2,8 @@
 Changelog for package urg_stamped
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.6 (2020-06-23)
+------------------
 * Add check for device timestamp jump to node (`#66 <https://github.com/seqsense/urg_stamped/issues/66>`_)
 * Add timestamp jump detector to Walltime (`#65 <https://github.com/seqsense/urg_stamped/issues/65>`_)
 * Contributors: Yuta Koga
