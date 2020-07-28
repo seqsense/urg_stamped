@@ -424,18 +424,19 @@ protected:
       const std::string& echo_back,
       const std::string& status)
   {
-    if (status != "00" && status != "01")
+    if (status == "01")
+    {
+      ROS_INFO("1 / 2 reboot command was accepted.");
+    }
+    if (status == "00")
+    {
+      ROS_INFO("2 / 2 reboot command was accepted. The sensor starts rebooting. Exiting.");
+      ros::shutdown();
+    }
+    else
     {
       ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
       ROS_ERROR("Failed to reboot. Please power-off the sensor. Exiting.");
-      ros::shutdown();
-      return;
-    }
-
-    ROS_INFO("%d / 2 reboot command accepted.", (status == "01") ? 1 : 2);
-    if (status == "00")
-    {
-      ROS_INFO("The sensor starts rebooting. Exiting.");
       ros::shutdown();
     }
   }
