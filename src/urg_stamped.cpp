@@ -427,7 +427,7 @@ protected:
     if (status != "00" && status != "01")
     {
       ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
-      ROS_ERROR("Failed to reboot by RB command. Please power-off the lidar.");
+      ROS_ERROR("Failed to reboot by RB command. Please power-off the Lidar.");
       return;
     }
     ROS_INFO("%d / 2 reboot command accepted.", (status == "01") ? 1 : 2);
@@ -522,7 +522,6 @@ public:
   UrgStampedNode()
     : nh_("")
     , pnh_("~")
-    //, error_count_(0, 0)
     , tm_iter_num_(5)
     , tm_median_window_(35)
     , estimated_communication_delay_init_(false)
