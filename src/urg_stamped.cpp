@@ -427,10 +427,17 @@ protected:
     if (status != "00" && status != "01")
     {
       ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
-      ROS_ERROR("Failed to reboot by RB command. Please power-off the Lidar.");
+      ROS_ERROR("Failed to reboot. Please power-off the sensor. Exiting.");
+      ros::shutdown();
       return;
     }
+
     ROS_INFO("%d / 2 reboot command accepted.", (status == "01") ? 1 : 2);
+    if (status == "00")
+    {
+      ROS_INFO("The sensor starts rebooting. Exiting.");
+      ros::shutdown();
+    }
   }
   void cbConnect()
   {
@@ -472,13 +479,11 @@ protected:
       ++error_count_.abnormal_error;
       if (error_count_.abnormal_error > error_count_max_)
       {
-        ROS_ERROR("Error count exceeded limit, rebooting the sensor and exiting.");
+        ROS_ERROR("Error count exceeded limit, trying to reboot the sensor.");
         for (int i = 0; i < 2; ++i)
         {
           scip_->sendCommand("RB");
         }
-        ros::Duration(0.05).sleep();
-        ros::shutdown();
       }
     }
     else
