@@ -47,9 +47,6 @@ protected:
   ros::Timer timer_delay_estim_;
   ros::Timer timer_try_tm_;
 
-  int error_count_;
-  int error_count_max_;
-
   sensor_msgs::LaserScan msg_base_;
   uint32_t step_min_;
   uint32_t step_max_;
@@ -86,6 +83,25 @@ protected:
   TimestampOutlierRemover timestamp_outlier_removal_;
   TimestampMovingAverage timestamp_moving_average_;
 
+  class ResponseErrorCount
+  {
+  public:
+    int abnormal_error;
+    int error;
+
+    ResponseErrorCount()
+      : abnormal_error(0)
+      , error(0)
+    {
+    }
+    void reset()
+    {
+      abnormal_error = error = 0;
+    }
+  };
+  ResponseErrorCount error_count_;
+  int error_count_max_;
+
   void cbM(
       const boost::posix_time::ptime& time_read,
       const std::string& echo_back,
@@ -98,7 +114,7 @@ protected:
       if (status != "00")
       {
         ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
-        errorCountIncrement();
+        errorCountIncrement(status);
       }
       return;
     }
@@ -106,10 +122,10 @@ protected:
     const uint64_t walltime_device = walltime_.update(scan.timestamp_);
     if (detectDeviceTimeJump(time_read, walltime_device))
     {
-      errorCountIncrement();
+      errorCountIncrement(status);
       return;
     }
-    error_count_ = 0;
+    error_count_.reset();
 
     const auto estimated_timestamp_lf =
         device_time_origin_.origin_ +
@@ -169,7 +185,7 @@ protected:
     if (status != "00")
     {
       ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
-      errorCountIncrement();
+      errorCountIncrement(status);
       return;
     }
 
@@ -188,7 +204,7 @@ protected:
         const uint64_t walltime_device = walltime_.update(time_device.timestamp_);
         if (detectDeviceTimeJump(time_read, walltime_device))
         {
-          errorCountIncrement();
+          errorCountIncrement(status);
           break;
         }
 
@@ -262,7 +278,7 @@ protected:
     if (status != "00")
     {
       ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
-      errorCountIncrement();
+      errorCountIncrement(status);
       return;
     }
 
@@ -306,7 +322,7 @@ protected:
     if (status != "00")
     {
       ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
-      errorCountIncrement();
+      errorCountIncrement(status);
       return;
     }
   }
@@ -323,7 +339,7 @@ protected:
     if (status != "00")
     {
       ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
-      errorCountIncrement();
+      errorCountIncrement(status);
       return;
     }
 
@@ -352,7 +368,7 @@ protected:
       const uint64_t walltime_device = walltime_.update(time_device);
       if (detectDeviceTimeJump(time_read, walltime_device))
       {
-        errorCountIncrement();
+        errorCountIncrement(status);
         return;
       }
 
@@ -397,11 +413,24 @@ protected:
     if (status != "00")
     {
       ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
-      errorCountIncrement();
+      errorCountIncrement(status);
       return;
     }
 
     ROS_DEBUG("Scan data stopped");
+  }
+  void cbRB(
+      const boost::posix_time::ptime& time_read,
+      const std::string& echo_back,
+      const std::string& status)
+  {
+    if (status != "00" && status != "01")
+    {
+      ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
+      ROS_ERROR("Failed to reboot by RB command. Please power-off the lidar.");
+      return;
+    }
+    ROS_INFO("%d / 2 reboot command accepted.", (status == "01") ? 1 : 2);
   }
   void cbConnect()
   {
@@ -433,15 +462,35 @@ protected:
     scip_->sendCommand("TM0");
   }
 
-  void errorCountIncrement()
+  void errorCountIncrement(const std::string& status)
   {
-    ++error_count_;
-    if (error_count_ > error_count_max_)
+    if (status == "00")
+      return;
+
+    if (status == "0L")
     {
-      ROS_ERROR("Error count exceeded limit, resetting the sensor and exiting.");
-      scip_->sendCommand("RS");
-      ros::Duration(0.05).sleep();
-      ros::shutdown();
+      ++error_count_.abnormal_error;
+      if (error_count_.abnormal_error > error_count_max_)
+      {
+        ROS_ERROR("Error count exceeded limit, rebooting the sensor and exiting.");
+        for (int i = 0; i < 2; ++i)
+        {
+          scip_->sendCommand("RB");
+        }
+        ros::Duration(0.05).sleep();
+        ros::shutdown();
+      }
+    }
+    else
+    {
+      ++error_count_.error;
+      if (error_count_.error > error_count_max_)
+      {
+        ROS_ERROR("Error count exceeded limit, resetting the sensor and exiting.");
+        scip_->sendCommand("RS");
+        ros::Duration(0.05).sleep();
+        ros::shutdown();
+      }
     }
   }
 
@@ -473,7 +522,7 @@ public:
   UrgStampedNode()
     : nh_("")
     , pnh_("~")
-    , error_count_(0)
+    //, error_count_(0, 0)
     , tm_iter_num_(5)
     , tm_median_window_(35)
     , estimated_communication_delay_init_(false)
@@ -549,6 +598,11 @@ public:
                     boost::arg<4>()));
     scip_->registerCallback<scip2::ResponseQT>(
         boost::bind(&UrgStampedNode::cbQT, this,
+                    boost::arg<1>(),
+                    boost::arg<2>(),
+                    boost::arg<3>()));
+    scip_->registerCallback<scip2::ResponseRB>(
+        boost::bind(&UrgStampedNode::cbRB, this,
                     boost::arg<1>(),
                     boost::arg<2>(),
                     boost::arg<3>()));
