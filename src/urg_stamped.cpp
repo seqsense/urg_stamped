@@ -83,21 +83,10 @@ protected:
   TimestampOutlierRemover timestamp_outlier_removal_;
   TimestampMovingAverage timestamp_moving_average_;
 
-  class ResponseErrorCount
+  struct ResponseErrorCount
   {
-  public:
     int abnormal_error;
     int error;
-
-    ResponseErrorCount()
-      : abnormal_error(0)
-      , error(0)
-    {
-    }
-    void reset()
-    {
-      abnormal_error = error = 0;
-    }
   };
   ResponseErrorCount error_count_;
   int error_count_max_;
@@ -125,7 +114,7 @@ protected:
       errorCountIncrement(status);
       return;
     }
-    error_count_.reset();
+    error_count_ = {0, 0};
 
     const auto estimated_timestamp_lf =
         device_time_origin_.origin_ +
@@ -528,6 +517,7 @@ public:
   UrgStampedNode()
     : nh_("")
     , pnh_("~")
+    , error_count_{0, 0}
     , tm_iter_num_(5)
     , tm_median_window_(35)
     , estimated_communication_delay_init_(false)
