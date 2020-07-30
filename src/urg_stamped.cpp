@@ -473,6 +473,7 @@ protected:
         for (int i = 0; i < 2; ++i)
         {
           scip_->sendCommand("RB");
+          ros::Duration(0.05).sleep();
         }
       }
     }
