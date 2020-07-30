@@ -114,7 +114,7 @@ protected:
       errorCountIncrement(status);
       return;
     }
-    error_count_ = {0, 0};
+    error_count_ = { 0, 0 };
 
     const auto estimated_timestamp_lf =
         device_time_origin_.origin_ +
@@ -413,16 +413,7 @@ protected:
       const std::string& echo_back,
       const std::string& status)
   {
-    if (status == "01")
-    {
-      ROS_INFO("1 / 2 reboot command was accepted.");
-    }
-    else if (status == "00")
-    {
-      ROS_INFO("2 / 2 reboot command was accepted. The sensor starts rebooting. Exiting.");
-      ros::shutdown();
-    }
-    else
+    if (status != "00" && status != "01")
     {
       ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
       ROS_ERROR("Failed to reboot. Please power-off the sensor. Exiting.");
@@ -470,11 +461,10 @@ protected:
       if (error_count_.abnormal_error > error_count_max_)
       {
         ROS_ERROR("Error count exceeded limit, trying to reboot the sensor and exiting.");
-        for (int i = 0; i < 2; ++i)
-        {
-          scip_->sendCommand("RB");
-          ros::Duration(0.05).sleep();
-        }
+        scip_->sendCommand("RB");
+        scip_->sendCommand("RB");  // Sending it 2 times in 1 sec. is needed
+        ros::Duration(0.05).sleep();
+        ros::shutdown();
       }
     }
     else
@@ -527,7 +517,7 @@ public:
     , timestamp_hpf_(20)
     , timestamp_outlier_removal_(ros::Duration(0.001), ros::Duration())
     , timestamp_moving_average_(5, ros::Duration())
-    , error_count_{0, 0}
+    , error_count_{ 0, 0 }
   {
     std::string ip;
     int port;
