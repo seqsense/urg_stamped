@@ -517,7 +517,6 @@ public:
   UrgStampedNode()
     : nh_("")
     , pnh_("~")
-    , error_count_{0, 0}
     , tm_iter_num_(5)
     , tm_median_window_(35)
     , estimated_communication_delay_init_(false)
@@ -527,6 +526,7 @@ public:
     , timestamp_hpf_(20)
     , timestamp_outlier_removal_(ros::Duration(0.001), ros::Duration())
     , timestamp_moving_average_(5, ros::Duration())
+    , error_count_{0, 0}
   {
     std::string ip;
     int port;
