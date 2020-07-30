@@ -417,7 +417,7 @@ protected:
     {
       ROS_INFO("1 / 2 reboot command was accepted.");
     }
-    if (status == "00")
+    else if (status == "00")
     {
       ROS_INFO("2 / 2 reboot command was accepted. The sensor starts rebooting. Exiting.");
       ros::shutdown();
@@ -469,7 +469,7 @@ protected:
       ++error_count_.abnormal_error;
       if (error_count_.abnormal_error > error_count_max_)
       {
-        ROS_ERROR("Error count exceeded limit, trying to reboot the sensor.");
+        ROS_ERROR("Error count exceeded limit, trying to reboot the sensor and exiting.");
         for (int i = 0; i < 2; ++i)
         {
           scip_->sendCommand("RB");
