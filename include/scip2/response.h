@@ -24,10 +24,10 @@
 
 #include <scip2/response/abstract.h>
 #include <scip2/response/parameters.h>
+#include <scip2/response/quit.h>
 #include <scip2/response/reboot.h>
 #include <scip2/response/stream.h>
 #include <scip2/response/time_sync.h>
-#include <scip2/response/quit.h>
 #include <scip2/logger.h>
 
 namespace scip2
