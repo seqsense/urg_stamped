@@ -421,8 +421,7 @@ protected:
     if (status != "00" && status != "01")
     {
       ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
-      ROS_ERROR("Failed to reboot. Please power-off the sensor. Exiting.");
-      ros::shutdown();
+      ROS_ERROR("Failed to reboot. Please power-off the sensor.");
     }
   }
   void cbConnect()
@@ -465,7 +464,7 @@ protected:
       ++error_count_.abnormal_error;
       if (error_count_.abnormal_error > error_count_max_)
       {
-        ROS_ERROR("Error count exceeded limit, trying to reboot the sensor and exiting.");
+        ROS_ERROR("Error count exceeded limit, rebooting the sensor and exiting.");
         scip_->sendCommand("RB");
         scip_->sendCommand("RB");  // Sending it 2 times in 1 sec. is needed
         ros::Duration(0.05).sleep();
