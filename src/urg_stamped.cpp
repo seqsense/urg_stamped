@@ -85,6 +85,11 @@ protected:
 
   struct ResponseErrorCount
   {
+    ResponseErrorCount()
+      : abnormal_error(0)
+      , error(0)
+    {
+    }
     int abnormal_error;
     int error;
   };
@@ -114,7 +119,7 @@ protected:
       errorCountIncrement(status);
       return;
     }
-    error_count_ = { 0, 0 };
+    error_count_ = ResponseErrorCount();
 
     const auto estimated_timestamp_lf =
         device_time_origin_.origin_ +
@@ -517,7 +522,6 @@ public:
     , timestamp_hpf_(20)
     , timestamp_outlier_removal_(ros::Duration(0.001), ros::Duration())
     , timestamp_moving_average_(5, ros::Duration())
-    , error_count_{ 0, 0 }
   {
     std::string ip;
     int port;
