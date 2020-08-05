@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 The urg_stamped Authors
+ * Copyright 2020 The urg_stamped Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef SCIP2_RESPONSE_QUIT_H
-#define SCIP2_RESPONSE_QUIT_H
+#ifndef SCIP2_RESPONSE_REBOOT_H
+#define SCIP2_RESPONSE_REBOOT_H
 
 #include <boost/asio.hpp>
 
@@ -25,7 +25,7 @@
 
 namespace scip2
 {
-class ResponseQT : public Response
+class ResponseRB : public Response
 {
 public:
   using Callback = boost::function<void(
@@ -39,7 +39,7 @@ protected:
 public:
   std::string getCommandCode() const
   {
-    return std::string("QT");
+    return std::string("RB");
   }
   void operator()(
       const boost::posix_time::ptime& time_read,
@@ -58,4 +58,4 @@ public:
 
 }  // namespace scip2
 
-#endif  // SCIP2_RESPONSE_QUIT_H
+#endif  // SCIP2_RESPONSE_REBOOT_H

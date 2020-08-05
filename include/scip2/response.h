@@ -24,9 +24,10 @@
 
 #include <scip2/response/abstract.h>
 #include <scip2/response/parameters.h>
+#include <scip2/response/quit.h>
+#include <scip2/response/reboot.h>
 #include <scip2/response/stream.h>
 #include <scip2/response/time_sync.h>
-#include <scip2/response/quit.h>
 #include <scip2/logger.h>
 
 namespace scip2
@@ -50,6 +51,7 @@ public:
     registerResponse(Response::Ptr(new ResponseME));
     registerResponse(Response::Ptr(new ResponseTM));
     registerResponse(Response::Ptr(new ResponseQT));
+    registerResponse(Response::Ptr(new ResponseRB));
   }
   void operator()(
       const boost::posix_time::ptime& time_read,
