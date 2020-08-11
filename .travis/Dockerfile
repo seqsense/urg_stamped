@@ -17,7 +17,7 @@ RUN apt-get -qq update \
   && rosdep install -y --from-paths src --ignore-src \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
-  && sh -c 'curl -sL https://raw.githubusercontent.com/at-wat/gh-pr-comment/master/install.sh | sh -s latest /catkin_ws'
+  && sh -c 'curl -sL https://raw.githubusercontent.com/at-wat/gh-pr-comment/master/install.sh | sh -s latest /usr/local/bin'
 RUN cd /catkin_ws/src \
   && . /opt/ros/${ROS_DISTRO}/setup.sh \
   && catkin_init_workspace
