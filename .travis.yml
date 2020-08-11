@@ -1,10 +1,6 @@
 dist: bionic
 services: docker
 language: bash
-addons:
-  apt:
-    packages:
-      - python-pip
 
 cache:
   directories:
@@ -22,7 +18,7 @@ branches:
     - master
 
 before_install:
-  - pip install --user gh-pr-comment
+  - curl -sL https://raw.githubusercontent.com/at-wat/gh-pr-comment/master/install.sh | sh -s
 
 install: true
 
@@ -48,17 +44,17 @@ jobs:
       if: head_branch =~ ^release-.*$
       env:
         - ROS_DISTRO_TARGET=kinetic
-      before_install: pip install --user gh-pr-comment
+      before_install: curl -sL https://raw.githubusercontent.com/at-wat/gh-pr-comment/master/install.sh | sh -s
       script: .travis/prerelease_test.sh
     - stage: prerelease-test
       if: head_branch =~ ^release-.*$
       env:
         - ROS_DISTRO_TARGET=melodic
-      before_install: pip install --user gh-pr-comment
+      before_install: curl -sL https://raw.githubusercontent.com/at-wat/gh-pr-comment/master/install.sh | sh -s
       script: .travis/prerelease_test.sh
     - stage: prerelease-test
       if: head_branch =~ ^release-.*$
       env:
         - ROS_DISTRO_TARGET=noetic
-      before_install: pip install --user gh-pr-comment
+      before_install: curl -sL https://raw.githubusercontent.com/at-wat/gh-pr-comment/master/install.sh | sh -s
       script: .travis/prerelease_test.sh
