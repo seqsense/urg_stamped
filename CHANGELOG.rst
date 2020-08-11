@@ -2,8 +2,8 @@
 Changelog for package urg_stamped
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.7 (2020-08-11)
+------------------
 * Reboot lidar when it is in abnormal state (`#71 <https://github.com/seqsense/urg_stamped/issues/71>`_)
 * Create GitHub Release after bloom release (`#72 <https://github.com/seqsense/urg_stamped/issues/72>`_)
 * Update CI config (`#69 <https://github.com/seqsense/urg_stamped/issues/69>`_)
