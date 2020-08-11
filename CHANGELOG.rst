@@ -2,6 +2,13 @@
 Changelog for package urg_stamped
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Reboot lidar when it is in abnormal state (`#71 <https://github.com/seqsense/urg_stamped/issues/71>`_)
+* Create GitHub Release after bloom release (`#72 <https://github.com/seqsense/urg_stamped/issues/72>`_)
+* Update CI config (`#69 <https://github.com/seqsense/urg_stamped/issues/69>`_)
+* Contributors: Atsushi Watanabe, Yuta Koga
+
 0.0.6 (2020-06-23)
 ------------------
 * Add check for device timestamp jump to node (`#66 <https://github.com/seqsense/urg_stamped/issues/66>`_)
