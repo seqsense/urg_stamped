@@ -24,7 +24,8 @@ case ${ROS_DISTRO_TARGET} in
 esac
 
 echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/ros-latest.list
-travis_retry sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+recv_key='sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654'
+${recv_key} || ${recv_key} || ${recv_key}
 sudo apt-get update -qq
 sudo apt-get install -y --no-install-recommends python3-ros-buildfarm python3-pip git
 sudo pip3 install git+https://github.com/ros/catkin
