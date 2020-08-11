@@ -24,6 +24,7 @@ install: true
 
 script:
   - BUILD_LINK="[[#${TRAVIS_BUILD_NUMBER}](${TRAVIS_BUILD_WEB_URL})]"
+  - cp ~/.local/bin/gh-pr-comment .travis/
   - docker build
     -t ${DOCKER_CACHE_TARGET}:${ROS_DISTRO_TARGET}
     -f .travis/Dockerfile
