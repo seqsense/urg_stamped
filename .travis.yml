@@ -25,17 +25,19 @@ install: true
 script:
   - BUILD_LINK="[[#${TRAVIS_BUILD_NUMBER}](${TRAVIS_BUILD_WEB_URL})]"
   - cp ~/.local/bin/gh-pr-comment .travis/
-  - docker build
-    -t ${DOCKER_CACHE_TARGET}:${ROS_DISTRO_TARGET}
-    -f .travis/Dockerfile
-    --build-arg ROS_DISTRO=${ROS_DISTRO_TARGET}
-    --pull=true ${TRAVIS_BUILD_DIR}
-    || (gh-pr-comment "${BUILD_LINK} FAILED on ${ROS_DISTRO_TARGET}" "docker build failed"; false)
-  - docker run --rm \
-    -e BUILD_LINK=${BUILD_LINK} \
-    $(sh <(curl -s https://raw.githubusercontent.com/at-wat/gh-pr-comment/master/env.sh)) \
-    ${DOCKER_CACHE_TARGET}:${ROS_DISTRO_TARGET} \
-    /catkin_ws/src/${PACKAGE_NAME}/.travis/test.sh
+  - |
+    docker build \
+      -t ${DOCKER_CACHE_TARGET}:${ROS_DISTRO_TARGET} \
+      -f .travis/Dockerfile \
+      --build-arg ROS_DISTRO=${ROS_DISTRO_TARGET} \
+      --pull=true ${TRAVIS_BUILD_DIR} \
+      || (gh-pr-comment "${BUILD_LINK} FAILED on ${ROS_DISTRO_TARGET}" "docker build failed"; false)
+  - |
+    docker run --rm \
+      -e BUILD_LINK=${BUILD_LINK} \
+      $(sh <(curl -s https://raw.githubusercontent.com/at-wat/gh-pr-comment/master/env.sh)) \
+      ${DOCKER_CACHE_TARGET}:${ROS_DISTRO_TARGET} \
+      /catkin_ws/src/${PACKAGE_NAME}/.travis/test.sh
 
 jobs:
   include:
