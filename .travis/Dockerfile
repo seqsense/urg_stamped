@@ -6,7 +6,6 @@ RUN apt-get -qq update \
   && if [ "${ROS_DISTRO}" = "noetic" ]; then ROS_PYTHON_VERSION=3; fi \
   && apt-get install -y --no-install-recommends \
     build-essential \
-    curl \
     libgtest-dev \
     libxml2-utils \
     python${ROS_PYTHON_VERSION}-rosdep \
