@@ -8,7 +8,6 @@ RUN apt-get -qq update \
     build-essential \
     libgtest-dev \
     libxml2-utils \
-    python${ROS_PYTHON_VERSION}-pip \
     python${ROS_PYTHON_VERSION}-rosdep \
     sudo \
   && rosdep init \
@@ -16,10 +15,11 @@ RUN apt-get -qq update \
   && cd /catkin_ws \
   && rosdep install -y --from-paths src --ignore-src \
   && apt-get clean \
-  && rm -rf /var/lib/apt/lists/* \
-  && python${ROS_PYTHON_VERSION} -m pip install gh-pr-comment
+  && rm -rf /var/lib/apt/lists/*
 RUN cd /catkin_ws/src \
   && . /opt/ros/${ROS_DISTRO}/setup.sh \
   && catkin_init_workspace
+
+COPY .travis/gh-pr-comment /usr/local/bin/
 
 WORKDIR /catkin_ws
