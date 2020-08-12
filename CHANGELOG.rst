@@ -2,6 +2,16 @@
 Changelog for package urg_stamped
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.0.7 (2020-08-12)
+------------------
+* Remove travis_retry from prerelease_test.sh (`#78 <https://github.com/seqsense/urg_stamped/issues/78>`_)
+* Use downloaded gh-pr-comment binary in docker container (`#77 <https://github.com/seqsense/urg_stamped/issues/77>`_)
+* Download gh-pr-comment binary instead of using pip (`#75 <https://github.com/seqsense/urg_stamped/issues/75>`_)
+* Reboot lidar when it is in abnormal state (`#71 <https://github.com/seqsense/urg_stamped/issues/71>`_)
+* Create GitHub Release after bloom release (`#72 <https://github.com/seqsense/urg_stamped/issues/72>`_)
+* Update CI config (`#69 <https://github.com/seqsense/urg_stamped/issues/69>`_)
+* Contributors: Atsushi Watanabe, Yuta Koga
+
 0.0.6 (2020-06-23)
 ------------------
 * Add check for device timestamp jump to node (`#66 <https://github.com/seqsense/urg_stamped/issues/66>`_)
