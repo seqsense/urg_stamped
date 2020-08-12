@@ -2,8 +2,8 @@
 Changelog for package urg_stamped
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.7 (2020-08-12)
+------------------
 * Remove travis_retry from prerelease_test.sh (`#78 <https://github.com/seqsense/urg_stamped/issues/78>`_)
 * Use downloaded gh-pr-comment binary in docker container (`#77 <https://github.com/seqsense/urg_stamped/issues/77>`_)
 * Download gh-pr-comment binary instead of using pip (`#75 <https://github.com/seqsense/urg_stamped/issues/75>`_)
