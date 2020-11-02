@@ -18,7 +18,7 @@ branches:
     - master
 
 before_install:
-  - echo "${DOCKERHUB_TOKEN}" | docker login -u "${DOCKERHUB_USERNAME}" --password-stdin
+  - if [ -n "${DOCKERHUB_TOKEN}" ]; then echo "${DOCKERHUB_TOKEN}" | docker login -u "${DOCKERHUB_USERNAME}" --password-stdin; fi
   - curl -sL https://raw.githubusercontent.com/at-wat/gh-pr-comment/master/install.sh | sh -s
 
 install: true
