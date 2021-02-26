@@ -45,22 +45,26 @@ public:
   }
   virtual int sync()
   {
+    std::string log = str();
+    if (!log.empty() && log.back() == '\n')
+      log.pop_back();
+
     switch (type_)
     {
       case LOG_DEBUG:
-        ROS_DEBUG("%s", str().c_str());
+        ROS_DEBUG("%s", log.c_str());
         break;
       case LOG_INFO:
-        ROS_INFO("%s", str().c_str());
+        ROS_INFO("%s", log.c_str());
         break;
       case LOG_WARN:
-        ROS_WARN("%s", str().c_str());
+        ROS_WARN("%s", log.c_str());
         break;
       case LOG_ERROR:
-        ROS_ERROR("%s", str().c_str());
+        ROS_ERROR("%s", log.c_str());
         break;
       case LOG_FATAL:
-        ROS_FATAL("%s", str().c_str());
+        ROS_FATAL("%s", log.c_str());
         break;
     }
     str("");
