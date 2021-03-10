@@ -2,8 +2,8 @@
 Changelog for package urg_stamped
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.8 (2021-03-10)
+------------------
 * Fix token name for releasing (`#86 <https://github.com/seqsense/urg_stamped/issues/86>`_)
 * Fix prerelease test (`#85 <https://github.com/seqsense/urg_stamped/issues/85>`_)
 * Remove unnecessary newline from log (`#82 <https://github.com/seqsense/urg_stamped/issues/82>`_)
