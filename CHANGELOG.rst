@@ -2,6 +2,12 @@
 Changelog for package urg_stamped
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Remove unnecessary newline from log (`#82 <https://github.com/seqsense/urg_stamped/issues/82>`_)
+* Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
+* Contributors: Atsushi Watanabe
+
 0.0.7 (2020-08-12)
 ------------------
 * Remove travis_retry from prerelease_test.sh (`#78 <https://github.com/seqsense/urg_stamped/issues/78>`_)
