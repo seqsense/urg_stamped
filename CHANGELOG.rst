@@ -2,8 +2,8 @@
 Changelog for package urg_stamped
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.8 (2021-03-10)
+------------------
 * Remove unnecessary newline from log (`#82 <https://github.com/seqsense/urg_stamped/issues/82>`_)
 * Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
 * Contributors: Atsushi Watanabe
