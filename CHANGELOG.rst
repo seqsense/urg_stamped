@@ -10,8 +10,8 @@ Changelog for package urg_stamped
 * Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
 * Contributors: Atsushi Watanabe
 
-Forthcoming
------------
+0.0.9 (2021-03-10)
+------------------
 * Release 0.0.8 (`#84 <https://github.com/seqsense/urg_stamped/issues/84>`_)
 * Fix token name for releasing (`#86 <https://github.com/seqsense/urg_stamped/issues/86>`_)
 * Fix prerelease test (`#85 <https://github.com/seqsense/urg_stamped/issues/85>`_)
