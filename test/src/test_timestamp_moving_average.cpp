@@ -16,8 +16,10 @@
 
 #include <gtest/gtest.h>
 
-#include <timestamp_moving_average.h>
+#include <urg_stamped/timestamp_moving_average.h>
 
+namespace urg_stamped
+{
 TEST(TimestampMovingAverage, ResetAndGo)
 {
   TimestampMovingAverage ma(3, ros::Duration(0.1));
@@ -56,6 +58,7 @@ TEST(TimestampMovingAverage, SkippedInput)
     ASSERT_EQ(ma.update(ros::Time(t)), ros::Time(t));
   }
 }
+}  // namespace urg_stamped
 
 int main(int argc, char** argv)
 {

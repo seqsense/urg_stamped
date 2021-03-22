@@ -17,7 +17,12 @@ catkin_package(
 add_compile_options(-std=c++11)
 include_directories(${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} include)
 
-add_executable(urg_stamped src/urg_stamped.cpp src/scip2/logger.cpp src/ros_logger.cpp)
+add_executable(urg_stamped
+  src/urg_stamped.cpp
+  src/urg_stamped_node.cpp
+  src/scip2/logger.cpp
+  src/ros_logger.cpp
+)
 target_link_libraries(urg_stamped ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 
@@ -25,6 +30,7 @@ if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
   find_package(rosunit REQUIRED)
   find_package(roslint REQUIRED)
+  set(ROSLINT_CPP_OPTS "--filter=-runtime/references,-build/c++11")
   roslint_cpp()
   roslint_add_test()
 

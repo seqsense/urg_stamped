@@ -20,8 +20,10 @@
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
-#include <device_time_origin.h>
+#include <urg_stamped/device_time_origin.h>
 
+namespace urg_stamped
+{
 TEST(DeviceTimeOriginTest, testEstimateOriginByAverage)
 {
   const boost::posix_time::time_duration delay = boost::posix_time::milliseconds(1);
@@ -69,6 +71,7 @@ TEST(DeviceTimeOriginTest, testDetectTimeJump)
       device_time_origin::jump_detector::detectTimeJump(
           last_origin_not_init, last_origin_not_init + ros::Duration(1.01), 1.0));
 }
+}  // namespace urg_stamped
 
 int main(int argc, char** argv)
 {

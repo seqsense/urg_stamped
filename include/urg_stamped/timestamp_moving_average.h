@@ -14,29 +14,33 @@
  * limitations under the License.
  */
 
-#ifndef TIMESTAMP_OUTLIER_REMOVER_H
-#define TIMESTAMP_OUTLIER_REMOVER_H
+#ifndef URG_STAMPED_TIMESTAMP_MOVING_AVERAGE_H
+#define URG_STAMPED_TIMESTAMP_MOVING_AVERAGE_H
 
 #include <ros/ros.h>
 
 #include <cmath>
+#include <vector>
 
-class TimestampOutlierRemover
+namespace urg_stamped
+{
+class TimestampMovingAverage
 {
 protected:
-  ros::Time stamp_;
-  ros::Duration diff_max_;
+  size_t window_size_;
   ros::Duration interval_;
-  size_t outlier_cnt_;
+  std::vector<ros::Time> buffer_;
+  size_t pos_;
 
 public:
-  TimestampOutlierRemover(
-      const ros::Duration& diff_max,
+  TimestampMovingAverage(
+      const size_t window_size,
       const ros::Duration& interval)
-    : diff_max_(diff_max)
+    : window_size_(window_size)
     , interval_(interval)
-    , outlier_cnt_(0)
+    , pos_(0)
   {
+    buffer_.resize(window_size);
   }
   void setInterval(const ros::Duration& interval)
   {
@@ -44,33 +48,23 @@ public:
   }
   ros::Time update(const ros::Time& stamp)
   {
-    if (stamp_ == ros::Time())
-      stamp_ = stamp - interval_;
+    buffer_[pos_ % window_size_] = stamp;
+    pos_++;
+    if (pos_ < window_size_)
+      return stamp;
 
-    const auto interval = stamp - stamp_;
-    const int scan_num = lround(interval.toSec() / interval_.toSec());
-    const double interval_remainder = remainder(interval.toSec(), interval_.toSec());
-
-    if (fabs(interval_remainder) > diff_max_.toSec())
+    ros::Duration sum(0);
+    for (const ros::Time& b : buffer_)
     {
-      stamp_ += interval_ * scan_num;
-      if (outlier_cnt_ >= 1)
-        stamp_ = stamp;
-
-      outlier_cnt_++;
+      sum += ros::Duration(remainder((b - stamp).toSec(), interval_.toSec()));
     }
-    else
-    {
-      stamp_ = stamp;
-      outlier_cnt_ = 0;
-    }
-
-    return stamp_;
+    return stamp + sum * (1.0 / window_size_);
   }
   void reset()
   {
-    stamp_ = ros::Time();
+    pos_ = 0;
   }
 };
+}  // namespace urg_stamped
 
-#endif  // TIMESTAMP_OUTLIER_REMOVER_H
+#endif  // URG_STAMPED_TIMESTAMP_MOVING_AVERAGE_H

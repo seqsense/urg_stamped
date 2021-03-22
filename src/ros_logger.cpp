@@ -22,8 +22,6 @@
 
 #include <scip2/logger.h>
 
-namespace urg_stamped
-{
 namespace
 {
 class ROSOutStreamBuffer : public std::stringbuf
@@ -84,6 +82,8 @@ std::ostream error_logger(&error_buf);
 std::ostream fatal_logger(&fatal_buf);
 }  // namespace
 
+namespace urg_stamped
+{
 void setROSLogger()
 {
   scip2::logger::setDebugLogger(&debug_logger);

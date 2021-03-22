@@ -62,13 +62,13 @@ public:
       const auto delm = std::find(line.begin(), line.end(), ':');
       if (delm == line.end())
       {
-        logger::error() << "Parameter decode error" << std::endl;
+        logger::error() << "Parameter decode error (:)" << line << std::endl;
         return;
       }
       const auto end = std::find(line.begin(), line.end(), ';');
       if (end == line.end())
       {
-        logger::error() << "Parameter decode error" << std::endl;
+        logger::error() << "Parameter decode error (;)" << line << std::endl;
         return;
       }
       const uint8_t checksum = line.back();
