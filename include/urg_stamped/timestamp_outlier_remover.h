@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 The urg_stamped Authors
+ * Copyright 2018-2021 The urg_stamped Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-#ifndef TIMESTAMP_OUTLIER_REMOVER_H
-#define TIMESTAMP_OUTLIER_REMOVER_H
+#ifndef URG_STAMPED_TIMESTAMP_OUTLIER_REMOVER_H
+#define URG_STAMPED_TIMESTAMP_OUTLIER_REMOVER_H
 
 #include <ros/ros.h>
 
 #include <cmath>
 
+namespace urg_stamped
+{
 class TimestampOutlierRemover
 {
 protected:
@@ -72,5 +74,6 @@ public:
     stamp_ = ros::Time();
   }
 };
+}  // namespace urg_stamped
 
-#endif  // TIMESTAMP_OUTLIER_REMOVER_H
+#endif  // URG_STAMPED_TIMESTAMP_OUTLIER_REMOVER_H

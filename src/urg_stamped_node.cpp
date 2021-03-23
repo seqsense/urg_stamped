@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 The urg_stamped Authors
+ * Copyright 2018-2021 The urg_stamped Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,17 @@
  * limitations under the License.
  */
 
-#ifndef ROS_LOGGER_H
-#define ROS_LOGGER_H
+#include <ros/ros.h>
 
-#include <iostream>
+#include <urg_stamped/urg_stamped.h>
 
-namespace urg_stamped
+int main(int argc, char** argv)
 {
-void setROSLogger();
-}  // namespace urg_stamped
+  ros::init(argc, argv, "urg_stamped");
+  urg_stamped::setROSLogger();
 
-#endif  // ROS_LOGGER_H
+  urg_stamped::UrgStampedNode node;
+  node.spin();
+
+  return 1;
+}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 The urg_stamped Authors
+ * Copyright 2018-2021 The urg_stamped Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-#ifndef TIMESTAMP_MOVING_AVERAGE_H
-#define TIMESTAMP_MOVING_AVERAGE_H
+#ifndef URG_STAMPED_TIMESTAMP_MOVING_AVERAGE_H
+#define URG_STAMPED_TIMESTAMP_MOVING_AVERAGE_H
 
 #include <ros/ros.h>
 
 #include <cmath>
 #include <vector>
 
+namespace urg_stamped
+{
 class TimestampMovingAverage
 {
 protected:
@@ -63,5 +65,6 @@ public:
     pos_ = 0;
   }
 };
+}  // namespace urg_stamped
 
-#endif  // TIMESTAMP_MOVING_AVERAGE_H
+#endif  // URG_STAMPED_TIMESTAMP_MOVING_AVERAGE_H

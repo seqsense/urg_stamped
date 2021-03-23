@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 The urg_stamped Authors
+ * Copyright 2020-2021 The urg_stamped Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-#ifndef DEVICE_TIME_ORIGIN_H
-#define DEVICE_TIME_ORIGIN_H
+#ifndef URG_STAMPED_DEVICE_TIME_ORIGIN_H
+#define URG_STAMPED_DEVICE_TIME_ORIGIN_H
 
 #include <ros/ros.h>
 
 #include <cmath>
 
+namespace urg_stamped
+{
 namespace device_time_origin
 {
 class DriftedTime
@@ -81,5 +83,6 @@ inline bool detectTimeJump(
 }
 }  // namespace jump_detector
 }  // namespace device_time_origin
+}  // namespace urg_stamped
 
-#endif  // DEVICE_TIME_ORIGIN_H
+#endif  // URG_STAMPED_DEVICE_TIME_ORIGIN_H

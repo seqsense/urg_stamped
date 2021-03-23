@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 The urg_stamped Authors
+ * Copyright 2018-2021 The urg_stamped Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,10 @@
 
 #include <gtest/gtest.h>
 
-#include <timestamp_outlier_remover.h>
+#include <urg_stamped/timestamp_outlier_remover.h>
 
+namespace urg_stamped
+{
 TEST(TimestampOutlierRemoval, RemoveOneOutlier)
 {
   TimestampOutlierRemover remover(ros::Duration(0.01), ros::Duration(0.1));
@@ -40,6 +42,7 @@ TEST(TimestampOutlierRemoval, MoreThanTwoOutlier)
   ASSERT_EQ(remover.update(ros::Time(10.320)), ros::Time(10.300));  // outlier
   ASSERT_EQ(remover.update(ros::Time(10.440)), ros::Time(10.440));  // fix only first outlier
 }
+}  // namespace urg_stamped
 
 int main(int argc, char** argv)
 {

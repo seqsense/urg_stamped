@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 The urg_stamped Authors
+ * Copyright 2018-2021 The urg_stamped Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-#ifndef FIRST_ORDER_FILTER_H
-#define FIRST_ORDER_FILTER_H
+#ifndef URG_STAMPED_FIRST_ORDER_FILTER_H
+#define URG_STAMPED_FIRST_ORDER_FILTER_H
 
+namespace urg_stamped
+{
 template <typename FLT>
 class FirstOrderFilter
 {
@@ -66,5 +68,6 @@ public:
     this->k_[0] = 2 * time_constant * (-this->k_[1] + 1.0);
   }
 };
+}  // namespace urg_stamped
 
-#endif  // FIRST_ORDER_FILTER_H
+#endif  // URG_STAMPED_FIRST_ORDER_FILTER_H

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 The urg_stamped Authors
+ * Copyright 2018-2021 The urg_stamped Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,10 @@
 
 #include <cmath>
 
-#include <first_order_filter.h>
+#include <urg_stamped/first_order_filter.h>
 
+namespace urg_stamped
+{
 TEST(FirstOrderFilter, PassThrough)
 {
   FirstOrderFilter<double> flt;
@@ -48,6 +50,7 @@ TEST(FirstOrderFilter, HPF)
     flt.update(1.0);
   ASSERT_NEAR(flt.update(1.0), 1.0 / std::exp(1), 1e-2);
 }
+}  // namespace urg_stamped
 
 int main(int argc, char** argv)
 {

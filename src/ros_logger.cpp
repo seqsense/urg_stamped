@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 The urg_stamped Authors
+ * Copyright 2019-2021 The urg_stamped Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,6 @@
 
 #include <scip2/logger.h>
 
-namespace urg_stamped
-{
 namespace
 {
 class ROSOutStreamBuffer : public std::stringbuf
@@ -84,6 +82,8 @@ std::ostream error_logger(&error_buf);
 std::ostream fatal_logger(&fatal_buf);
 }  // namespace
 
+namespace urg_stamped
+{
 void setROSLogger()
 {
   scip2::logger::setDebugLogger(&debug_logger);
