@@ -128,7 +128,6 @@ void UrgStampedNode::cbTM(
     return;
   }
 
-  timer_try_tm_.stop();
   switch (echo_back[2])
   {
     case '0':
@@ -357,6 +356,12 @@ void UrgStampedNode::cbQT(
   }
 
   ROS_DEBUG("Scan data stopped");
+
+  if (try_tm_)
+  {
+    try_tm_ = false;
+    scip_->sendCommand("TM0");
+  }
 }
 void UrgStampedNode::cbRB(
     const boost::posix_time::ptime& time_read,
@@ -388,15 +393,8 @@ void UrgStampedNode::delayEstimation(const ros::TimerEvent& event)
 {
   timer_sync_.stop();
   ROS_DEBUG("Starting communication delay estimation");
+  try_tm_ = true;
   scip_->sendCommand("QT");
-  timer_try_tm_ = nh_.createTimer(
-      ros::Duration(0.05),
-      &UrgStampedNode::tryTM, this);
-}
-void UrgStampedNode::tryTM(const ros::TimerEvent& event)
-{
-  scip_->sendCommand("QT");
-  scip_->sendCommand("TM0");
 }
 
 void UrgStampedNode::errorCountIncrement(const std::string& status)
@@ -553,6 +551,7 @@ void UrgStampedNode::spin()
       boost::bind(&scip2::Connection::spin, device_.get()));
   ros::spin();
   timer_sync_.stop();
+  try_tm_ = false;
   scip_->sendCommand("QT");
   device_->stop();
 }
