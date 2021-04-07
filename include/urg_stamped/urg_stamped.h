@@ -59,6 +59,7 @@ protected:
   scip2::Protocol::Ptr scip_;
 
   bool publish_intensity_;
+  bool device_initialized_;
 
   enum class DelayEstimState
   {
@@ -141,6 +142,10 @@ protected:
       const std::string& echo_back,
       const std::string& status);
   void cbRB(
+      const boost::posix_time::ptime& time_read,
+      const std::string& echo_back,
+      const std::string& status);
+  void cbRS(
       const boost::posix_time::ptime& time_read,
       const std::string& echo_back,
       const std::string& status);

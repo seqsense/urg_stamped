@@ -26,6 +26,7 @@
 #include <scip2/response/parameters.h>
 #include <scip2/response/quit.h>
 #include <scip2/response/reboot.h>
+#include <scip2/response/reset.h>
 #include <scip2/response/stream.h>
 #include <scip2/response/time_sync.h>
 #include <scip2/logger.h>
@@ -52,6 +53,8 @@ public:
     registerResponse(Response::Ptr(new ResponseTM));
     registerResponse(Response::Ptr(new ResponseQT));
     registerResponse(Response::Ptr(new ResponseRB));
+    registerResponse(Response::Ptr(new ResponseRS));
+    registerResponse(Response::Ptr(new ResponseRT));
   }
   void operator()(
       const boost::posix_time::ptime& time_read,

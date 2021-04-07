@@ -111,10 +111,12 @@ void UrgStampedNode::cbM(
 
   pub_scan_.publish(msg);
 }
+
 void UrgStampedNode::cbTMSend(const boost::posix_time::ptime& time_send)
 {
   time_tm_request = time_send;
 }
+
 void UrgStampedNode::cbTM(
     const boost::posix_time::ptime& time_read,
     const std::string& echo_back,
@@ -207,6 +209,7 @@ void UrgStampedNode::cbTM(
     }
   }
 }
+
 void UrgStampedNode::cbPP(
     const boost::posix_time::ptime& time_read,
     const std::string& echo_back,
@@ -251,6 +254,7 @@ void UrgStampedNode::cbPP(
   timestamp_moving_average_.setInterval(ros::Duration(msg_base_.scan_time));
   delayEstimation();
 }
+
 void UrgStampedNode::cbVV(
     const boost::posix_time::ptime& time_read,
     const std::string& echo_back,
@@ -264,10 +268,12 @@ void UrgStampedNode::cbVV(
     return;
   }
 }
+
 void UrgStampedNode::cbIISend(const boost::posix_time::ptime& time_send)
 {
   time_ii_request = time_send;
 }
+
 void UrgStampedNode::cbII(
     const boost::posix_time::ptime& time_read,
     const std::string& echo_back,
@@ -343,6 +349,7 @@ void UrgStampedNode::cbII(
               delay.toSec());
   }
 }
+
 void UrgStampedNode::cbQT(
     const boost::posix_time::ptime& time_read,
     const std::string& echo_back,
@@ -363,6 +370,7 @@ void UrgStampedNode::cbQT(
     scip_->sendCommand("TM0");
   }
 }
+
 void UrgStampedNode::cbRB(
     const boost::posix_time::ptime& time_read,
     const std::string& echo_back,
@@ -374,9 +382,30 @@ void UrgStampedNode::cbRB(
     ROS_ERROR("Failed to reboot. Please power-off the sensor.");
   }
 }
+
+void UrgStampedNode::cbRS(
+    const boost::posix_time::ptime& time_read,
+    const std::string& echo_back,
+    const std::string& status)
+{
+  if (status != "00")
+  {
+    ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
+    ROS_ERROR("Failed to reset. Rebooting the sensor and exiting.");
+    hardReset();
+    return;
+  }
+  ROS_INFO("Sensor reset succeeded.");
+  if (!device_initialized_)
+  {
+    device_initialized_ = true;
+    scip_->sendCommand("PP");
+  }
+}
+
 void UrgStampedNode::cbConnect()
 {
-  scip_->sendCommand("PP");
+  scip_->sendCommand("RS");
   device_->startWatchdog(boost::posix_time::seconds(1));
 }
 
@@ -480,6 +509,8 @@ bool UrgStampedNode::detectDeviceTimeJump(
 UrgStampedNode::UrgStampedNode()
   : nh_("")
   , pnh_("~")
+  , delay_estim_state_(DelayEstimState::IDLE)
+  , device_initialized_(false)
   , tm_iter_num_(5)
   , tm_median_window_(35)
   , estimated_communication_delay_init_(false)
@@ -563,13 +594,17 @@ UrgStampedNode::UrgStampedNode()
                   boost::arg<1>(),
                   boost::arg<2>(),
                   boost::arg<3>()));
+  scip_->registerCallback<scip2::ResponseRS>(
+      boost::bind(&UrgStampedNode::cbRS, this,
+                  boost::arg<1>(),
+                  boost::arg<2>(),
+                  boost::arg<3>()));
 
   if (delay_estim_interval > 0.0)
   {
     timer_delay_estim_ = nh_.createTimer(
         ros::Duration(delay_estim_interval), &UrgStampedNode::delayEstimation, this);
   }
-  delay_estim_state_ = DelayEstimState::IDLE;
 }
 
 void UrgStampedNode::spin()
