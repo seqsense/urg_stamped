@@ -439,6 +439,8 @@ void UrgStampedNode::delayEstimation(const ros::TimerEvent& event)
           static_cast<int>(delay_estim_state_));
       softReset();
       break;
+    default:
+      break;
   }
 }
 
