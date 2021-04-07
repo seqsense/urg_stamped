@@ -60,7 +60,14 @@ protected:
 
   bool publish_intensity_;
 
-  bool try_tm_;
+  enum class DelayEstimState
+  {
+    IDLE,
+    STOPPING_SCAN,
+    ESTIMATING,
+    EXITING,
+  };
+  DelayEstimState delay_estim_state_;
   boost::posix_time::ptime time_tm_request;
   std::list<ros::Duration> communication_delays_;
   std::list<ros::Time> device_time_origins_;
@@ -147,6 +154,9 @@ protected:
   bool detectDeviceTimeJump(
       const boost::posix_time::ptime& time_response,
       const uint64_t& device_timestamp);
+
+  void softReset();
+  void hardReset();
 
 public:
   UrgStampedNode();

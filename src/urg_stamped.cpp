@@ -357,9 +357,9 @@ void UrgStampedNode::cbQT(
 
   ROS_DEBUG("Scan data stopped");
 
-  if (try_tm_)
+  if (delay_estim_state_ == DelayEstimState::STOPPING_SCAN)
   {
-    try_tm_ = false;
+    delay_estim_state_ = DelayEstimState::ESTIMATING;
     scip_->sendCommand("TM0");
   }
 }
@@ -389,12 +389,28 @@ void UrgStampedNode::timeSync(const ros::TimerEvent& event)
       ros::Duration(sync_interval_(random_engine_)),
       &UrgStampedNode::timeSync, this, true);
 }
+
 void UrgStampedNode::delayEstimation(const ros::TimerEvent& event)
 {
-  timer_sync_.stop();
-  ROS_DEBUG("Starting communication delay estimation");
-  try_tm_ = true;
-  scip_->sendCommand("QT");
+  timer_sync_.stop();  // Stop timer for sync using II command.
+  switch (delay_estim_state_)
+  {
+    case DelayEstimState::STOPPING_SCAN:
+      ROS_ERROR("Previous QT command was ignored by the sensor");
+      errorCountIncrement("QT command was ignored");
+    // fallthrough
+    case DelayEstimState::IDLE:
+      ROS_DEBUG("Starting communication delay estimation");
+      delay_estim_state_ = DelayEstimState::STOPPING_SCAN;
+      scip_->sendCommand("QT");
+      break;
+    case DelayEstimState::ESTIMATING:
+      ROS_ERROR(
+          "Previous delay estimation was not completed (state: %d), resetting the sensor and exiting.",
+          static_cast<int>(delay_estim_state_));
+      softReset();
+      break;
+  }
 }
 
 void UrgStampedNode::errorCountIncrement(const std::string& status)
@@ -408,10 +424,7 @@ void UrgStampedNode::errorCountIncrement(const std::string& status)
     if (error_count_.abnormal_error > error_count_max_)
     {
       ROS_ERROR("Error count exceeded limit, rebooting the sensor and exiting.");
-      scip_->sendCommand("RB");
-      scip_->sendCommand("RB");  // Sending it 2 times in 1 sec. is needed
-      ros::Duration(0.05).sleep();
-      ros::shutdown();
+      hardReset();
     }
   }
   else
@@ -420,11 +433,24 @@ void UrgStampedNode::errorCountIncrement(const std::string& status)
     if (error_count_.error > error_count_max_)
     {
       ROS_ERROR("Error count exceeded limit, resetting the sensor and exiting.");
-      scip_->sendCommand("RS");
-      ros::Duration(0.05).sleep();
-      ros::shutdown();
+      softReset();
     }
   }
+}
+
+void UrgStampedNode::softReset()
+{
+  scip_->sendCommand("RS");
+  ros::Duration(0.05).sleep();
+  ros::shutdown();
+}
+
+void UrgStampedNode::hardReset()
+{
+  scip_->sendCommand("RB");
+  scip_->sendCommand("RB");  // Sending it 2 times in 1 sec. is needed
+  ros::Duration(0.05).sleep();
+  ros::shutdown();
 }
 
 bool UrgStampedNode::detectDeviceTimeJump(
@@ -543,6 +569,7 @@ UrgStampedNode::UrgStampedNode()
     timer_delay_estim_ = nh_.createTimer(
         ros::Duration(delay_estim_interval), &UrgStampedNode::delayEstimation, this);
   }
+  delay_estim_state_ = DelayEstimState::IDLE;
 }
 
 void UrgStampedNode::spin()
@@ -551,7 +578,7 @@ void UrgStampedNode::spin()
       boost::bind(&scip2::Connection::spin, device_.get()));
   ros::spin();
   timer_sync_.stop();
-  try_tm_ = false;
+  delay_estim_state_ = DelayEstimState::EXITING;
   scip_->sendCommand("QT");
   device_->stop();
 }
