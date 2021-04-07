@@ -10,8 +10,9 @@ Changelog for package urg_stamped
 * Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
 * Contributors: Atsushi Watanabe
 
-0.0.10 (2021-04-07)
--------------------
+Forthcoming
+-----------
+* Add codecov.yml (`#96 <https://github.com/seqsense/urg_stamped/issues/96>`_)
 * Fix error handling during delay estimation (`#92 <https://github.com/seqsense/urg_stamped/issues/92>`_)
 * Add option to enable debug log output at launch (`#93 <https://github.com/seqsense/urg_stamped/issues/93>`_)
 * Send TM command after receiving QT response (`#91 <https://github.com/seqsense/urg_stamped/issues/91>`_)
