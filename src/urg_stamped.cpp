@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <ros/console.h>
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
 
@@ -480,6 +481,17 @@ UrgStampedNode::UrgStampedNode()
   pnh_.param("delay_estim_interval", delay_estim_interval, 20.0);
   pnh_.param("error_limit", error_count_max_, 4);
   pnh_.param("allowed_device_time_origin_diff", allowed_device_time_origin_diff_, 1.0);
+
+  bool debug;
+  pnh_.param("debug", debug, false);
+  if (debug)
+  {
+    // Enable debug level log at the beginning of the node to show initialization related logs.
+    if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug))
+    {
+      ros::console::notifyLoggerLevelsChanged();
+    }
+  }
 
   pub_scan_ = nh_.advertise<sensor_msgs::LaserScan>("scan", 10);
 
