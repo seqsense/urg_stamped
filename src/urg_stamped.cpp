@@ -197,6 +197,7 @@ void UrgStampedNode::cbTM(
     }
     case '2':
     {
+      delay_estim_state_ = DelayEstimState::IDLE;
       scip_->sendCommand(
           (publish_intensity_ ? "ME" : "MD") +
           (boost::format("%04d%04d") % step_min_ % step_max_).str() +
