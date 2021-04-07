@@ -59,8 +59,16 @@ protected:
   scip2::Protocol::Ptr scip_;
 
   bool publish_intensity_;
+  bool device_initialized_;
 
-  bool try_tm_;
+  enum class DelayEstimState
+  {
+    IDLE,
+    STOPPING_SCAN,
+    ESTIMATING,
+    EXITING,
+  };
+  DelayEstimState delay_estim_state_;
   boost::posix_time::ptime time_tm_request;
   std::list<ros::Duration> communication_delays_;
   std::list<ros::Time> device_time_origins_;
@@ -137,6 +145,10 @@ protected:
       const boost::posix_time::ptime& time_read,
       const std::string& echo_back,
       const std::string& status);
+  void cbRS(
+      const boost::posix_time::ptime& time_read,
+      const std::string& echo_back,
+      const std::string& status);
   void cbConnect();
 
   void timeSync(const ros::TimerEvent& event = ros::TimerEvent());
@@ -147,6 +159,9 @@ protected:
   bool detectDeviceTimeJump(
       const boost::posix_time::ptime& time_response,
       const uint64_t& device_timestamp);
+
+  void softReset();
+  void hardReset();
 
 public:
   UrgStampedNode();
