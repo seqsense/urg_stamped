@@ -396,7 +396,7 @@ void UrgStampedNode::cbRS(
     hardReset();
     return;
   }
-  ROS_INFO("Sensor reset succeeded.");
+  ROS_INFO("Sensor reset succeeded");
   if (!device_initialized_)
   {
     device_initialized_ = true;
