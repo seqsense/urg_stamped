@@ -131,10 +131,12 @@ void UrgStampedNode::cbTM(
     return;
   }
 
+  timer_try_tm_.stop();
   switch (echo_back[2])
   {
     case '0':
     {
+      delay_estim_state_ = DelayEstimState::ESTIMATING;
       scip_->sendCommand(
           "TM1",
           boost::bind(&UrgStampedNode::cbTMSend, this, boost::arg<1>()));
@@ -368,8 +370,10 @@ void UrgStampedNode::cbQT(
 
   if (delay_estim_state_ == DelayEstimState::STOPPING_SCAN)
   {
-    delay_estim_state_ = DelayEstimState::ESTIMATING;
-    scip_->sendCommand("TM0");
+    delay_estim_state_ = DelayEstimState::ESTIMATION_STARTING;
+    timer_try_tm_ = nh_.createTimer(
+        ros::Duration(0.05),
+        &UrgStampedNode::tryTM, this);
   }
 }
 
@@ -443,6 +447,14 @@ void UrgStampedNode::delayEstimation(const ros::TimerEvent& event)
       break;
     default:
       break;
+  }
+}
+
+void UrgStampedNode::tryTM(const ros::TimerEvent& event)
+{
+  if (delay_estim_state_ == DelayEstimState::ESTIMATION_STARTING)
+  {
+    scip_->sendCommand("TM0");
   }
 }
 
