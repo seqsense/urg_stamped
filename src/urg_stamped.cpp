@@ -450,20 +450,20 @@ void UrgStampedNode::tryTM(const ros::TimerEvent& event)
 {
   switch (delay_estim_state_)
   {
-  case DelayEstimState::STOPPING_SCAN:
-    ROS_DEBUG("Stopping scan");
-    scip_->sendCommand("QT");
-    break;
-  case DelayEstimState::ESTIMATION_STARTING:
-    ROS_DEBUG("Entering the time synchronization mode");
-    scip_->sendCommand("TM0");
-    break;
-  case DelayEstimState::ESTIMATING:
-    ROS_WARN("Timeout occured during the time synchronization");
-    scip_->sendCommand("TM2");
-    break;
-  default:
-    break;
+    case DelayEstimState::STOPPING_SCAN:
+      ROS_DEBUG("Stopping scan");
+      scip_->sendCommand("QT");
+      break;
+    case DelayEstimState::ESTIMATION_STARTING:
+      ROS_DEBUG("Entering the time synchronization mode");
+      scip_->sendCommand("TM0");
+      break;
+    case DelayEstimState::ESTIMATING:
+      ROS_WARN("Timeout occured during the time synchronization");
+      scip_->sendCommand("TM2");
+      break;
+    default:
+      break;
   }
 }
 
