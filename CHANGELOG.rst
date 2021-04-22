@@ -10,8 +10,8 @@ Changelog for package urg_stamped
 * Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
 * Contributors: Atsushi Watanabe
 
-Forthcoming
------------
+0.0.11 (2021-04-22)
+-------------------
 * Fallback timeout during time synchronization (`#97 <https://github.com/seqsense/urg_stamped/issues/97>`_)
 * Contributors: Atsushi Watanabe
 
