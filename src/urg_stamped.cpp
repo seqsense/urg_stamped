@@ -128,6 +128,15 @@ void UrgStampedNode::cbTM(
   {
     ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
     errorCountIncrement(status);
+
+    if (echo_back[2] == '0' && delay_estim_state_ == DelayEstimState::ESTIMATION_STARTING)
+    {
+      ROS_WARN(
+          "Failed to enter the time synchronization mode, "
+          "even after receiving successful QT command response. "
+          "QT command may be ignored by the sensor firmware");
+      delay_estim_state_ = DelayEstimState::STOPPING_SCAN;
+    }
     return;
   }
 
@@ -136,7 +145,7 @@ void UrgStampedNode::cbTM(
   {
     case '0':
     {
-      ROS_DEBUG("Entered time synchronization mode");
+      ROS_DEBUG("Entered the time synchronization mode");
       delay_estim_state_ = DelayEstimState::ESTIMATING;
       scip_->sendCommand(
           "TM1",
@@ -210,7 +219,7 @@ void UrgStampedNode::cbTM(
       timestamp_outlier_removal_.reset();
       timestamp_moving_average_.reset();
       t0_ = ros::Time();
-      ROS_DEBUG("Leaving time synchronization mode");
+      ROS_DEBUG("Leaving the time synchronization mode");
       break;
     }
   }
@@ -432,7 +441,7 @@ void UrgStampedNode::delayEstimation(const ros::TimerEvent& event)
   delay_estim_state_ = DelayEstimState::STOPPING_SCAN;
   timer_try_tm_.stop();
   timer_try_tm_ = nh_.createTimer(
-      ros::Duration(0.05),
+      ros::Duration(0.1),
       &UrgStampedNode::tryTM, this);
   tryTM();
 }
@@ -446,11 +455,11 @@ void UrgStampedNode::tryTM(const ros::TimerEvent& event)
     scip_->sendCommand("QT");
     break;
   case DelayEstimState::ESTIMATION_STARTING:
-    ROS_DEBUG("Entering time synchronization mode");
+    ROS_DEBUG("Entering the time synchronization mode");
     scip_->sendCommand("TM0");
     break;
   case DelayEstimState::ESTIMATING:
-    ROS_WARN("Timeout occured during time synchronization");
+    ROS_WARN("Timeout occured during the time synchronization");
     scip_->sendCommand("TM2");
     break;
   }
