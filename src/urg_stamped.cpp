@@ -128,13 +128,25 @@ void UrgStampedNode::cbTM(
   {
     ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
     errorCountIncrement(status);
+
+    if (echo_back[2] == '0' && delay_estim_state_ == DelayEstimState::ESTIMATION_STARTING)
+    {
+      ROS_WARN(
+          "Failed to enter the time synchronization mode, "
+          "even after receiving successful QT command response. "
+          "QT command may be ignored by the sensor firmware");
+      delay_estim_state_ = DelayEstimState::STOPPING_SCAN;
+    }
     return;
   }
 
+  timer_retry_tm_.stop();
   switch (echo_back[2])
   {
     case '0':
     {
+      ROS_DEBUG("Entered the time synchronization mode");
+      delay_estim_state_ = DelayEstimState::ESTIMATING;
       scip_->sendCommand(
           "TM1",
           boost::bind(&UrgStampedNode::cbTMSend, this, boost::arg<1>()));
@@ -207,6 +219,7 @@ void UrgStampedNode::cbTM(
       timestamp_outlier_removal_.reset();
       timestamp_moving_average_.reset();
       t0_ = ros::Time();
+      ROS_DEBUG("Leaving the time synchronization mode");
       break;
     }
   }
@@ -368,8 +381,8 @@ void UrgStampedNode::cbQT(
 
   if (delay_estim_state_ == DelayEstimState::STOPPING_SCAN)
   {
-    delay_estim_state_ = DelayEstimState::ESTIMATING;
-    scip_->sendCommand("TM0");
+    delay_estim_state_ = DelayEstimState::ESTIMATION_STARTING;
+    retryTM();
   }
 }
 
@@ -424,22 +437,30 @@ void UrgStampedNode::timeSync(const ros::TimerEvent& event)
 void UrgStampedNode::delayEstimation(const ros::TimerEvent& event)
 {
   timer_sync_.stop();  // Stop timer for sync using II command.
+  ROS_DEBUG("Starting communication delay estimation");
+  delay_estim_state_ = DelayEstimState::STOPPING_SCAN;
+  timer_retry_tm_.stop();
+  timer_retry_tm_ = nh_.createTimer(
+      ros::Duration(0.1),
+      &UrgStampedNode::retryTM, this);
+  retryTM();
+}
+
+void UrgStampedNode::retryTM(const ros::TimerEvent& event)
+{
   switch (delay_estim_state_)
   {
     case DelayEstimState::STOPPING_SCAN:
-      ROS_ERROR("Previous QT command was ignored by the sensor");
-      errorCountIncrement("QT command was ignored");
-    // fallthrough
-    case DelayEstimState::IDLE:
-      ROS_DEBUG("Starting communication delay estimation");
-      delay_estim_state_ = DelayEstimState::STOPPING_SCAN;
+      ROS_DEBUG("Stopping scan");
       scip_->sendCommand("QT");
       break;
+    case DelayEstimState::ESTIMATION_STARTING:
+      ROS_DEBUG("Entering the time synchronization mode");
+      scip_->sendCommand("TM0");
+      break;
     case DelayEstimState::ESTIMATING:
-      ROS_ERROR(
-          "Previous delay estimation was not completed (state: %d), resetting the sensor and exiting.",
-          static_cast<int>(delay_estim_state_));
-      softReset();
+      ROS_WARN("Timeout occured during the time synchronization");
+      scip_->sendCommand("TM2");
       break;
     default:
       break;
