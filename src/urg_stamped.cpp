@@ -136,6 +136,7 @@ void UrgStampedNode::cbTM(
   {
     case '0':
     {
+      ROS_DEBUG("Entered time synchronization mode");
       delay_estim_state_ = DelayEstimState::ESTIMATING;
       scip_->sendCommand(
           "TM1",
@@ -209,6 +210,7 @@ void UrgStampedNode::cbTM(
       timestamp_outlier_removal_.reset();
       timestamp_moving_average_.reset();
       t0_ = ros::Time();
+      ROS_DEBUG("Leaving time synchronization mode");
       break;
     }
   }
@@ -454,6 +456,7 @@ void UrgStampedNode::tryTM(const ros::TimerEvent& event)
 {
   if (delay_estim_state_ == DelayEstimState::ESTIMATION_STARTING)
   {
+    ROS_DEBUG("Entering time synchronization mode");
     scip_->sendCommand("TM0");
   }
 }
