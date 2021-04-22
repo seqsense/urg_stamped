@@ -462,6 +462,8 @@ void UrgStampedNode::tryTM(const ros::TimerEvent& event)
     ROS_WARN("Timeout occured during the time synchronization");
     scip_->sendCommand("TM2");
     break;
+  default:
+    break;
   }
 }
 
