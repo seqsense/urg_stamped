@@ -10,6 +10,11 @@ Changelog for package urg_stamped
 * Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
 * Contributors: Atsushi Watanabe
 
+Forthcoming
+-----------
+* Fallback timeout during time synchronization (`#97 <https://github.com/seqsense/urg_stamped/issues/97>`_)
+* Contributors: Atsushi Watanabe
+
 0.0.10 (2021-04-07)
 -------------------
 * Add codecov.yml (`#96 <https://github.com/seqsense/urg_stamped/issues/96>`_)
