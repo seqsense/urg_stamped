@@ -140,7 +140,7 @@ void UrgStampedNode::cbTM(
     return;
   }
 
-  timer_try_tm_.stop();
+  timer_retry_tm_.stop();
   switch (echo_back[2])
   {
     case '0':
@@ -382,7 +382,7 @@ void UrgStampedNode::cbQT(
   if (delay_estim_state_ == DelayEstimState::STOPPING_SCAN)
   {
     delay_estim_state_ = DelayEstimState::ESTIMATION_STARTING;
-    tryTM();
+    retryTM();
   }
 }
 
@@ -439,14 +439,14 @@ void UrgStampedNode::delayEstimation(const ros::TimerEvent& event)
   timer_sync_.stop();  // Stop timer for sync using II command.
   ROS_DEBUG("Starting communication delay estimation");
   delay_estim_state_ = DelayEstimState::STOPPING_SCAN;
-  timer_try_tm_.stop();
-  timer_try_tm_ = nh_.createTimer(
+  timer_retry_tm_.stop();
+  timer_retry_tm_ = nh_.createTimer(
       ros::Duration(0.1),
-      &UrgStampedNode::tryTM, this);
-  tryTM();
+      &UrgStampedNode::retryTM, this);
+  retryTM();
 }
 
-void UrgStampedNode::tryTM(const ros::TimerEvent& event)
+void UrgStampedNode::retryTM(const ros::TimerEvent& event)
 {
   switch (delay_estim_state_)
   {

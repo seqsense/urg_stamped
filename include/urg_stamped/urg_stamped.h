@@ -50,7 +50,7 @@ protected:
   ros::Publisher pub_scan_;
   ros::Timer timer_sync_;
   ros::Timer timer_delay_estim_;
-  ros::Timer timer_try_tm_;
+  ros::Timer timer_retry_tm_;
 
   sensor_msgs::LaserScan msg_base_;
   uint32_t step_min_;
@@ -155,7 +155,7 @@ protected:
 
   void timeSync(const ros::TimerEvent& event = ros::TimerEvent());
   void delayEstimation(const ros::TimerEvent& event = ros::TimerEvent());
-  void tryTM(const ros::TimerEvent& event = ros::TimerEvent());
+  void retryTM(const ros::TimerEvent& event = ros::TimerEvent());
 
   void errorCountIncrement(const std::string& status);
 
