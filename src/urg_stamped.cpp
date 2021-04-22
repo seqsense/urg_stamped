@@ -373,9 +373,7 @@ void UrgStampedNode::cbQT(
   if (delay_estim_state_ == DelayEstimState::STOPPING_SCAN)
   {
     delay_estim_state_ = DelayEstimState::ESTIMATION_STARTING;
-    timer_try_tm_ = nh_.createTimer(
-        ros::Duration(0.05),
-        &UrgStampedNode::tryTM, this);
+    tryTM();
   }
 }
 
@@ -430,34 +428,31 @@ void UrgStampedNode::timeSync(const ros::TimerEvent& event)
 void UrgStampedNode::delayEstimation(const ros::TimerEvent& event)
 {
   timer_sync_.stop();  // Stop timer for sync using II command.
-  switch (delay_estim_state_)
-  {
-    case DelayEstimState::STOPPING_SCAN:
-      ROS_ERROR("Previous QT command was ignored by the sensor");
-      errorCountIncrement("QT command was ignored");
-    // fallthrough
-    case DelayEstimState::IDLE:
-      ROS_DEBUG("Starting communication delay estimation");
-      delay_estim_state_ = DelayEstimState::STOPPING_SCAN;
-      scip_->sendCommand("QT");
-      break;
-    case DelayEstimState::ESTIMATING:
-      ROS_ERROR(
-          "Previous delay estimation was not completed (state: %d), resetting the sensor and exiting.",
-          static_cast<int>(delay_estim_state_));
-      softReset();
-      break;
-    default:
-      break;
-  }
+  ROS_DEBUG("Starting communication delay estimation");
+  delay_estim_state_ = DelayEstimState::STOPPING_SCAN;
+  timer_try_tm_.stop();
+  timer_try_tm_ = nh_.createTimer(
+      ros::Duration(0.05),
+      &UrgStampedNode::tryTM, this);
+  tryTM();
 }
 
 void UrgStampedNode::tryTM(const ros::TimerEvent& event)
 {
-  if (delay_estim_state_ == DelayEstimState::ESTIMATION_STARTING)
+  switch (delay_estim_state_)
   {
+  case DelayEstimState::STOPPING_SCAN:
+    ROS_DEBUG("Stopping scan");
+    scip_->sendCommand("QT");
+    break;
+  case DelayEstimState::ESTIMATION_STARTING:
     ROS_DEBUG("Entering time synchronization mode");
     scip_->sendCommand("TM0");
+    break;
+  case DelayEstimState::ESTIMATING:
+    ROS_WARN("Timeout occured during time synchronization");
+    scip_->sendCommand("TM2");
+    break;
   }
 }
 
