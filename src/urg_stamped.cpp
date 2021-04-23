@@ -453,6 +453,7 @@ void UrgStampedNode::retryTM(const ros::TimerEvent& event)
     case DelayEstimState::STOPPING_SCAN:
       ROS_DEBUG("Stopping scan");
       scip_->sendCommand("QT");
+      scip_->sendCommand("QT");
       break;
     case DelayEstimState::ESTIMATION_STARTING:
       ROS_DEBUG("Entering the time synchronization mode");
@@ -650,6 +651,7 @@ void UrgStampedNode::spin()
   ros::spin();
   timer_sync_.stop();
   delay_estim_state_ = DelayEstimState::EXITING;
+  scip_->sendCommand("QT");
   scip_->sendCommand("QT");
   device_->stop();
 }
