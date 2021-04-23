@@ -10,6 +10,13 @@ Changelog for package urg_stamped
 * Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
 * Contributors: Atsushi Watanabe
 
+0.0.11 (2021-04-23)
+-------------------
+* Send QT command twice to avoid being ignored (`#103 <https://github.com/seqsense/urg_stamped/issues/103>`_)
+* Change TM0 status 10 error log level (`#100 <https://github.com/seqsense/urg_stamped/issues/100>`_)
+* Fallback timeout during time synchronization (`#97 <https://github.com/seqsense/urg_stamped/issues/97>`_)
+* Contributors: Atsushi Watanabe
+
 0.0.10 (2021-04-07)
 -------------------
 * Add codecov.yml (`#96 <https://github.com/seqsense/urg_stamped/issues/96>`_)
