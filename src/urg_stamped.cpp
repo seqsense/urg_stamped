@@ -382,7 +382,7 @@ void UrgStampedNode::cbQT(
   if (delay_estim_state_ == DelayEstimState::STOPPING_SCAN)
   {
     delay_estim_state_ = DelayEstimState::ESTIMATION_STARTING;
-    retryTM();
+    // Send TM0 command by timer to avoid sensor state transition failure.
   }
 }
 
@@ -441,7 +441,7 @@ void UrgStampedNode::delayEstimation(const ros::TimerEvent& event)
   delay_estim_state_ = DelayEstimState::STOPPING_SCAN;
   timer_retry_tm_.stop();
   timer_retry_tm_ = nh_.createTimer(
-      ros::Duration(0.1),
+      ros::Duration(0.05),
       &UrgStampedNode::retryTM, this);
   retryTM();
 }
