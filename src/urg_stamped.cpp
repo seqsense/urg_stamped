@@ -452,6 +452,9 @@ void UrgStampedNode::retryTM(const ros::TimerEvent& event)
   {
     case DelayEstimState::STOPPING_SCAN:
       ROS_DEBUG("Stopping scan");
+      // The sensor sometimes doesn't stop scan
+      // even if successful QT response was returned.
+      // Send the command twice to avoid it.
       scip_->sendCommand("QT");
       scip_->sendCommand("QT");
       break;
