@@ -131,7 +131,7 @@ void UrgStampedNode::cbTM(
 
     if (echo_back[2] == '0' && delay_estim_state_ == DelayEstimState::ESTIMATION_STARTING)
     {
-      ROS_WARN(
+      ROS_INFO(
           "Failed to enter the time synchronization mode, "
           "even after receiving successful QT command response. "
           "QT command may be ignored by the sensor firmware");
