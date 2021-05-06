@@ -1,4 +1,4 @@
-ARG ROS_DISTRO=kinetic
+ARG ROS_DISTRO=noetic
 # ========================================
 FROM alpine:latest as cloner
 
