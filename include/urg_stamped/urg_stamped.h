@@ -109,6 +109,7 @@ protected:
     int error;
   };
   ResponseErrorCount error_count_;
+  bool tm_success_;
   int error_count_max_;
 
   void cbM(

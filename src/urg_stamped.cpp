@@ -220,6 +220,7 @@ void UrgStampedNode::cbTM(
       timestamp_moving_average_.reset();
       t0_ = ros::Time();
       ROS_DEBUG("Leaving the time synchronization mode");
+      tm_success_ = true;
       break;
     }
   }
@@ -490,8 +491,16 @@ void UrgStampedNode::errorCountIncrement(const std::string& status)
     ++error_count_.error;
     if (error_count_.error > error_count_max_)
     {
-      ROS_ERROR("Error count exceeded limit, resetting the sensor and exiting.");
-      softReset();
+      if (tm_success_)
+      {
+        ROS_ERROR("Error count exceeded limit, resetting the sensor and exiting.");
+        softReset();
+      }
+      else
+      {
+        ROS_ERROR("Error count exceeded limit without successful time sync, rebooting the sensor and exiting.");
+        hardReset();
+      }
     }
   }
 }
@@ -549,6 +558,7 @@ UrgStampedNode::UrgStampedNode()
   , timestamp_hpf_(20)
   , timestamp_outlier_removal_(ros::Duration(0.001), ros::Duration())
   , timestamp_moving_average_(5, ros::Duration())
+  , tm_success_(false)
 {
   std::string ip;
   int port;
