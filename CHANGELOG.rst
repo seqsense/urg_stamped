@@ -10,6 +10,14 @@ Changelog for package urg_stamped
 * Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
 * Contributors: Atsushi Watanabe
 
+0.0.12 (2021-07-11)
+-------------------
+* Fix gpg key source in prerelease test (`#111 <https://github.com/seqsense/urg_stamped/issues/111>`_)
+* Reboot sensor if time sync error count exceeded limit and never succeeded (`#108 <https://github.com/seqsense/urg_stamped/issues/108>`_)
+* Rotate bot token (`#106 <https://github.com/seqsense/urg_stamped/issues/106>`_)
+* Drop Kinetic (`#105 <https://github.com/seqsense/urg_stamped/issues/105>`_)
+* Contributors: Atsushi Watanabe
+
 0.0.11 (2021-04-23)
 -------------------
 * Send QT command twice to avoid being ignored (`#103 <https://github.com/seqsense/urg_stamped/issues/103>`_)
