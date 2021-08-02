@@ -457,10 +457,6 @@ void UrgStampedNode::retryTM(const ros::TimerEvent& event)
       break;
     case DelayEstimState::ESTIMATION_STARTING:
       ROS_DEBUG("Entering the time synchronization mode");
-      // The sensor sometimes doesn't stop scan
-      // even if successful QT response was returned.
-      // Send the QT command again to avoid it.
-      scip_->sendCommand("QT");
       scip_->sendCommand("TM0");
       break;
     case DelayEstimState::ESTIMATING:
