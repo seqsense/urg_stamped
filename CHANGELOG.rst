@@ -10,8 +10,8 @@ Changelog for package urg_stamped
 * Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
 * Contributors: Atsushi Watanabe
 
-Forthcoming
------------
+0.0.13 (2021-08-03)
+-------------------
 * Remove doubled QT command request (`#112 <https://github.com/seqsense/urg_stamped/issues/112>`_)
 * Contributors: Atsushi Watanabe
 
