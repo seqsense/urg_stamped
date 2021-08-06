@@ -10,6 +10,11 @@ Changelog for package urg_stamped
 * Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
 * Contributors: Atsushi Watanabe
 
+0.0.13 (2021-08-03)
+-------------------
+* Remove doubled QT command request (`#112 <https://github.com/seqsense/urg_stamped/issues/112>`_)
+* Contributors: Atsushi Watanabe
+
 0.0.12 (2021-07-11)
 -------------------
 * Fix gpg key source in prerelease test (`#111 <https://github.com/seqsense/urg_stamped/issues/111>`_)
