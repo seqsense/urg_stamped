@@ -394,13 +394,13 @@ void UrgStampedNode::cbRB(
 {
   if (status == "01")
   {
-    ROS_ERROR("Reboot in-progress");
+    ROS_ERROR("Sensor reboot in-progress");
     scip_->sendCommand("RB");  // Sending it 2 times in 1 sec. is needed
     return;
   }
   else if (status == "00")
   {
-    ROS_ERROR("Reboot succeeded");
+    ROS_ERROR("Sensor reboot succeeded");
     device_->stop();
     return;
   }
