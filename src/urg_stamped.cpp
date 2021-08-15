@@ -533,7 +533,7 @@ void UrgStampedNode::hardReset()
 
 void UrgStampedNode::sleepRandom()
 {
-  std::uniform_real_distribution<double> rnd(0.05, 2.0);
+  std::uniform_real_distribution<double> rnd(1.0, 5.0);
   ros::Duration(rnd(random_engine_)).sleep();
 }
 
