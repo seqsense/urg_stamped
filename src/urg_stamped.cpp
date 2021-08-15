@@ -401,7 +401,7 @@ void UrgStampedNode::cbRB(
   else if (status == "00")
   {
     ROS_ERROR("Sensor reboot succeeded");
-    sleepRandom();
+    sleepRandom(1.0, 3.0);
     device_->stop();
     ros::shutdown();
     return;
@@ -427,7 +427,7 @@ void UrgStampedNode::cbRS(
   {
     ROS_INFO("Restarting urg_stamped");
     device_->stop();
-    sleepRandom();
+    sleepRandom(1.0, 3.0);
     ros::shutdown();
     return;
   }
@@ -532,9 +532,9 @@ void UrgStampedNode::hardReset()
   scip_->sendCommand("RB");
 }
 
-void UrgStampedNode::sleepRandom()
+void UrgStampedNode::sleepRandom(const double min, const double max)
 {
-  std::uniform_real_distribution<double> rnd(1.0, 5.0);
+  std::uniform_real_distribution<double> rnd(min, max);
   ros::Duration(rnd(random_engine_)).sleep();
 }
 
