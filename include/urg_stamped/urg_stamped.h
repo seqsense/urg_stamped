@@ -61,6 +61,7 @@ protected:
 
   bool publish_intensity_;
   bool device_initialized_;
+  bool failed_;
 
   enum class DelayEstimState
   {
@@ -166,6 +167,7 @@ protected:
 
   void softReset();
   void hardReset();
+  void sleepRandom();
 
 public:
   UrgStampedNode();

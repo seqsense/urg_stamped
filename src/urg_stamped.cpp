@@ -392,11 +392,21 @@ void UrgStampedNode::cbRB(
     const std::string& echo_back,
     const std::string& status)
 {
-  if (status != "00" && status != "01")
+  if (status == "01")
   {
-    ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
-    ROS_ERROR("Failed to reboot. Please power-off the sensor.");
+    ROS_ERROR("Reboot in-progress");
+    scip_->sendCommand("RB");  // Sending it 2 times in 1 sec. is needed
+    return;
   }
+  else if (status == "00")
+  {
+    ROS_ERROR("Reboot succeeded");
+    sleepRandom();
+    ros::shutdown();
+    return;
+  }
+  ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
+  ROS_ERROR("Failed to reboot. Please power-off the sensor.");
 }
 
 void UrgStampedNode::cbRS(
@@ -412,6 +422,14 @@ void UrgStampedNode::cbRS(
     return;
   }
   ROS_INFO("Sensor reset succeeded");
+  if (failed_)
+  {
+    ROS_INFO("Restarting urg_stamped");
+    device_->stop();
+    sleepRandom();
+    ros::shutdown();
+    return;
+  }
   if (!device_initialized_)
   {
     device_initialized_ = true;
@@ -478,6 +496,7 @@ void UrgStampedNode::errorCountIncrement(const std::string& status)
     ++error_count_.abnormal_error;
     if (error_count_.abnormal_error > error_count_max_)
     {
+      failed_ = true;
       ROS_ERROR("Error count exceeded limit, rebooting the sensor and exiting.");
       hardReset();
     }
@@ -487,6 +506,7 @@ void UrgStampedNode::errorCountIncrement(const std::string& status)
     ++error_count_.error;
     if (error_count_.error > error_count_max_)
     {
+      failed_ = true;
       if (tm_success_)
       {
         ROS_ERROR("Error count exceeded limit, resetting the sensor and exiting.");
@@ -504,16 +524,17 @@ void UrgStampedNode::errorCountIncrement(const std::string& status)
 void UrgStampedNode::softReset()
 {
   scip_->sendCommand("RS");
-  ros::Duration(0.05).sleep();
-  ros::shutdown();
 }
 
 void UrgStampedNode::hardReset()
 {
   scip_->sendCommand("RB");
-  scip_->sendCommand("RB");  // Sending it 2 times in 1 sec. is needed
-  ros::Duration(0.05).sleep();
-  ros::shutdown();
+}
+
+void UrgStampedNode::sleepRandom()
+{
+  std::uniform_real_distribution<double> rnd(0.05, 2.0);
+  ros::Duration(rnd(random_engine_)).sleep();
 }
 
 bool UrgStampedNode::detectDeviceTimeJump(
@@ -544,6 +565,7 @@ UrgStampedNode::UrgStampedNode()
   : nh_("")
   , pnh_("~")
   , device_initialized_(false)
+  , failed_(false)
   , delay_estim_state_(DelayEstimState::IDLE)
   , tm_iter_num_(5)
   , tm_median_window_(35)
