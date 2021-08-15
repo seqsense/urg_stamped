@@ -401,8 +401,8 @@ void UrgStampedNode::cbRB(
   else if (status == "00")
   {
     ROS_ERROR("Sensor reboot succeeded");
-    device_->stop();
     sleepRandom();
+    device_->stop();
     ros::shutdown();
     return;
   }
