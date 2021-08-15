@@ -402,6 +402,8 @@ void UrgStampedNode::cbRB(
   {
     ROS_ERROR("Sensor reboot succeeded");
     device_->stop();
+    sleepRandom();
+    ros::shutdown();
     return;
   }
   ROS_ERROR("%s errored with %s", echo_back.c_str(), status.c_str());
@@ -425,6 +427,8 @@ void UrgStampedNode::cbRS(
   {
     ROS_INFO("Restarting urg_stamped");
     device_->stop();
+    sleepRandom();
+    ros::shutdown();
     return;
   }
   if (!device_initialized_)
@@ -606,14 +610,6 @@ UrgStampedNode::UrgStampedNode()
   pub_scan_ = nh_.advertise<sensor_msgs::LaserScan>("scan", 10);
 
   device_.reset(new scip2::ConnectionTcp(ip, port));
-  const auto cbClose = [&]
-  {
-    if (failed_)
-    {
-      sleepRandom();
-    }
-    ros::shutdown();
-  };
   device_->registerCloseCallback(ros::shutdown);
   device_->registerConnectCallback(
       boost::bind(&UrgStampedNode::cbConnect, this));
