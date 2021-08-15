@@ -579,6 +579,9 @@ UrgStampedNode::UrgStampedNode()
   , timestamp_moving_average_(5, ros::Duration())
   , tm_success_(false)
 {
+  std::random_device rd;
+  random_engine_.seed(rd());
+
   std::string ip;
   int port;
   double sync_interval_min;
