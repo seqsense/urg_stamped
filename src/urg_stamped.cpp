@@ -386,6 +386,7 @@ void UrgStampedNode::cbQT(
   if (delay_estim_state_ == DelayEstimState::STOPPING_SCAN)
   {
     delay_estim_state_ = DelayEstimState::ESTIMATION_STARTING;
+    sleepRandom(0.01, 0.05);
     retryTM();
   }
 }
