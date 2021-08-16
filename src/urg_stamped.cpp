@@ -605,6 +605,8 @@ UrgStampedNode::UrgStampedNode()
   pnh_.param("error_limit", error_count_max_, 4);
   pnh_.param("allowed_device_time_origin_diff", allowed_device_time_origin_diff_, 1.0);
 
+  urg_stamped::setROSLogger(msg_base_.header.frame_id + ": ");
+
   bool debug;
   pnh_.param("debug", debug, false);
   if (debug)
