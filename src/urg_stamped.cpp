@@ -326,6 +326,12 @@ void UrgStampedNode::cbII(
     return;
   }
 
+  const auto stat = params.find("STAT");
+  if (stat != params.end())
+  {
+    scip2::logger::debug() << "sensor status: " << stat->second << std::endl;
+  }
+
   const auto delay =
       ros::Time::fromBoost(time_read) -
       ros::Time::fromBoost(time_ii_request);
