@@ -290,11 +290,11 @@ void UrgStampedNode::cbVV(
 
   const char* keys[] =
       {
-        "VEND",
-        "PROD",
-        "FIRM",
-        "PROT",
-        "SERI",
+          "VEND",
+          "PROD",
+          "FIRM",
+          "PROT",
+          "SERI",
       };
   for (const char* key : keys)
   {
