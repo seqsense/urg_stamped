@@ -129,7 +129,7 @@ void UrgStampedNode::cbTM(
 {
   if (status != "00")
   {
-    scip2::logger::error() << echo_back.c_str() << " errored with " << status.c_str() << std::endl;
+    scip2::logger::error() << echo_back << " errored with " << status << std::endl;
     errorCountIncrement(status);
 
     if (echo_back[2] == '0' && delay_estim_state_ == DelayEstimState::ESTIMATION_STARTING)
