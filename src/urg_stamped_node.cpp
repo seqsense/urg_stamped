@@ -21,7 +21,6 @@
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "urg_stamped");
-  urg_stamped::setROSLogger();
 
   urg_stamped::UrgStampedNode node;
   node.spin();

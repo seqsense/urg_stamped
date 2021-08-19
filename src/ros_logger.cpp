@@ -36,6 +36,7 @@ public:
     LOG_FATAL,
   };
   Type type_;
+  std::string prefix_;
 
   explicit ROSOutStreamBuffer(Type type)
     : type_(type)
@@ -50,23 +51,28 @@ public:
     switch (type_)
     {
       case LOG_DEBUG:
-        ROS_DEBUG("%s", log.c_str());
+        ROS_DEBUG("%s%s", prefix_.c_str(), log.c_str());
         break;
       case LOG_INFO:
-        ROS_INFO("%s", log.c_str());
+        ROS_INFO("%s%s", prefix_.c_str(), log.c_str());
         break;
       case LOG_WARN:
-        ROS_WARN("%s", log.c_str());
+        ROS_WARN("%s%s", prefix_.c_str(), log.c_str());
         break;
       case LOG_ERROR:
-        ROS_ERROR("%s", log.c_str());
+        ROS_ERROR("%s%s", prefix_.c_str(), log.c_str());
         break;
       case LOG_FATAL:
-        ROS_FATAL("%s", log.c_str());
+        ROS_FATAL("%s%s", prefix_.c_str(), log.c_str());
         break;
     }
     str("");
     return 0;
+  }
+
+  void setPrefix(const std::string& prefix)
+  {
+    prefix_ = prefix;
   }
 };
 
@@ -84,8 +90,13 @@ std::ostream fatal_logger(&fatal_buf);
 
 namespace urg_stamped
 {
-void setROSLogger()
+void setROSLogger(const std::string& prefix)
 {
+  debug_buf.setPrefix(prefix);
+  info_buf.setPrefix(prefix);
+  warn_buf.setPrefix(prefix);
+  error_buf.setPrefix(prefix);
+  fatal_buf.setPrefix(prefix);
   scip2::logger::setDebugLogger(&debug_logger);
   scip2::logger::setInfoLogger(&info_logger);
   scip2::logger::setWarnLogger(&warn_logger);

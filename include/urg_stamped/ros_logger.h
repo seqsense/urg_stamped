@@ -18,10 +18,11 @@
 #define URG_STAMPED_ROS_LOGGER_H
 
 #include <iostream>
+#include <string>
 
 namespace urg_stamped
 {
-void setROSLogger();
+void setROSLogger(const std::string& prefix);
 }  // namespace urg_stamped
 
 #endif  // URG_STAMPED_ROS_LOGGER_H
