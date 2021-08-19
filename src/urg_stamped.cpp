@@ -287,6 +287,25 @@ void UrgStampedNode::cbVV(
     errorCountIncrement(status);
     return;
   }
+
+  const char* keys[] =
+      {
+        "VEND",
+        "PROD",
+        "FIRM",
+        "PROT",
+        "SERI",
+      };
+  for (const char* key : keys)
+  {
+    const auto kv = params.find(key);
+    if (kv == params.end())
+    {
+      scip2::logger::error() << "VV doesn't have key " << key << std::endl;
+      continue;
+    }
+    scip2::logger::info() << key << ": " << kv->second << std::endl;
+  }
 }
 
 void UrgStampedNode::cbIISend(const boost::posix_time::ptime& time_send)
@@ -418,6 +437,7 @@ void UrgStampedNode::cbRS(
   if (!device_initialized_)
   {
     device_initialized_ = true;
+    scip_->sendCommand("VV");
     scip_->sendCommand("PP");
   }
 }
