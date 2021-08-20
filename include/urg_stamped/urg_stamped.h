@@ -159,6 +159,7 @@ protected:
       const std::string& echo_back,
       const std::string& status);
   void cbConnect();
+  void cbClose();
 
   void sendII();
   void timeSync(const ros::TimerEvent& event = ros::TimerEvent());

@@ -513,6 +513,13 @@ void UrgStampedNode::cbConnect()
   device_->startWatchdog(boost::posix_time::seconds(1));
 }
 
+void UrgStampedNode::cbClose()
+{
+  delay_estim_state_ = DelayEstimState::EXITING;
+  device_->stop();
+  ros::shutdown();
+}
+
 void UrgStampedNode::sendII()
 {
   scip_->sendCommand(
@@ -709,7 +716,8 @@ UrgStampedNode::UrgStampedNode()
   pub_scan_ = nh_.advertise<sensor_msgs::LaserScan>("scan", 10);
 
   device_.reset(new scip2::ConnectionTcp(ip, port));
-  device_->registerCloseCallback(ros::shutdown);
+  device_->registerCloseCallback(
+      boost::bind(&UrgStampedNode::cbClose, this));
   device_->registerConnectCallback(
       boost::bind(&UrgStampedNode::cbConnect, this));
 
