@@ -60,7 +60,6 @@ protected:
   scip2::Protocol::Ptr scip_;
 
   bool publish_intensity_;
-  bool device_initialized_;
   bool failed_;
 
   enum class DelayEstimState
@@ -161,6 +160,7 @@ protected:
       const std::string& status);
   void cbConnect();
 
+  void sendII();
   void timeSync(const ros::TimerEvent& event = ros::TimerEvent());
   void delayEstimation(const ros::TimerEvent& event = ros::TimerEvent());
   void retryTM(const ros::TimerEvent& event = ros::TimerEvent());

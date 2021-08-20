@@ -497,12 +497,10 @@ void UrgStampedNode::cbRS(
     ros::shutdown();
     return;
   }
-  if (!device_initialized_)
-  {
-    device_initialized_ = true;
-    scip_->sendCommand("VV");
-    scip_->sendCommand("PP");
-  }
+  scip_->sendCommand("VV");
+  scip_->sendCommand("PP");
+  delay_estim_state_ = DelayEstimState::IDLE;
+  tm_try_count_ = 0;
 }
 
 void UrgStampedNode::cbConnect()
@@ -511,11 +509,16 @@ void UrgStampedNode::cbConnect()
   device_->startWatchdog(boost::posix_time::seconds(1));
 }
 
-void UrgStampedNode::timeSync(const ros::TimerEvent& event)
+void UrgStampedNode::sendII()
 {
   scip_->sendCommand(
       "II",
       boost::bind(&UrgStampedNode::cbIISend, this, boost::arg<1>()));
+}
+
+void UrgStampedNode::timeSync(const ros::TimerEvent& event)
+{
+  sendII();
   timer_sync_ = nh_.createTimer(
       ros::Duration(sync_interval_(random_engine_)),
       &UrgStampedNode::timeSync, this, true);
@@ -551,7 +554,7 @@ void UrgStampedNode::retryTM(const ros::TimerEvent& event)
       break;
     case DelayEstimState::STATE_CHECKING:
       scip2::logger::debug() << "Checking sensor state" << std::endl;
-      scip_->sendCommand("II");
+      sendII();
       break;
     case DelayEstimState::ESTIMATION_STARTING:
       scip2::logger::debug() << "Entering the time synchronization mode" << std::endl;
@@ -647,7 +650,6 @@ bool UrgStampedNode::detectDeviceTimeJump(
 UrgStampedNode::UrgStampedNode()
   : nh_("")
   , pnh_("~")
-  , device_initialized_(false)
   , failed_(false)
   , delay_estim_state_(DelayEstimState::IDLE)
   , tm_iter_num_(5)
