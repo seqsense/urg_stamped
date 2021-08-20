@@ -491,7 +491,7 @@ void UrgStampedNode::delayEstimation(const ros::TimerEvent& event)
   delay_estim_state_ = DelayEstimState::STOPPING_SCAN;
   timer_retry_tm_.stop();
   timer_retry_tm_ = nh_.createTimer(
-      ros::Duration(0.1),
+      tm_command_interval_,
       &UrgStampedNode::retryTM, this);
   retryTM();
 }
@@ -631,6 +631,10 @@ UrgStampedNode::UrgStampedNode()
   pnh_.param("delay_estim_interval", delay_estim_interval, 20.0);
   pnh_.param("error_limit", error_count_max_, 4);
   pnh_.param("allowed_device_time_origin_diff", allowed_device_time_origin_diff_, 1.0);
+
+  double tm_interval;
+  pnh_.param("tm_command_interval", tm_interval, 0.1);
+  tm_command_interval_ = ros::Duration(tm_interval);
 
   urg_stamped::setROSLogger(msg_base_.header.frame_id + ": ");
 

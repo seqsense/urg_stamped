@@ -113,6 +113,8 @@ protected:
   bool tm_success_;
   int error_count_max_;
 
+  ros::Duration tm_command_interval_;
+
   void cbM(
       const boost::posix_time::ptime& time_read,
       const std::string& echo_back,
