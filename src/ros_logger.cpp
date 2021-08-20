@@ -63,11 +63,9 @@ public:
           break;
         case LOG_ERROR:
           ROS_ERROR("%s%s", prefix_.c_str(), log.c_str());
-          std::cerr << prefix_ << log;
           break;
         case LOG_FATAL:
           ROS_FATAL("%s%s", prefix_.c_str(), log.c_str());
-          std::cerr << prefix_ << log;
           break;
       }
     }
