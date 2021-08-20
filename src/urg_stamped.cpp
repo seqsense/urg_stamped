@@ -696,5 +696,6 @@ void UrgStampedNode::spin()
   delay_estim_state_ = DelayEstimState::EXITING;
   scip_->sendCommand("QT");
   device_->stop();
+  thread.join();
 }
 }  // namespace urg_stamped
