@@ -582,8 +582,15 @@ void UrgStampedNode::retryTM(const ros::TimerEvent& event)
 
 void UrgStampedNode::errorCountIncrement(const std::string& status)
 {
-  if (status == "00")
+  if (delay_estim_state_ == DelayEstimState::EXITING)
+  {
     return;
+  }
+
+  if (status == "00")
+  {
+    return;
+  }
 
   if (status == "0L")
   {
@@ -591,6 +598,7 @@ void UrgStampedNode::errorCountIncrement(const std::string& status)
     if (error_count_.abnormal_error > error_count_max_)
     {
       failed_ = true;
+      delay_estim_state_ = DelayEstimState::EXITING;
       scip2::logger::error() << "Error count exceeded limit, rebooting the sensor and exiting."
                              << std::endl;
       hardReset();
@@ -602,6 +610,7 @@ void UrgStampedNode::errorCountIncrement(const std::string& status)
     if (error_count_.error > error_count_max_)
     {
       failed_ = true;
+      delay_estim_state_ = DelayEstimState::EXITING;
       if (tm_success_)
       {
         scip2::logger::error() << "Error count exceeded limit, resetting the sensor and exiting." << std::endl;
