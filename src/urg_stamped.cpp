@@ -515,6 +515,7 @@ void UrgStampedNode::cbConnect()
 
 void UrgStampedNode::cbClose()
 {
+  scip2::logger::info() << "delay estimation state was " << static_cast<int>(delay_estim_state_) << std::endl;
   delay_estim_state_ = DelayEstimState::EXITING;
   device_->stop();
   ros::shutdown();
@@ -634,6 +635,7 @@ void UrgStampedNode::softReset()
 
 void UrgStampedNode::hardReset()
 {
+  scip2::logger::error() << "Rebooting the sensor" << std::endl;
   scip_->sendCommand("RB");
 }
 
