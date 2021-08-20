@@ -354,6 +354,10 @@ void UrgStampedNode::cbII(
       std::transform(state.begin(), state.end(), state.begin(), tolower);
       if (state.find("idle") != std::string::npos)
       {
+        if (last_measurement_state_ != state)
+        {
+          scip2::logger::info() << "Sensor is idle, entering time synchronization mode" << std::endl;
+        }
         delay_estim_state_ = DelayEstimState::ESTIMATION_STARTING;
         retryTM();
       }
