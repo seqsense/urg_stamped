@@ -467,8 +467,8 @@ void UrgStampedNode::cbRB(
   else if (status == "00")
   {
     scip2::logger::info() << "Sensor reboot succeeded" << std::endl;
+    sleepRandom(1.0, 3.0);
     device_->stop();
-    ros::Duration(0.05).sleep();
     ros::shutdown();
     return;
   }
@@ -493,7 +493,7 @@ void UrgStampedNode::cbRS(
   {
     scip2::logger::info() << "Restarting urg_stamped" << std::endl;
     device_->stop();
-    ros::Duration(0.05).sleep();
+    sleepRandom(1.0, 3.0);
     ros::shutdown();
     return;
   }
@@ -615,6 +615,12 @@ void UrgStampedNode::softReset()
 void UrgStampedNode::hardReset()
 {
   scip_->sendCommand("RB");
+}
+
+void UrgStampedNode::sleepRandom(const double min, const double max)
+{
+  std::uniform_real_distribution<double> rnd(min, max);
+  ros::Duration(rnd(random_engine_)).sleep();
 }
 
 bool UrgStampedNode::detectDeviceTimeJump(
