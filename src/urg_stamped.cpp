@@ -515,7 +515,13 @@ void UrgStampedNode::cbConnect()
 
 void UrgStampedNode::cbClose()
 {
-  scip2::logger::info() << "delay estimation state was " << static_cast<int>(delay_estim_state_) << std::endl;
+  scip2::logger::info()
+      << "internal state on failure: "
+      << "delay_estim_state_=" << static_cast<int>(delay_estim_state_) << " "
+      << "tm_try_count_=" << tm_try_count_ << " "
+      << "error_count_.error=" << error_count_.error << " "
+      << "error_count_.abnormal_error=" << error_count_.abnormal_error << " "
+      << std::endl;
   delay_estim_state_ = DelayEstimState::EXITING;
   device_->stop();
   ros::shutdown();
