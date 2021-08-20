@@ -712,7 +712,7 @@ UrgStampedNode::UrgStampedNode()
   pnh_.param("allowed_device_time_origin_diff", allowed_device_time_origin_diff_, 1.0);
 
   double tm_interval, tm_timeout;
-  pnh_.param("tm_interval", tm_interval, 0.1);
+  pnh_.param("tm_interval", tm_interval, 0.06);
   tm_command_interval_ = ros::Duration(tm_interval);
   pnh_.param("tm_timeout", tm_timeout, 10.0);
   tm_try_max_ = static_cast<int>(tm_timeout / tm_interval);
