@@ -115,6 +115,9 @@ protected:
   int error_count_max_;
 
   ros::Duration tm_command_interval_;
+  std::string last_measurement_state_;
+  int tm_try_max_;
+  int tm_try_count_;
 
   void cbM(
       const boost::posix_time::ptime& time_read,
@@ -162,7 +165,7 @@ protected:
   void delayEstimation(const ros::TimerEvent& event = ros::TimerEvent());
   void retryTM(const ros::TimerEvent& event = ros::TimerEvent());
 
-  void errorCountIncrement(const std::string& status);
+  void errorCountIncrement(const std::string& status = "");
 
   bool detectDeviceTimeJump(
       const boost::posix_time::ptime& time_response,

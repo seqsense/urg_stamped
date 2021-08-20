@@ -342,6 +342,7 @@ void UrgStampedNode::cbII(
     if (mesm == params.end())
     {
       scip2::logger::error() << "II doesn't have measurement state" << std::endl;
+      errorCountIncrement();
     }
     else
     {
@@ -358,9 +359,13 @@ void UrgStampedNode::cbII(
       }
       else
       {
-        scip2::logger::info() << "Sensor is not idle (" << state << ")" << std::endl;
+        if (last_measurement_state_ != state)
+        {
+          scip2::logger::info() << "Sensor is not idle (" << state << ")" << std::endl;
+        }
         delay_estim_state_ = DelayEstimState::STOPPING_SCAN;
       }
+      last_measurement_state_ = state;
     }
     return;
   }
@@ -518,6 +523,7 @@ void UrgStampedNode::timeSync(const ros::TimerEvent& event)
 
 void UrgStampedNode::delayEstimation(const ros::TimerEvent& event)
 {
+  tm_try_count_ = 0;
   timer_sync_.stop();  // Stop timer for sync using II command.
   scip2::logger::debug() << "Starting communication delay estimation" << std::endl;
   delay_estim_state_ = DelayEstimState::STOPPING_SCAN;
@@ -535,6 +541,13 @@ void UrgStampedNode::retryTM(const ros::TimerEvent& event)
     case DelayEstimState::STOPPING_SCAN:
       scip2::logger::debug() << "Stopping scan" << std::endl;
       scip_->sendCommand("QT");
+      tm_try_count_++;
+      if (tm_try_count_ > tm_try_max_)
+      {
+        scip2::logger::error() << "Failed to enter time synchronization mode" << std::endl;
+        errorCountIncrement();
+        softReset();
+      }
       break;
     case DelayEstimState::STATE_CHECKING:
       scip2::logger::debug() << "Checking sensor state" << std::endl;
@@ -668,9 +681,11 @@ UrgStampedNode::UrgStampedNode()
   pnh_.param("error_limit", error_count_max_, 4);
   pnh_.param("allowed_device_time_origin_diff", allowed_device_time_origin_diff_, 1.0);
 
-  double tm_interval;
-  pnh_.param("tm_command_interval", tm_interval, 0.1);
+  double tm_interval, tm_timeout;
+  pnh_.param("tm_interval", tm_interval, 0.1);
   tm_command_interval_ = ros::Duration(tm_interval);
+  pnh_.param("tm_timeout", tm_timeout, 10.0);
+  tm_try_max_ = static_cast<int>(tm_timeout / tm_interval);
 
   urg_stamped::setROSLogger(msg_base_.header.frame_id + ": ");
 
