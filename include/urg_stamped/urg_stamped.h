@@ -67,6 +67,7 @@ protected:
   {
     IDLE,
     STOPPING_SCAN,
+    STATE_CHECKING,
     ESTIMATION_STARTING,
     ESTIMATING,
     EXITING,

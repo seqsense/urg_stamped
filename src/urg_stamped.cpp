@@ -331,6 +331,39 @@ void UrgStampedNode::cbII(
   {
     scip2::logger::debug() << "sensor status: " << stat->second << std::endl;
   }
+  const auto mesm = params.find("MESM");
+  if (mesm != params.end())
+  {
+    scip2::logger::debug() << "measurement status: " << mesm->second << std::endl;
+  }
+
+  if (delay_estim_state_ == DelayEstimState::STATE_CHECKING)
+  {
+    if (mesm == params.end())
+    {
+      scip2::logger::error() << "II doesn't have measurement state" << std::endl;
+    }
+    else
+    {
+      const auto tolower = [](unsigned char c)
+      {
+        return std::tolower(c);
+      };
+      std::string state(mesm->second);
+      std::transform(state.begin(), state.end(), state.begin(), tolower);
+      if (state.find("idle") != std::string::npos)
+      {
+        delay_estim_state_ = DelayEstimState::ESTIMATION_STARTING;
+        retryTM();
+      }
+      else
+      {
+        scip2::logger::info() << "Sensor is not idle (" << state << ")" << std::endl;
+        delay_estim_state_ = DelayEstimState::STOPPING_SCAN;
+      }
+    }
+    return;
+  }
 
   const auto delay =
       ros::Time::fromBoost(time_read) -
@@ -410,8 +443,7 @@ void UrgStampedNode::cbQT(
 
   if (delay_estim_state_ == DelayEstimState::STOPPING_SCAN)
   {
-    delay_estim_state_ = DelayEstimState::ESTIMATION_STARTING;
-    sleepRandom(0.01, 0.05);
+    delay_estim_state_ = DelayEstimState::STATE_CHECKING;
     retryTM();
   }
 }
@@ -503,6 +535,10 @@ void UrgStampedNode::retryTM(const ros::TimerEvent& event)
     case DelayEstimState::STOPPING_SCAN:
       scip2::logger::debug() << "Stopping scan" << std::endl;
       scip_->sendCommand("QT");
+      break;
+    case DelayEstimState::STATE_CHECKING:
+      scip2::logger::debug() << "Checking sensor state" << std::endl;
+      scip_->sendCommand("II");
       break;
     case DelayEstimState::ESTIMATION_STARTING:
       scip2::logger::debug() << "Entering the time synchronization mode" << std::endl;
