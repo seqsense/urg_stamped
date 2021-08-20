@@ -92,10 +92,11 @@ void UrgStampedNode::cbM(
 
   if (scan.ranges_.size() != step_max_ - step_min_ + 1)
   {
-    scip2::logger::debug() << "Size of the received scan data is wrong "
-                              "(expected: "
-                           << step_max_ - step_min_ + 1
-                           << ", received: " << scan.ranges_.size() << "); refreshing" << std::endl;
+    scip2::logger::debug()
+        << "Size of the received scan data is wrong "
+           "(expected: "
+        << step_max_ - step_min_ + 1
+        << ", received: " << scan.ranges_.size() << "); refreshing" << std::endl;
     scip_->sendCommand(
         (has_intensity ? "ME" : "MD") +
         (boost::format("%04d%04d") % step_min_ % step_max_).str() +
@@ -134,10 +135,11 @@ void UrgStampedNode::cbTM(
 
     if (echo_back[2] == '0' && delay_estim_state_ == DelayEstimState::ESTIMATION_STARTING)
     {
-      scip2::logger::info() << "Failed to enter the time synchronization mode, "
-                               "even after receiving successful QT command response. "
-                               "QT command may be ignored by the sensor firmware"
-                            << std::endl;
+      scip2::logger::info()
+          << "Failed to enter the time synchronization mode, "
+             "even after receiving successful QT command response. "
+             "QT command may be ignored by the sensor firmware"
+          << std::endl;
       delay_estim_state_ = DelayEstimState::STOPPING_SCAN;
     }
     return;
@@ -196,11 +198,12 @@ void UrgStampedNode::cbTM(
               delays[tm_iter_num_ / 2] * communication_delay_filter_alpha_;
         }
         estimated_communication_delay_init_ = true;
-        scip2::logger::debug() << "delay: "
-                               << std::setprecision(6) << std::fixed << estimated_communication_delay_.toSec()
-                               << ", device timestamp: " << walltime_device
-                               << ", device time origin: " << origins[tm_iter_num_ / 2].toSec()
-                               << std::endl;
+        scip2::logger::debug()
+            << "delay: "
+            << std::setprecision(6) << std::fixed << estimated_communication_delay_.toSec()
+            << ", device timestamp: " << walltime_device
+            << ", device time origin: " << origins[tm_iter_num_ / 2].toSec()
+            << std::endl;
         scip_->sendCommand("TM2");
       }
       else
@@ -382,15 +385,17 @@ void UrgStampedNode::cbII(
     device_time_origin_.origin_ +=
         ros::Duration(exp_lpf_alpha * (origin - device_time_origin_.origin_).toSec());
 
-    scip2::logger::debug() << "on scan delay: " << std::setprecision(6) << std::fixed << delay
-                           << ", device timestamp: " << walltime_device
-                           << ", device time origin: " << origin
-                           << ", gain: " << updated_gain << std::endl;
+    scip2::logger::debug()
+        << "on scan delay: " << std::setprecision(6) << std::fixed << delay
+        << ", device timestamp: " << walltime_device
+        << ", device time origin: " << origin
+        << ", gain: " << updated_gain << std::endl;
   }
   else
   {
-    scip2::logger::debug() << "on scan delay (" << std::setprecision(6) << std::fixed << delay
-                           << ") is larger than expected; skipping" << std::endl;
+    scip2::logger::debug()
+        << "on scan delay (" << std::setprecision(6) << std::fixed << delay
+        << ") is larger than expected; skipping" << std::endl;
   }
 }
 
@@ -422,8 +427,9 @@ void UrgStampedNode::cbRB(
 {
   if (status != "00" && status != "01")
   {
-    scip2::logger::error() << echo_back << " errored with " << status << std::endl;
-    scip2::logger::error() << "Failed to reboot. Please power-off the sensor." << std::endl;
+    scip2::logger::error()
+        << echo_back << " errored with " << status << std::endl
+        << "Failed to reboot. Please power-off the sensor." << std::endl;
   }
 }
 
@@ -434,8 +440,9 @@ void UrgStampedNode::cbRS(
 {
   if (status != "00")
   {
-    scip2::logger::error() << echo_back << " errored with " << status << std::endl;
-    scip2::logger::error() << "Failed to reset. Rebooting the sensor and exiting." << std::endl;
+    scip2::logger::error()
+        << echo_back << " errored with " << status << std::endl
+        << "Failed to reset. Rebooting the sensor and exiting." << std::endl;
     hardReset();
     return;
   }
@@ -507,8 +514,9 @@ void UrgStampedNode::errorCountIncrement(const std::string& status)
     ++error_count_.abnormal_error;
     if (error_count_.abnormal_error > error_count_max_)
     {
-      scip2::logger::error() << "Error count exceeded limit, rebooting the sensor and exiting."
-                             << std::endl;
+      scip2::logger::error()
+          << "Error count exceeded limit, rebooting the sensor and exiting."
+          << std::endl;
       hardReset();
     }
   }
@@ -519,14 +527,16 @@ void UrgStampedNode::errorCountIncrement(const std::string& status)
     {
       if (tm_success_)
       {
-        scip2::logger::error() << "Error count exceeded limit, resetting the sensor and exiting." << std::endl;
+        scip2::logger::error()
+            << "Error count exceeded limit, resetting the sensor and exiting." << std::endl;
         softReset();
       }
       else
       {
-        scip2::logger::error() << "Error count exceeded limit without successful time sync, "
-                                  "rebooting the sensor and exiting."
-                               << std::endl;
+        scip2::logger::error()
+            << "Error count exceeded limit without successful time sync, "
+               "rebooting the sensor and exiting."
+            << std::endl;
         hardReset();
       }
     }
@@ -562,12 +572,13 @@ bool UrgStampedNode::detectDeviceTimeJump(
 
   if (jumped)
   {
-    scip2::logger::error() << "Device time origin jumped\n"
-                              "last origin: "
-                           << std::setprecision(3) << std::fixed << device_time_origin_.origin_.toSec()
-                           << ", current origin: " << current_origin.toSec()
-                           << ", allowed_device_time_origin_diff: " << allowed_device_time_origin_diff_
-                           << ", device_timestamp: " << device_timestamp << std::endl;
+    scip2::logger::error()
+        << "Device time origin jumped\n"
+           "last origin: "
+        << std::setprecision(3) << std::fixed << device_time_origin_.origin_.toSec()
+        << ", current origin: " << current_origin.toSec()
+        << ", allowed_device_time_origin_diff: " << allowed_device_time_origin_diff_
+        << ", device_timestamp: " << device_timestamp << std::endl;
   }
   return jumped;
 }
