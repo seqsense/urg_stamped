@@ -79,11 +79,11 @@ public:
           break;
         case LOG_INFO:
         case LOG_WARN:
-          std::cout << prefix_ << log;
+          std::cout << prefix_ << log << std::endl;
           break;
         case LOG_ERROR:
         case LOG_FATAL:
-          std::cerr << prefix_ << log;
+          std::cerr << prefix_ << log << std::endl;
           break;
       }
     }
