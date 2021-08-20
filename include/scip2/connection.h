@@ -198,6 +198,7 @@ public:
   }
   void stop()
   {
+    socket_.close();
     io_.stop();
   }
   void send(const std::string& data, CallbackSend cb = CallbackSend())
