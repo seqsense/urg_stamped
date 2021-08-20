@@ -173,7 +173,6 @@ protected:
 
   void softReset();
   void hardReset();
-  void sleepRandom(const double min, const double max);
 
 public:
   UrgStampedNode();
