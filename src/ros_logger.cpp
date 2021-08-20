@@ -60,10 +60,24 @@ public:
         ROS_WARN("%s%s", prefix_.c_str(), log.c_str());
         break;
       case LOG_ERROR:
-        ROS_ERROR("%s%s", prefix_.c_str(), log.c_str());
+        if (ros::ok())
+        {
+          ROS_ERROR("%s%s", prefix_.c_str(), log.c_str());
+        }
+        else
+        {
+          std::cerr << prefix_ << log;
+        }
         break;
       case LOG_FATAL:
-        ROS_FATAL("%s%s", prefix_.c_str(), log.c_str());
+        if (ros::ok())
+        {
+          ROS_FATAL("%s%s", prefix_.c_str(), log.c_str());
+        }
+        else
+        {
+          std::cerr << prefix_ << log;
+        }
         break;
     }
     str("");
