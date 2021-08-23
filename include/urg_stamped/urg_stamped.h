@@ -60,12 +60,13 @@ protected:
   scip2::Protocol::Ptr scip_;
 
   bool publish_intensity_;
-  bool device_initialized_;
+  bool failed_;
 
   enum class DelayEstimState
   {
     IDLE,
     STOPPING_SCAN,
+    STATE_CHECKING,
     ESTIMATION_STARTING,
     ESTIMATING,
     EXITING,
@@ -112,6 +113,11 @@ protected:
   bool tm_success_;
   int error_count_max_;
 
+  ros::Duration tm_command_interval_;
+  std::string last_measurement_state_;
+  int tm_try_max_;
+  int tm_try_count_;
+
   void cbM(
       const boost::posix_time::ptime& time_read,
       const std::string& echo_back,
@@ -153,12 +159,14 @@ protected:
       const std::string& echo_back,
       const std::string& status);
   void cbConnect();
+  void cbClose();
 
+  void sendII();
   void timeSync(const ros::TimerEvent& event = ros::TimerEvent());
   void delayEstimation(const ros::TimerEvent& event = ros::TimerEvent());
   void retryTM(const ros::TimerEvent& event = ros::TimerEvent());
 
-  void errorCountIncrement(const std::string& status);
+  void errorCountIncrement(const std::string& status = "");
 
   bool detectDeviceTimeJump(
       const boost::posix_time::ptime& time_response,
@@ -166,6 +174,7 @@ protected:
 
   void softReset();
   void hardReset();
+  void sleepRandom(const double min, const double max);
 
 public:
   UrgStampedNode();

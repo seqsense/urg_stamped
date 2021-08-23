@@ -48,23 +48,43 @@ public:
     if (!log.empty() && log.back() == '\n')
       log.pop_back();
 
-    switch (type_)
+    if (ros::ok())
     {
-      case LOG_DEBUG:
-        ROS_DEBUG("%s%s", prefix_.c_str(), log.c_str());
-        break;
-      case LOG_INFO:
-        ROS_INFO("%s%s", prefix_.c_str(), log.c_str());
-        break;
-      case LOG_WARN:
-        ROS_WARN("%s%s", prefix_.c_str(), log.c_str());
-        break;
-      case LOG_ERROR:
-        ROS_ERROR("%s%s", prefix_.c_str(), log.c_str());
-        break;
-      case LOG_FATAL:
-        ROS_FATAL("%s%s", prefix_.c_str(), log.c_str());
-        break;
+      switch (type_)
+      {
+        case LOG_DEBUG:
+          ROS_DEBUG("%s%s", prefix_.c_str(), log.c_str());
+          break;
+        case LOG_INFO:
+          ROS_INFO("%s%s", prefix_.c_str(), log.c_str());
+          break;
+        case LOG_WARN:
+          ROS_WARN("%s%s", prefix_.c_str(), log.c_str());
+          break;
+        case LOG_ERROR:
+          ROS_ERROR("%s%s", prefix_.c_str(), log.c_str());
+          break;
+        case LOG_FATAL:
+          ROS_FATAL("%s%s", prefix_.c_str(), log.c_str());
+          break;
+      }
+    }
+    else
+    {
+      // Fallback to stderr/stdout after ros::shutdown.
+      switch (type_)
+      {
+        case LOG_DEBUG:
+          break;
+        case LOG_INFO:
+        case LOG_WARN:
+          std::cout << prefix_ << log << std::endl;
+          break;
+        case LOG_ERROR:
+        case LOG_FATAL:
+          std::cerr << prefix_ << log << std::endl;
+          break;
+      }
     }
     str("");
     return 0;

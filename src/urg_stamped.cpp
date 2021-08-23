@@ -334,6 +334,51 @@ void UrgStampedNode::cbII(
   {
     scip2::logger::debug() << "sensor status: " << stat->second << std::endl;
   }
+  const auto mesm = params.find("MESM");
+  if (mesm != params.end())
+  {
+    scip2::logger::debug() << "measurement status: " << mesm->second << std::endl;
+  }
+
+  if (delay_estim_state_ == DelayEstimState::STATE_CHECKING)
+  {
+    if (mesm == params.end())
+    {
+      scip2::logger::error() << "II doesn't have measurement state" << std::endl;
+      errorCountIncrement();
+    }
+    else
+    {
+      // MESM (measurement state) value depends on the sensor model.
+      //   UTM-30LX-EW: "Idle"
+      //   UST-**LX: "Measuring"
+      std::string state(mesm->second);
+      const auto tolower = [](unsigned char c)
+      {
+        return std::tolower(c);
+      };
+      std::transform(state.begin(), state.end(), state.begin(), tolower);
+      if (state.find("idle") != std::string::npos || state.find("measuring") != std::string::npos)
+      {
+        if (last_measurement_state_ != state && last_measurement_state_ != "")
+        {
+          scip2::logger::info() << "Sensor is idle, entering time synchronization mode" << std::endl;
+        }
+        delay_estim_state_ = DelayEstimState::ESTIMATION_STARTING;
+        retryTM();
+      }
+      else
+      {
+        if (last_measurement_state_ != state)
+        {
+          scip2::logger::info() << "Sensor is not idle (" << state << ")" << std::endl;
+        }
+        delay_estim_state_ = DelayEstimState::STOPPING_SCAN;
+      }
+      last_measurement_state_ = state;
+    }
+    return;
+  }
 
   const auto delay =
       ros::Time::fromBoost(time_read) -
@@ -415,7 +460,7 @@ void UrgStampedNode::cbQT(
 
   if (delay_estim_state_ == DelayEstimState::STOPPING_SCAN)
   {
-    delay_estim_state_ = DelayEstimState::ESTIMATION_STARTING;
+    delay_estim_state_ = DelayEstimState::STATE_CHECKING;
     retryTM();
   }
 }
@@ -425,12 +470,23 @@ void UrgStampedNode::cbRB(
     const std::string& echo_back,
     const std::string& status)
 {
-  if (status != "00" && status != "01")
+  if (status == "01")
   {
-    scip2::logger::error()
-        << echo_back << " errored with " << status << std::endl
-        << "Failed to reboot. Please power-off the sensor." << std::endl;
+    scip2::logger::info() << "Sensor reboot in-progress" << std::endl;
+    scip_->sendCommand("RB");  // Sending it 2 times in 1 sec. is needed
+    return;
   }
+  else if (status == "00")
+  {
+    scip2::logger::info() << "Sensor reboot succeeded" << std::endl;
+    device_->stop();
+    sleepRandom(1.0, 2.0);
+    ros::shutdown();
+    return;
+  }
+  scip2::logger::error()
+      << echo_back << " errored with " << status << std::endl
+      << "Failed to reboot. Please power-off the sensor." << std::endl;
 }
 
 void UrgStampedNode::cbRS(
@@ -447,12 +503,18 @@ void UrgStampedNode::cbRS(
     return;
   }
   scip2::logger::info() << "Sensor reset succeeded" << std::endl;
-  if (!device_initialized_)
+  if (failed_)
   {
-    device_initialized_ = true;
-    scip_->sendCommand("VV");
-    scip_->sendCommand("PP");
+    scip2::logger::info() << "Restarting urg_stamped" << std::endl;
+    device_->stop();
+    sleepRandom(0.5, 1.0);
+    ros::shutdown();
+    return;
   }
+  scip_->sendCommand("VV");
+  scip_->sendCommand("PP");
+  delay_estim_state_ = DelayEstimState::IDLE;
+  tm_try_count_ = 0;
 }
 
 void UrgStampedNode::cbConnect()
@@ -461,11 +523,33 @@ void UrgStampedNode::cbConnect()
   device_->startWatchdog(boost::posix_time::seconds(1));
 }
 
-void UrgStampedNode::timeSync(const ros::TimerEvent& event)
+void UrgStampedNode::cbClose()
+{
+  scip2::logger::info()
+      << "internal state on failure: "
+      << "delay_estim_state_=" << static_cast<int>(delay_estim_state_) << " "
+      << "tm_try_count_=" << tm_try_count_ << " "
+      << "error_count_.error=" << error_count_.error << " "
+      << "error_count_.abnormal_error=" << error_count_.abnormal_error << " "
+      << std::endl;
+  delay_estim_state_ = DelayEstimState::EXITING;
+  device_->stop();
+  ros::shutdown();
+}
+
+void UrgStampedNode::sendII()
 {
   scip_->sendCommand(
       "II",
       boost::bind(&UrgStampedNode::cbIISend, this, boost::arg<1>()));
+}
+
+void UrgStampedNode::timeSync(const ros::TimerEvent& event)
+{
+  if (delay_estim_state_ == DelayEstimState::IDLE)
+  {
+    sendII();
+  }
   timer_sync_ = nh_.createTimer(
       ros::Duration(sync_interval_(random_engine_)),
       &UrgStampedNode::timeSync, this, true);
@@ -473,12 +557,13 @@ void UrgStampedNode::timeSync(const ros::TimerEvent& event)
 
 void UrgStampedNode::delayEstimation(const ros::TimerEvent& event)
 {
+  tm_try_count_ = 0;
   timer_sync_.stop();  // Stop timer for sync using II command.
   scip2::logger::debug() << "Starting communication delay estimation" << std::endl;
   delay_estim_state_ = DelayEstimState::STOPPING_SCAN;
   timer_retry_tm_.stop();
   timer_retry_tm_ = nh_.createTimer(
-      ros::Duration(0.1),
+      tm_command_interval_,
       &UrgStampedNode::retryTM, this);
   retryTM();
 }
@@ -490,6 +575,17 @@ void UrgStampedNode::retryTM(const ros::TimerEvent& event)
     case DelayEstimState::STOPPING_SCAN:
       scip2::logger::debug() << "Stopping scan" << std::endl;
       scip_->sendCommand("QT");
+      tm_try_count_++;
+      if (tm_try_count_ > tm_try_max_)
+      {
+        scip2::logger::error() << "Failed to enter time synchronization mode" << std::endl;
+        errorCountIncrement();
+        softReset();
+      }
+      break;
+    case DelayEstimState::STATE_CHECKING:
+      scip2::logger::debug() << "Checking sensor state" << std::endl;
+      sendII();
       break;
     case DelayEstimState::ESTIMATION_STARTING:
       scip2::logger::debug() << "Entering the time synchronization mode" << std::endl;
@@ -506,14 +602,24 @@ void UrgStampedNode::retryTM(const ros::TimerEvent& event)
 
 void UrgStampedNode::errorCountIncrement(const std::string& status)
 {
-  if (status == "00")
+  if (delay_estim_state_ == DelayEstimState::EXITING)
+  {
+    // Already resetting or rebooting.
     return;
+  }
+
+  if (status == "00")
+  {
+    return;
+  }
 
   if (status == "0L")
   {
     ++error_count_.abnormal_error;
     if (error_count_.abnormal_error > error_count_max_)
     {
+      failed_ = true;
+      delay_estim_state_ = DelayEstimState::EXITING;
       scip2::logger::error()
           << "Error count exceeded limit, rebooting the sensor and exiting."
           << std::endl;
@@ -525,6 +631,8 @@ void UrgStampedNode::errorCountIncrement(const std::string& status)
     ++error_count_.error;
     if (error_count_.error > error_count_max_)
     {
+      failed_ = true;
+      delay_estim_state_ = DelayEstimState::EXITING;
       if (tm_success_)
       {
         scip2::logger::error()
@@ -546,16 +654,18 @@ void UrgStampedNode::errorCountIncrement(const std::string& status)
 void UrgStampedNode::softReset()
 {
   scip_->sendCommand("RS");
-  ros::Duration(0.05).sleep();
-  ros::shutdown();
 }
 
 void UrgStampedNode::hardReset()
 {
+  scip2::logger::error() << "Rebooting the sensor" << std::endl;
   scip_->sendCommand("RB");
-  scip_->sendCommand("RB");  // Sending it 2 times in 1 sec. is needed
-  ros::Duration(0.05).sleep();
-  ros::shutdown();
+}
+
+void UrgStampedNode::sleepRandom(const double min, const double max)
+{
+  std::uniform_real_distribution<double> rnd(min, max);
+  ros::Duration(rnd(random_engine_)).sleep();
 }
 
 bool UrgStampedNode::detectDeviceTimeJump(
@@ -586,7 +696,7 @@ bool UrgStampedNode::detectDeviceTimeJump(
 UrgStampedNode::UrgStampedNode()
   : nh_("")
   , pnh_("~")
-  , device_initialized_(false)
+  , failed_(false)
   , delay_estim_state_(DelayEstimState::IDLE)
   , tm_iter_num_(5)
   , tm_median_window_(35)
@@ -599,6 +709,9 @@ UrgStampedNode::UrgStampedNode()
   , timestamp_moving_average_(5, ros::Duration())
   , tm_success_(false)
 {
+  std::random_device rd;
+  random_engine_.seed(rd());
+
   std::string ip;
   int port;
   double sync_interval_min;
@@ -616,6 +729,12 @@ UrgStampedNode::UrgStampedNode()
   pnh_.param("error_limit", error_count_max_, 4);
   pnh_.param("allowed_device_time_origin_diff", allowed_device_time_origin_diff_, 1.0);
 
+  double tm_interval, tm_timeout;
+  pnh_.param("tm_interval", tm_interval, 0.06);
+  tm_command_interval_ = ros::Duration(tm_interval);
+  pnh_.param("tm_timeout", tm_timeout, 10.0);
+  tm_try_max_ = static_cast<int>(tm_timeout / tm_interval);
+
   urg_stamped::setROSLogger(msg_base_.header.frame_id + ": ");
 
   bool debug;
@@ -632,7 +751,8 @@ UrgStampedNode::UrgStampedNode()
   pub_scan_ = nh_.advertise<sensor_msgs::LaserScan>("scan", 10);
 
   device_.reset(new scip2::ConnectionTcp(ip, port));
-  device_->registerCloseCallback(ros::shutdown);
+  device_->registerCloseCallback(
+      boost::bind(&UrgStampedNode::cbClose, this));
   device_->registerConnectCallback(
       boost::bind(&UrgStampedNode::cbConnect, this));
 
