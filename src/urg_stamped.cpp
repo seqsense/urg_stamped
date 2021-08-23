@@ -546,7 +546,10 @@ void UrgStampedNode::sendII()
 
 void UrgStampedNode::timeSync(const ros::TimerEvent& event)
 {
-  sendII();
+  if (delay_estim_state_ == DelayEstimState::IDLE)
+  {
+    sendII();
+  }
   timer_sync_ = nh_.createTimer(
       ros::Duration(sync_interval_(random_engine_)),
       &UrgStampedNode::timeSync, this, true);
