@@ -601,6 +601,7 @@ void UrgStampedNode::errorCountIncrement(const std::string& status)
 {
   if (delay_estim_state_ == DelayEstimState::EXITING)
   {
+    // Already resetting or rebooting.
     return;
   }
 

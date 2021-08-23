@@ -71,6 +71,7 @@ public:
     }
     else
     {
+      // Fallback to stderr/stdout after ros::shutdown.
       switch (type_)
       {
         case LOG_DEBUG:
