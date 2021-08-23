@@ -479,8 +479,8 @@ void UrgStampedNode::cbRB(
   else if (status == "00")
   {
     scip2::logger::info() << "Sensor reboot succeeded" << std::endl;
-    sleepRandom(1.0, 2.0);
     device_->stop();
+    sleepRandom(1.0, 2.0);
     ros::shutdown();
     return;
   }
