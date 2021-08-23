@@ -10,6 +10,15 @@ Changelog for package urg_stamped
 * Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
 * Contributors: Atsushi Watanabe
 
+0.0.14 (2021-08-23)
+-------------------
+* Fix continuous time sync failure (`#115 <https://github.com/seqsense/urg_stamped/issues/115>`_)
+* Tweak indent of stream oprators (`#119 <https://github.com/seqsense/urg_stamped/issues/119>`_)
+* Gracefully stop connection (`#118 <https://github.com/seqsense/urg_stamped/issues/118>`_)
+* Improve log outputs for multi-sensor configuration (`#116 <https://github.com/seqsense/urg_stamped/issues/116>`_)
+* Automatically hide old bot comments (`#117 <https://github.com/seqsense/urg_stamped/issues/117>`_)
+* Contributors: Atsushi Watanabe
+
 0.0.13 (2021-08-03)
 -------------------
 * Remove doubled QT command request (`#112 <https://github.com/seqsense/urg_stamped/issues/112>`_)
