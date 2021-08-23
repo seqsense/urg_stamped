@@ -349,13 +349,16 @@ void UrgStampedNode::cbII(
     }
     else
     {
+      // MESM (measurement state) value depends on the sensor model.
+      //   UTM-30LX-EW: "Idle"
+      //   UST-**LX: "Measuring"
+      std::string state(mesm->second);
       const auto tolower = [](unsigned char c)
       {
         return std::tolower(c);
       };
-      std::string state(mesm->second);
       std::transform(state.begin(), state.end(), state.begin(), tolower);
-      if (state.find("idle") != std::string::npos)
+      if (state.find("idle") != std::string::npos || state.find("measuring") != std::string::npos)
       {
         if (last_measurement_state_ != state && last_measurement_state_ != "")
         {
