@@ -10,8 +10,8 @@ Changelog for package urg_stamped
 * Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
 * Contributors: Atsushi Watanabe
 
-Forthcoming
------------
+0.0.14 (2021-08-23)
+-------------------
 * Fix continuous time sync failure (`#115 <https://github.com/seqsense/urg_stamped/issues/115>`_)
 * Tweak indent of stream oprators (`#119 <https://github.com/seqsense/urg_stamped/issues/119>`_)
 * Gracefully stop connection (`#118 <https://github.com/seqsense/urg_stamped/issues/118>`_)
