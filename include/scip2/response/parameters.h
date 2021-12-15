@@ -64,12 +64,12 @@ public:
       const ParsedParam p = parseParamLine(line);
       if (!p.parsed)
       {
-        logger::error() << "Parameter decode error" << std::endl;
+        logger::error() << "Parameter decode error: " << p.error << std::endl;
         return;
       }
       if (!p.checksum_matched)
       {
-        logger::error() << "Checksum mismatch; parameters dropped" << std::endl;
+        logger::error() << "Checksum mismatch; parameters dropped: " << p.error << std::endl;
         return;
       }
       params[p.key] = p.value;

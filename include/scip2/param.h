@@ -27,27 +27,45 @@ struct ParsedParam
   bool checksum_matched;
   std::string key;
   std::string value;
+  std::string error;
+
+  ParsedParam()
+    : parsed(false)
+    , checksum_matched(false)
+  {
+  }
 };
 
 static ParsedParam parseParamLine(const std::string& line)
 {
   ParsedParam ret;
 
+  if (line.size() < 3)
+  {
+    // ":;[checksum]"
+    ret.error = "parameter line must have at least 3 chars";
+    return ret;
+  }
+
   const auto delm = std::find(line.begin(), line.end(), ':');
   if (delm == line.end())
   {
+    ret.error = "delimiter not found";
     return ret;
   }
-  const auto end = std::find(line.begin(), line.end(), ';');
-  if (end == line.end())
+  auto ie = line.rbegin();
+  const uint8_t checksum = *ie;
+  ++ie;
+  if (*ie != ';')
   {
+    ret.error = "checksum delimiter not found";
     return ret;
   }
+  const auto end = line.end() - 2;
   ret.parsed = true;
   ret.key = std::string(line.begin(), delm);
   ret.value = std::string(delm + 1, end);
 
-  const uint8_t checksum = line.back();
   uint8_t sum = 0;
   for (auto it = line.begin(); it != end; ++it)
   {

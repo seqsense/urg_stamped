@@ -25,10 +25,17 @@ TEST(ParseParamLine, parsed)
   // Checksum example shown in SCIP2.0 Specification
   const std::string line("PROT:SCIP 2.0;N");
   const scip2::ParsedParam p = scip2::parseParamLine(line);
-  ASSERT_EQ(true, p.parsed);
+  ASSERT_EQ(true, p.parsed) << p.error;
   ASSERT_EQ(true, p.checksum_matched);
   ASSERT_EQ("PROT", p.key);
   ASSERT_EQ("SCIP 2.0", p.value);
+}
+
+TEST(ParseParamLine, shortLine)
+{
+  const std::string line(";");
+  const scip2::ParsedParam p = scip2::parseParamLine(line);
+  ASSERT_EQ(false, p.parsed);
 }
 
 TEST(ParseParamLine, noDelimiter)
@@ -38,11 +45,17 @@ TEST(ParseParamLine, noDelimiter)
   ASSERT_EQ(false, p.parsed);
 }
 
+TEST(ParseParamLine, noChecksumDelimiter)
+{
+  const std::string line("PROT:SCIP 2.0");
+  const scip2::ParsedParam p = scip2::parseParamLine(line);
+  ASSERT_EQ(false, p.parsed);
+}
 TEST(ParseParamLine, checksumMismatch)
 {
   const std::string line("PROT:SCIP 2.0;X");
   const scip2::ParsedParam p = scip2::parseParamLine(line);
-  ASSERT_EQ(true, p.parsed);
+  ASSERT_EQ(true, p.parsed) << p.error;
   ASSERT_EQ(false, p.checksum_matched);
   ASSERT_EQ("PROT", p.key);
   ASSERT_EQ("SCIP 2.0", p.value);
@@ -52,10 +65,10 @@ TEST(ParseParamLine, containsSemicolon)
 {
   const std::string line("TIME:j;o[;H");
   const scip2::ParsedParam p = scip2::parseParamLine(line);
-  ASSERT_EQ(true, p.parsed);
+  ASSERT_EQ(true, p.parsed) << p.error;
   ASSERT_EQ(true, p.checksum_matched);
-  ASSERT_EQ("PROT", p.key);
-  ASSERT_EQ("SCIP 2.0", p.value);
+  ASSERT_EQ("TIME", p.key);
+  ASSERT_EQ("j;o[", p.value);
 }
 
 int main(int argc, char** argv)
