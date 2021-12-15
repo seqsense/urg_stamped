@@ -41,6 +41,7 @@ if(CATKIN_ENABLE_TESTING)
   target_link_libraries(test_device_time_origin ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
   catkin_add_gtest(test_first_order_filter test/src/test_first_order_filter.cpp)
+  catkin_add_gtest(test_param test/src/test_param.cpp)
 
   catkin_add_gtest(test_timestamp_moving_average test/src/test_timestamp_moving_average.cpp)
   target_link_libraries(test_timestamp_moving_average ${catkin_LIBRARIES} ${Boost_LIBRARIES})

@@ -24,6 +24,7 @@
 
 #include <scip2/response/abstract.h>
 #include <scip2/logger.h>
+#include <scip2/param.h>
 
 namespace scip2
 {
@@ -59,32 +60,19 @@ public:
     {
       if (line.size() == 0)
         break;
-      const auto delm = std::find(line.begin(), line.end(), ':');
-      if (delm == line.end())
+
+      const ParsedParam p = parseParamLine(line);
+      if (!p.parsed)
       {
-        logger::error() << "Parameter decode error" << std::endl;
+        logger::error() << "Parameter decode error: " << p.error << std::endl;
         return;
       }
-      const auto end = std::find(line.begin(), line.end(), ';');
-      if (end == line.end())
+      if (!p.checksum_matched)
       {
-        logger::error() << "Parameter decode error" << std::endl;
+        logger::error() << "Checksum mismatch; parameters dropped: " << p.error << std::endl;
         return;
       }
-      const uint8_t checksum = line.back();
-      uint8_t sum = 0;
-      for (auto it = line.begin(); it != end; ++it)
-      {
-        sum += *it;
-      }
-      if ((sum & 0x3F) + 0x30 != checksum)
-      {
-        logger::error() << "Checksum mismatch; parameters dropped" << std::endl;
-        return;
-      }
-      const std::string key(line.begin(), delm);
-      const std::string value(delm + 1, end);
-      params[key] = value;
+      params[p.key] = p.value;
     }
     if (cb_)
       cb_(time_read, echo_back, status, params);
