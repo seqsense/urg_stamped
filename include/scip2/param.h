@@ -18,6 +18,7 @@
 #define SCIP2_PARAM_H
 
 #include <string>
+#include <algorithm>
 
 namespace scip2
 {
