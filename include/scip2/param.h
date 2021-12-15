@@ -21,17 +21,17 @@
 
 namespace scip2
 {
-struct DecodedParam
+struct ParsedParam
 {
-  bool decoded;
+  bool parsed;
   bool checksum_matched;
   std::string key;
   std::string value;
 };
 
-static DecodedParam decodeParamLine(const std::string& line)
+static ParsedParam parseParamLine(const std::string& line)
 {
-  DecodedParam ret;
+  ParsedParam ret;
 
   const auto delm = std::find(line.begin(), line.end(), ':');
   if (delm == line.end())
@@ -43,7 +43,7 @@ static DecodedParam decodeParamLine(const std::string& line)
   {
     return ret;
   }
-  ret.decoded = true;
+  ret.parsed = true;
   ret.key = std::string(line.begin(), delm);
   ret.value = std::string(delm + 1, end);
 

@@ -61,8 +61,8 @@ public:
       if (line.size() == 0)
         break;
 
-      const DecodedParam p = decodeParamLine(line);
-      if (!p.decoded)
+      const ParsedParam p = parseParamLine(line);
+      if (!p.parsed)
       {
         logger::error() << "Parameter decode error" << std::endl;
         return;
