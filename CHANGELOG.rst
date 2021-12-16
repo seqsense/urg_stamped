@@ -10,6 +10,12 @@ Changelog for package urg_stamped
 * Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
 * Contributors: Atsushi Watanabe
 
+0.0.15 (2021-12-15)
+-------------------
+* Fix parsing parameter containing semicolon (`#123 <https://github.com/seqsense/urg_stamped/issues/123>`_)
+* Use Alpine ROS as a cloner base (`#122 <https://github.com/seqsense/urg_stamped/issues/122>`_)
+* Contributors: Atsushi Watanabe
+
 0.0.14 (2021-08-23)
 -------------------
 * Fix continuous time sync failure (`#115 <https://github.com/seqsense/urg_stamped/issues/115>`_)
