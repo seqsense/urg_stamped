@@ -76,9 +76,10 @@ void UrgStampedNode::cbM(
   if (t0_ == ros::Time(0))
     t0_ = estimated_timestamp_lf;
 
+  const ros::Time time_read_ros = ros::Time::fromBoost(time_read);
   const auto receive_time =
       timestamp_outlier_removal_.update(
-          ros::Time::fromBoost(time_read) -
+          time_read_ros -
           estimated_communication_delay_ * 0.5 -
           ros::Duration(msg_base_.scan_time));
 
@@ -89,6 +90,16 @@ void UrgStampedNode::cbM(
           ros::Duration(
               timestamp_lpf_.update((estimated_timestamp_lf - t0_).toSec()) +
               timestamp_hpf_.update((receive_time - t0_).toSec())));
+
+  const ros::Duration delay = msg.header.stamp - time_read_ros;
+  if (delay < ros::Duration(0))
+  {
+    scip2::logger::error()
+        << "estimated future timestamp (read: " << time_read_ros.toSec()
+        << ", estimated: " << msg.header.stamp.toSec() << std::endl;
+    errorCountIncrement();
+    return;
+  }
 
   if (scan.ranges_.size() != step_max_ - step_min_ + 1)
   {
