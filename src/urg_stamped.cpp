@@ -66,7 +66,6 @@ void UrgStampedNode::cbM(
     errorCountIncrement(status);
     return;
   }
-  error_count_ = ResponseErrorCount();
 
   const auto estimated_timestamp_lf =
       device_time_origin_.origin_ +
@@ -76,9 +75,10 @@ void UrgStampedNode::cbM(
   if (t0_ == ros::Time(0))
     t0_ = estimated_timestamp_lf;
 
+  const ros::Time time_read_ros = ros::Time::fromBoost(time_read);
   const auto receive_time =
       timestamp_outlier_removal_.update(
-          ros::Time::fromBoost(time_read) -
+          time_read_ros -
           estimated_communication_delay_ * 0.5 -
           ros::Duration(msg_base_.scan_time));
 
@@ -89,6 +89,16 @@ void UrgStampedNode::cbM(
           ros::Duration(
               timestamp_lpf_.update((estimated_timestamp_lf - t0_).toSec()) +
               timestamp_hpf_.update((receive_time - t0_).toSec())));
+
+  if (msg.header.stamp > time_read_ros)
+  {
+    scip2::logger::error()
+        << std::setprecision(6) << std::fixed
+        << "estimated future timestamp (read: " << time_read_ros.toSec()
+        << ", estimated: " << msg.header.stamp.toSec() << std::endl;
+    errorCountIncrement();
+    return;
+  }
 
   if (scan.ranges_.size() != step_max_ - step_min_ + 1)
   {
@@ -115,6 +125,7 @@ void UrgStampedNode::cbM(
   }
 
   pub_scan_.publish(msg);
+  error_count_ = ResponseErrorCount();
 }
 
 void UrgStampedNode::cbTMSend(const boost::posix_time::ptime& time_send)
