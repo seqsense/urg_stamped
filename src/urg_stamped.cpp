@@ -91,8 +91,7 @@ void UrgStampedNode::cbM(
               timestamp_lpf_.update((estimated_timestamp_lf - t0_).toSec()) +
               timestamp_hpf_.update((receive_time - t0_).toSec())));
 
-  const ros::Duration delay = msg.header.stamp - time_read_ros;
-  if (delay < ros::Duration(0))
+  if (msg.header.stamp > time_read_ros)
   {
     scip2::logger::error()
         << "estimated future timestamp (read: " << time_read_ros.toSec()
