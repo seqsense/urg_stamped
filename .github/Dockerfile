@@ -39,6 +39,7 @@ RUN if [ ${ROS_DISTRO} = "noetic" ]; then PYTHON_VERSION_SUFFIX=3; else PYTHON_V
     curl \
     libxml2-utils \
     python${PYTHON_VERSION_SUFFIX}-catkin-pkg \
+    python${PYTHON_VERSION_SUFFIX}-pip \
     python${PYTHON_VERSION_SUFFIX}-rosdep \
     python${PYTHON_VERSION_SUFFIX}-rosdep-modules \
     python${PYTHON_VERSION_SUFFIX}-rosdistro \
@@ -46,6 +47,7 @@ RUN if [ ${ROS_DISTRO} = "noetic" ]; then PYTHON_VERSION_SUFFIX=3; else PYTHON_V
     python${PYTHON_VERSION_SUFFIX}-setuptools \
     sudo \
     wget \
+  && python${PYTHON_VERSION_SUFFIX} -m pip install catkin_lint \
   && rosdep init \
   && rosdep update \
   && rosdep install --from-paths /catkin_ws/src --ignore-src --rosdistro=${ROS_DISTRO} -y \
