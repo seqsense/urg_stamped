@@ -1,6 +1,6 @@
 ARG ROS_DISTRO=noetic
 # ========================================
-FROM ghcr.io/alpine-ros/alpine-ros:noetic-bare as cloner
+FROM ghcr.io/alpine-ros/alpine-ros:noetic-3.14-bare as cloner
 
 RUN apk add --no-cache git py3-wstool
 
@@ -39,7 +39,6 @@ RUN if [ ${ROS_DISTRO} = "noetic" ]; then PYTHON_VERSION_SUFFIX=3; else PYTHON_V
     curl \
     libxml2-utils \
     python${PYTHON_VERSION_SUFFIX}-catkin-pkg \
-    python${PYTHON_VERSION_SUFFIX}-pip \
     python${PYTHON_VERSION_SUFFIX}-rosdep \
     python${PYTHON_VERSION_SUFFIX}-rosdep-modules \
     python${PYTHON_VERSION_SUFFIX}-rosdistro \
@@ -47,7 +46,6 @@ RUN if [ ${ROS_DISTRO} = "noetic" ]; then PYTHON_VERSION_SUFFIX=3; else PYTHON_V
     python${PYTHON_VERSION_SUFFIX}-setuptools \
     sudo \
     wget \
-  && python${PYTHON_VERSION_SUFFIX} -m pip install catkin_lint \
   && rosdep init \
   && rosdep update \
   && rosdep install --from-paths /catkin_ws/src --ignore-src --rosdistro=${ROS_DISTRO} -y \
