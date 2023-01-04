@@ -94,6 +94,7 @@ void UrgStampedNode::cbM(
   if (msg.header.stamp > time_read_ros)
   {
     scip2::logger::error()
+        << std::setprecision(6) << std::fixed
         << "estimated future timestamp (read: " << time_read_ros.toSec()
         << ", estimated: " << msg.header.stamp.toSec() << std::endl;
     errorCountIncrement();
