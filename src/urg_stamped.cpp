@@ -66,7 +66,6 @@ void UrgStampedNode::cbM(
     errorCountIncrement(status);
     return;
   }
-  error_count_ = ResponseErrorCount();
 
   const auto estimated_timestamp_lf =
       device_time_origin_.origin_ +
@@ -126,6 +125,7 @@ void UrgStampedNode::cbM(
   }
 
   pub_scan_.publish(msg);
+  error_count_ = ResponseErrorCount();
 }
 
 void UrgStampedNode::cbTMSend(const boost::posix_time::ptime& time_send)
