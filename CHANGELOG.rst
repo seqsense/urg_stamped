@@ -10,8 +10,9 @@ Changelog for package urg_stamped
 * Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
 * Contributors: Atsushi Watanabe
 
-0.0.16 (2023-01-04)
--------------------
+Forthcoming
+-----------
+* Update release scripts (`#133 <https://github.com/seqsense/urg_stamped/issues/133>`_)
 * Fix multiline run in bloom-release workflow (`#130 <https://github.com/seqsense/urg_stamped/issues/130>`_)
 * Detect future timestamp as error (`#129 <https://github.com/seqsense/urg_stamped/issues/129>`_)
 * Unuse actions/create-release (`#127 <https://github.com/seqsense/urg_stamped/issues/127>`_)
