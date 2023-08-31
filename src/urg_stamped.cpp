@@ -505,11 +505,18 @@ void UrgStampedNode::cbRS(
     const std::string& echo_back,
     const std::string& status)
 {
+  const bool requested = cmd_resetting_;
+  cmd_resetting_ = false;
+
   if (status != "00")
   {
-    scip2::logger::error()
-        << echo_back << " errored with " << status << std::endl
-        << "Failed to reset. Rebooting the sensor and exiting." << std::endl;
+    scip2::logger::error() << echo_back << " errored with " << status << std::endl;
+    if (!requested)
+    {
+      errorCountIncrement(status);
+      return;
+    }
+    scip2::logger::error() << "Failed to reset. Rebooting the sensor and exiting." << std::endl;
     hardReset();
     return;
   }
@@ -530,7 +537,7 @@ void UrgStampedNode::cbRS(
 
 void UrgStampedNode::cbConnect()
 {
-  scip_->sendCommand("RS");
+  softReset();
   device_->startWatchdog(boost::posix_time::seconds(1));
 }
 
@@ -664,6 +671,7 @@ void UrgStampedNode::errorCountIncrement(const std::string& status)
 
 void UrgStampedNode::softReset()
 {
+  cmd_resetting_ = true;
   scip_->sendCommand("RS");
 }
 
@@ -719,6 +727,7 @@ UrgStampedNode::UrgStampedNode()
   , timestamp_outlier_removal_(ros::Duration(0.001), ros::Duration())
   , timestamp_moving_average_(5, ros::Duration())
   , tm_success_(false)
+  , cmd_resetting_(false)
 {
   std::random_device rd;
   random_engine_.seed(rd());
