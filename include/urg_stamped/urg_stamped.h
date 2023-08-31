@@ -118,6 +118,8 @@ protected:
   int tm_try_max_;
   int tm_try_count_;
 
+  bool cmd_resetting_;
+
   void cbM(
       const boost::posix_time::ptime& time_read,
       const std::string& echo_back,
