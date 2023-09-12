@@ -10,8 +10,8 @@ Changelog for package urg_stamped
 * Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
 * Contributors: Atsushi Watanabe
 
-Forthcoming
------------
+0.0.17 (2023-09-12)
+-------------------
 * Reboot on reset error only if requested reset (`#135 <https://github.com/seqsense/urg_stamped/issues/135>`_)
 * Drop Melodic support (`#134 <https://github.com/seqsense/urg_stamped/issues/134>`_)
 * Contributors: Atsushi Watanabe
