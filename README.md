@@ -69,3 +69,4 @@ urg_stamped has better timestamp characteristics comparing with urg_node.
 urg_stamped        | ![urg_stamped 10 rad/s](doc/images/urg_stamped_10radps.png)     | ![urg_stamped 20 rad/s](doc/images/urg_stamped_20radps.png)
 urg_node           | ![urg_node 10 rad/s](doc/images/urg_node_10radps.png)           | ![urg_node 20 rad/s](doc/images/urg_node_20radps.png)
 urg_node<br>(sync) | ![urg_node sync 10 rad/s](doc/images/urg_node_sync_10radps.png) | ![urg_node sync_20 rad/s](doc/images/urg_node_sync_20radps.png)
+
