@@ -61,6 +61,7 @@ protected:
 
   bool publish_intensity_;
   bool failed_;
+  bool disable_on_scan_sync_;
 
   enum class DelayEstimState
   {
@@ -167,6 +168,7 @@ protected:
   void timeSync(const ros::TimerEvent& event = ros::TimerEvent());
   void delayEstimation(const ros::TimerEvent& event = ros::TimerEvent());
   void retryTM(const ros::TimerEvent& event = ros::TimerEvent());
+  void updateOrigin(const ros::Time& now, const ros::Time& origin, const ros::Time& time_at_device_timestamp);
 
   void errorCountIncrement(const std::string& status = "");
 

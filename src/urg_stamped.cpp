@@ -207,6 +207,14 @@ void UrgStampedNode::cbTM(
           estimated_communication_delay_ =
               estimated_communication_delay_ * (1.0 - communication_delay_filter_alpha_) +
               delays[tm_iter_num_ / 2] * communication_delay_filter_alpha_;
+          const auto now = ros::Time::fromBoost(time_read);
+          if (disable_on_scan_sync_)
+          {
+            updateOrigin(now, origins[tm_iter_num_ / 2], now);
+            scip2::logger::debug()
+                << "device time origin: " << device_time_origin_.origin_
+                << ", gain: " << device_time_origin_.gain_ << std::endl;
+          }
         }
         estimated_communication_delay_init_ = true;
         scip2::logger::debug()
@@ -425,27 +433,13 @@ void UrgStampedNode::cbII(
         time_read, walltime_device, estimated_communication_delay_, time_at_device_timestamp);
 
     const auto now = ros::Time::fromBoost(time_read);
-    if (last_sync_time_ == ros::Time(0))
-      last_sync_time_ = now;
-    const double dt = std::min((now - last_sync_time_).toSec(), 10.0);
-    last_sync_time_ = now;
-
-    const double gain =
-        (time_at_device_timestamp - device_time_origin_.origin_).toSec() /
-        (time_at_device_timestamp - origin).toSec();
-    const double exp_lpf_alpha =
-        dt * (1.0 / 30.0);  // 30 seconds exponential LPF
-    const double updated_gain =
-        (1.0 - exp_lpf_alpha) * device_time_origin_.gain_ + exp_lpf_alpha * gain;
-    device_time_origin_.gain_ = updated_gain;
-    device_time_origin_.origin_ +=
-        ros::Duration(exp_lpf_alpha * (origin - device_time_origin_.origin_).toSec());
+    updateOrigin(now, origin, time_at_device_timestamp);
 
     scip2::logger::debug()
         << "on scan delay: " << std::setprecision(6) << std::fixed << delay
         << ", device timestamp: " << walltime_device
         << ", device time origin: " << origin
-        << ", gain: " << updated_gain << std::endl;
+        << ", gain: " << device_time_origin_.gain_ << std::endl;
   }
   else
   {
@@ -453,6 +447,29 @@ void UrgStampedNode::cbII(
         << "on scan delay (" << std::setprecision(6) << std::fixed << delay
         << ") is larger than expected; skipping" << std::endl;
   }
+}
+
+void UrgStampedNode::updateOrigin(
+    const ros::Time& now,
+    const ros::Time& origin,
+    const ros::Time& time_at_device_timestamp)
+{
+  if (last_sync_time_ == ros::Time(0))
+    last_sync_time_ = now;
+
+  const double dt = std::min((now - last_sync_time_).toSec(), 10.0);
+  last_sync_time_ = now;
+
+  const double gain =
+      (time_at_device_timestamp - device_time_origin_.origin_).toSec() /
+      (time_at_device_timestamp - origin).toSec();
+  const double exp_lpf_alpha =
+      dt * (1.0 / 30.0);  // 30 seconds exponential LPF
+  const double updated_gain =
+      (1.0 - exp_lpf_alpha) * device_time_origin_.gain_ + exp_lpf_alpha * gain;
+  device_time_origin_.gain_ = updated_gain;
+  device_time_origin_.origin_ +=
+      ros::Duration(exp_lpf_alpha * (origin - device_time_origin_.origin_).toSec());
 }
 
 void UrgStampedNode::cbQT(
@@ -564,7 +581,7 @@ void UrgStampedNode::sendII()
 
 void UrgStampedNode::timeSync(const ros::TimerEvent& event)
 {
-  if (delay_estim_state_ == DelayEstimState::IDLE)
+  if (delay_estim_state_ == DelayEstimState::IDLE && !disable_on_scan_sync_)
   {
     sendII();
   }
@@ -744,6 +761,7 @@ UrgStampedNode::UrgStampedNode()
   pnh_.param("publish_intensity", publish_intensity_, true);
   pnh_.param("sync_interval_min", sync_interval_min, 1.0);
   pnh_.param("sync_interval_max", sync_interval_max, 1.5);
+  pnh_.param("disable_on_scan_sync", disable_on_scan_sync_, false);
   sync_interval_ = std::uniform_real_distribution<double>(sync_interval_min, sync_interval_max);
   pnh_.param("delay_estim_interval", delay_estim_interval, 20.0);
   pnh_.param("error_limit", error_count_max_, 4);
