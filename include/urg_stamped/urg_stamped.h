@@ -98,7 +98,9 @@ protected:
   size_t tm_iter_num_;
   size_t tm_median_window_;
   bool estimated_communication_delay_init_;
+  bool device_time_origin_init_;
   double communication_delay_filter_alpha_;
+  ros::Time tm_start_time_;
 
   boost::posix_time::ptime time_ii_request;
   std::vector<ros::Duration> on_scan_communication_delays_;

@@ -163,6 +163,10 @@ void UrgStampedNode::cbTM(
     {
       scip2::logger::debug() << "Entered the time synchronization mode" << std::endl;
       delay_estim_state_ = DelayEstimState::ESTIMATING;
+
+      tm_start_time_ = ros::Time::now();
+      device_time_origins_.clear();
+
       scip_->sendCommand(
           "TM1",
           boost::bind(&UrgStampedNode::cbTMSend, this, boost::arg<1>()));
@@ -184,54 +188,65 @@ void UrgStampedNode::cbTM(
       if (communication_delays_.size() > tm_median_window_)
         communication_delays_.pop_front();
 
-      const auto origin = device_time_origin::estimator::estimateOriginByAverage(
-          time_tm_request, time_read, walltime_device);
-      device_time_origins_.push_back(DeviceOriginAt(origin, ros::Time::fromBoost(time_read) - delay * 0.5));
-      if (device_time_origins_.size() > tm_median_window_)
-        device_time_origins_.pop_front();
-
       if (communication_delays_.size() >= tm_iter_num_)
       {
+        const size_t i_med = communication_delays_.size() / 2;
         std::vector<ros::Duration> delays(communication_delays_.begin(), communication_delays_.end());
-        std::vector<DeviceOriginAt> origins(device_time_origins_.begin(), device_time_origins_.end());
         std::sort(delays.begin(), delays.end());
-        std::sort(origins.begin(), origins.end());
 
         if (!estimated_communication_delay_init_)
         {
-          estimated_communication_delay_ = delays[tm_iter_num_ / 2];
-          device_time_origin_ = device_time_origin::DriftedTime(origins[tm_iter_num_ / 2].origin_, 1.0);
+          estimated_communication_delay_ = delays[i_med];
+          estimated_communication_delay_init_ = true;
         }
         else
         {
           estimated_communication_delay_ =
               estimated_communication_delay_ * (1.0 - communication_delay_filter_alpha_) +
-              delays[tm_iter_num_ / 2] * communication_delay_filter_alpha_;
-          if (disable_on_scan_sync_)
-          {
-            const auto now = ros::Time::fromBoost(time_read);
-            updateOrigin(now, origins[tm_iter_num_ / 2].origin_, origins[tm_iter_num_ / 2].at_);
-            scip2::logger::debug()
-                << "device time origin: " << device_time_origin_.origin_
-                << ", gain: " << device_time_origin_.gain_ << std::endl;
-          }
+              delays[i_med] * communication_delay_filter_alpha_;
         }
-        estimated_communication_delay_init_ = true;
         scip2::logger::debug()
             << "delay: "
             << std::setprecision(6) << std::fixed << estimated_communication_delay_.toSec()
             << ", device timestamp: " << walltime_device
-            << ", device time origin: " << origins[tm_iter_num_ / 2].origin_.toSec()
             << std::endl;
-        scip_->sendCommand("TM2");
       }
-      else
+
+      const auto origin = device_time_origin::estimator::estimateOriginByAverage(
+          time_tm_request, time_read, walltime_device);
+      device_time_origins_.emplace_back(origin, ros::Time::fromBoost(time_read) - delay * 0.5);
+
+      if (device_time_origins_.size() >= tm_iter_num_ && estimated_communication_delay_init_)
       {
-        ros::Duration(0.005).sleep();
-        scip_->sendCommand(
-            "TM1",
-            boost::bind(&UrgStampedNode::cbTMSend, this, boost::arg<1>()));
+        std::vector<DeviceOriginAt> origins(device_time_origins_.begin(), device_time_origins_.end());
+        std::sort(origins.begin(), origins.end());
+
+        const size_t i_med = device_time_origins_.size() / 2;
+        if (!device_time_origin_init_)
+        {
+          device_time_origin_ = device_time_origin::DriftedTime(origins[i_med].origin_, 1.0);
+          device_time_origin_init_ = true;
+        }
+
+        if (disable_on_scan_sync_)
+        {
+          const auto now = ros::Time::fromBoost(time_read);
+          updateOrigin(now, origins[i_med].origin_, origins[i_med].at_);
+          scip2::logger::debug()
+              << "device time origin: " << device_time_origin_.origin_
+              << ", gain: " << device_time_origin_.gain_
+              << ", origin: " << origins[i_med].origin_
+              << ", at: " << origins[i_med].at_
+              << std::endl;
+        }
+        scip_->sendCommand("TM2");
+        break;
       }
+
+      ros::Duration(0.005).sleep();
+      scip_->sendCommand(
+          "TM1",
+          boost::bind(&UrgStampedNode::cbTMSend, this, boost::arg<1>()));
       break;
     }
     case '2':
@@ -245,7 +260,12 @@ void UrgStampedNode::cbTM(
       timestamp_outlier_removal_.reset();
       timestamp_moving_average_.reset();
       t0_ = ros::Time();
-      scip2::logger::debug() << "Leaving the time synchronization mode" << std::endl;
+      scip2::logger::debug()
+          << std::setprecision(6) << std::fixed
+          << "Leaving the time synchronization mode (took "
+          << (ros::Time::now() - tm_start_time_).toSec()
+          << ")"
+          << std::endl;
       tm_success_ = true;
       break;
     }
@@ -737,6 +757,7 @@ UrgStampedNode::UrgStampedNode()
   , tm_iter_num_(5)
   , tm_median_window_(35)
   , estimated_communication_delay_init_(false)
+  , device_time_origin_init_(false)
   , communication_delay_filter_alpha_(0.3)
   , last_sync_time_(0)
   , timestamp_lpf_(20)
