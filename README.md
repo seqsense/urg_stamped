@@ -38,6 +38,7 @@ Topics and major parameters are designed to be compatible with [urg_node](http:/
 - **sync_interval_min** (double): minimum interval to try observing sensor internal timestamp in seconds
 - **sync_interval_max** (double): maximum interval to try observing sensor internal timestamp in seconds
 - **delay_estim_interval** (double): communication delay estimation interval in seconds (dropping 2 or 3 scans during delay estimation)
+- **disable_on_scan_sync** (bool): disable on-scan time synchronization for models like UST-05LX
 
 ## Known Limitations
 
