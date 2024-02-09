@@ -186,31 +186,31 @@ void UrgStampedNode::cbTM(
 
       const auto origin = device_time_origin::estimator::estimateOriginByAverage(
           time_tm_request, time_read, walltime_device);
-      device_time_origins_.push_back(origin);
+      device_time_origins_.push_back(DeviceOriginAt(origin, ros::Time::fromBoost(time_read) - delay * 0.5));
       if (device_time_origins_.size() > tm_median_window_)
         device_time_origins_.pop_front();
 
       if (communication_delays_.size() >= tm_iter_num_)
       {
         std::vector<ros::Duration> delays(communication_delays_.begin(), communication_delays_.end());
-        std::vector<ros::Time> origins(device_time_origins_.begin(), device_time_origins_.end());
-        sort(delays.begin(), delays.end());
-        sort(origins.begin(), origins.end());
+        std::vector<DeviceOriginAt> origins(device_time_origins_.begin(), device_time_origins_.end());
+        std::sort(delays.begin(), delays.end());
+        std::sort(origins.begin(), origins.end());
 
         if (!estimated_communication_delay_init_)
         {
           estimated_communication_delay_ = delays[tm_iter_num_ / 2];
-          device_time_origin_ = device_time_origin::DriftedTime(origins[tm_iter_num_ / 2], 1.0);
+          device_time_origin_ = device_time_origin::DriftedTime(origins[tm_iter_num_ / 2].origin_, 1.0);
         }
         else
         {
           estimated_communication_delay_ =
               estimated_communication_delay_ * (1.0 - communication_delay_filter_alpha_) +
               delays[tm_iter_num_ / 2] * communication_delay_filter_alpha_;
-          const auto now = ros::Time::fromBoost(time_read);
           if (disable_on_scan_sync_)
           {
-            updateOrigin(now, origins[tm_iter_num_ / 2], now);
+            const auto now = ros::Time::fromBoost(time_read);
+            updateOrigin(now, origins[tm_iter_num_ / 2].origin_, origins[tm_iter_num_ / 2].at_);
             scip2::logger::debug()
                 << "device time origin: " << device_time_origin_.origin_
                 << ", gain: " << device_time_origin_.gain_ << std::endl;
@@ -221,7 +221,7 @@ void UrgStampedNode::cbTM(
             << "delay: "
             << std::setprecision(6) << std::fixed << estimated_communication_delay_.toSec()
             << ", device timestamp: " << walltime_device
-            << ", device time origin: " << origins[tm_iter_num_ / 2].toSec()
+            << ", device time origin: " << origins[tm_iter_num_ / 2].origin_.toSec()
             << std::endl;
         scip_->sendCommand("TM2");
       }

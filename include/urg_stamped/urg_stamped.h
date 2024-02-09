@@ -42,6 +42,24 @@
 
 namespace urg_stamped
 {
+class DeviceOriginAt
+{
+public:
+  ros::Time origin_;
+  ros::Time at_;
+
+  inline DeviceOriginAt(const ros::Time origin, const ros::Time at)
+    : origin_(origin)
+    , at_(at)
+  {
+  }
+
+  inline bool operator<(const DeviceOriginAt& b) const
+  {
+    return origin_ < b.origin_;
+  }
+};
+
 class UrgStampedNode
 {
 protected:
@@ -75,7 +93,7 @@ protected:
   DelayEstimState delay_estim_state_;
   boost::posix_time::ptime time_tm_request;
   std::list<ros::Duration> communication_delays_;
-  std::list<ros::Time> device_time_origins_;
+  std::list<DeviceOriginAt> device_time_origins_;
   ros::Duration estimated_communication_delay_;
   size_t tm_iter_num_;
   size_t tm_median_window_;
