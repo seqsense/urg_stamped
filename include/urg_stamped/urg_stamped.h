@@ -42,6 +42,24 @@
 
 namespace urg_stamped
 {
+class DeviceOriginAt
+{
+public:
+  ros::Time origin_;
+  ros::Time at_;
+
+  inline DeviceOriginAt(const ros::Time origin, const ros::Time at)
+    : origin_(origin)
+    , at_(at)
+  {
+  }
+
+  inline bool operator<(const DeviceOriginAt& b) const
+  {
+    return origin_ < b.origin_;
+  }
+};
+
 class UrgStampedNode
 {
 protected:
@@ -61,6 +79,7 @@ protected:
 
   bool publish_intensity_;
   bool failed_;
+  bool disable_on_scan_sync_;
 
   enum class DelayEstimState
   {
@@ -74,12 +93,14 @@ protected:
   DelayEstimState delay_estim_state_;
   boost::posix_time::ptime time_tm_request;
   std::list<ros::Duration> communication_delays_;
-  std::list<ros::Time> device_time_origins_;
+  std::list<DeviceOriginAt> device_time_origins_;
   ros::Duration estimated_communication_delay_;
   size_t tm_iter_num_;
   size_t tm_median_window_;
   bool estimated_communication_delay_init_;
+  bool device_time_origin_init_;
   double communication_delay_filter_alpha_;
+  ros::Time tm_start_time_;
 
   boost::posix_time::ptime time_ii_request;
   std::vector<ros::Duration> on_scan_communication_delays_;
@@ -167,6 +188,7 @@ protected:
   void timeSync(const ros::TimerEvent& event = ros::TimerEvent());
   void delayEstimation(const ros::TimerEvent& event = ros::TimerEvent());
   void retryTM(const ros::TimerEvent& event = ros::TimerEvent());
+  void updateOrigin(const ros::Time& now, const ros::Time& origin, const ros::Time& time_at_device_timestamp);
 
   void errorCountIncrement(const std::string& status = "");
 
