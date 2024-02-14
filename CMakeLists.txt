@@ -25,6 +25,12 @@ add_executable(urg_stamped
 )
 target_link_libraries(urg_stamped ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
+add_executable(urg_sim
+  src/urg_sim/urg_sim.cpp
+  src/urg_sim/urg_sim_exec.cpp
+)
+target_link_libraries(urg_sim ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
