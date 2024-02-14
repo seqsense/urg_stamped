@@ -10,8 +10,8 @@ Changelog for package urg_stamped
 * Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
 * Contributors: Atsushi Watanabe
 
-Forthcoming
------------
+0.1.0 (2024-02-14)
+------------------
 * Add option to disable on-scan time sync (`#141 <https://github.com/seqsense/urg_stamped/issues/141>`_)
 * Contributors: Atsushi Watanabe
 
