@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <chrono>
 #include <iostream>
 
 #include <boost/asio/error.hpp>
@@ -26,6 +27,12 @@
 
 namespace urg_sim
 {
+
+namespace
+{
+const char* status_accepted = "00";
+const char* status_error_command_not_defined = "0E";
+}  // namespace
 
 void URGSimulator::spin()
 {
@@ -41,10 +48,15 @@ void URGSimulator::spin()
       break;
     }
 
+    const auto now = std::chrono::steady_clock::now();
+    const double delay_sec = comm_delay_distribution_(rand_engine_);
+    const auto delay =
+        std::chrono::duration_cast<std::chrono::steady_clock::duration>(
+            std::chrono::duration<double, std::ratio<1>>(delay_sec));
+
     const std::string line(
         boost::asio::buffer_cast<const char*>(buf.data()));
-    std::cerr << "Received command" << std::endl;
-    parseCommand(line);
+    input_queue_.emplace_back(line, now + delay);
   }
 }
 

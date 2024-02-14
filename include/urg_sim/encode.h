@@ -14,26 +14,19 @@
  * limitations under the License.
  */
 
-#include <iostream>
+#ifndef URG_SIM_ENCODE_H
+#define URG_SIM_ENCODE_H
 
-#include <boost/asio/ip/tcp.hpp>
+#include <string>
 
-#include <urg_sim/urg_sim.h>
-
-int main(int argc, char** argv)
+namespace urg_sim
 {
-  const urg_sim::URGSimulator::Params params = {
-      .comm_delay_base = 0.001,
-      .comm_delay_sigma = 0.0001,
-  };
-  urg_sim::URGSimulator sim(
-      boost::asio::ip::tcp::endpoint(
-          boost::asio::ip::tcp::v4(),
-          10940),
-      params);
-  std::cerr << "Listening on :" << sim.getLocalEndpoint().port() << std::endl;
+namespace encode
+{
 
-  sim.spin();
+std::string checksum(const std::string& a);
 
-  return 1;
-}
+}  // namespace encode
+}  // namespace urg_sim
+
+#endif  // URG_SIM_ENCODE_H

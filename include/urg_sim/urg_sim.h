@@ -17,6 +17,10 @@
 #ifndef URG_SIM_URG_SIM_H
 #define URG_SIM_URG_SIM_H
 
+#include <chrono>
+#include <list>
+#include <random>
+
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/io_service.hpp>
 
@@ -43,6 +47,9 @@ public:
     , io_service_()
     , acceptor_(io_service_, endpoint)
     , socket_(io_service_)
+    , rand_engine_(std::random_device()())
+    , comm_delay_distribution_(
+          params.comm_delay_base, params.comm_delay_sigma)
   {
   }
 
@@ -54,11 +61,31 @@ public:
   void spin();
 
 private:
+  struct ScheduledData
+  {
+    std::string data;
+    std::chrono::steady_clock::time_point when;
+
+    inline ScheduledData(
+        const std::string& d,
+        const std::chrono::steady_clock::time_point& w)
+      : data(d)
+      , when(w)
+    {
+    }
+  };
+
   const URGSimulator::Params params_;
 
   boost::asio::io_service io_service_;
   boost::asio::ip::tcp::acceptor acceptor_;
   boost::asio::ip::tcp::socket socket_;
+
+  std::default_random_engine rand_engine_;
+  std::normal_distribution<double> comm_delay_distribution_;
+
+  std::list<ScheduledData> input_queue_;
+  std::list<ScheduledData> output_queue_;
 
   void parseCommand(const std::string& line);
 };
