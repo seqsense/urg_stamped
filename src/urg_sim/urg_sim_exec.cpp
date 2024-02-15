@@ -24,14 +24,16 @@ int main(int argc, char** argv)
 {
   const urg_sim::URGSimulator::Params params = {
       .comm_delay_base = 0.001,
-      .comm_delay_sigma = 0.0001,
+      .comm_delay_sigma = 0.0002,
   };
   urg_sim::URGSimulator sim(
       boost::asio::ip::tcp::endpoint(
           boost::asio::ip::tcp::v4(),
           10940),
       params);
-  std::cerr << "Listening on :" << sim.getLocalEndpoint().port() << std::endl;
+  std::cerr
+      << "Listening on :" << sim.getLocalEndpoint().port()
+      << std::endl;
 
   sim.spin();
 
