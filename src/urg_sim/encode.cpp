@@ -30,7 +30,7 @@ std::string checksum(const std::string& s)
   {
     sum += c;
   }
-  return std::string(1, sum);
+  return std::string(1, (sum & 0x3F) + 0x30);
 }
 
 std::string withChecksum(const std::string& s)

@@ -25,6 +25,7 @@ namespace encode
 {
 
 std::string checksum(const std::string& a);
+std::string withChecksum(const std::string& s);
 
 }  // namespace encode
 }  // namespace urg_sim

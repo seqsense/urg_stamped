@@ -21,11 +21,13 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/placeholders.hpp>
 #include <boost/asio/read_until.hpp>
+#include <boost/asio/write.hpp>
 #include <boost/bind/bind.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/system/error_code.hpp>
 
 #include <urg_sim/urg_sim.h>
+#include <urg_sim/encode.h>
 
 namespace urg_sim
 {
@@ -77,10 +79,50 @@ void URGSimulator::onRead(const boost::system::error_code& ec)
 }
 
 void URGSimulator::processInput(
-    const std::string line,
+    const std::string cmd,
     const boost::system::error_code& error)
 {
-  std::cerr << "processInput " << line << std::endl;
+  std::cerr << "processInput " << cmd << std::endl;
+
+  const std::string op = cmd.substr(0, 2);
+  if (op == "II")
+  {
+    send(cmd, status_accepted,
+         "data");
+  }
+  else if (op == "PP")
+  {
+    send(cmd, status_accepted,
+         "data");
+  }
+  else if (op == "VV")
+  {
+    send(cmd, status_accepted,
+         "data");
+  }
+  else
+  {
+    send(cmd, status_error_command_not_defined,
+         "data");
+  }
+}
+
+void URGSimulator::reset()
+{
+  timestamp_origin_ = boost::posix_time::microsec_clock::universal_time();
+}
+
+void URGSimulator::send(
+    const std::string echo,
+    const std::string status,
+    const std::string data)
+{
+  boost::asio::write(
+      socket_,
+      boost::asio::buffer(
+          echo + "\n" +
+          encode::withChecksum(status) + "\n" +
+          data + "\n\n"));
 }
 
 void URGSimulator::spin()

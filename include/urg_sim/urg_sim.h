@@ -74,11 +74,18 @@ private:
   std::default_random_engine rand_engine_;
   std::normal_distribution<double> comm_delay_distribution_;
 
+  boost::posix_time::ptime timestamp_origin_;
+
   void onRead(const boost::system::error_code& error);
   void processInput(
-      const std::string line,
+      const std::string cmd,
       const boost::system::error_code& error);
   void asyncRead();
+  void reset();
+  void send(
+      const std::string echo,
+      const std::string status,
+      const std::string data);
 };
 
 }  // namespace urg_sim
