@@ -100,6 +100,7 @@ private:
   void handleVV(const std::string cmd);
   void handlePP(const std::string cmd);
   void handleTM(const std::string cmd);
+  void handleUnknown(const std::string cmd);
 };
 
 }  // namespace urg_sim

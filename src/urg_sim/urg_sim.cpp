@@ -85,40 +85,37 @@ void URGSimulator::processInput(
   std::cerr << "processInput " << cmd << std::endl;
 
   const std::string op = cmd.substr(0, 2);
-  const auto h = handlers_.find(op);
-  if (h != handlers_.end())
-  {
-    h->second(cmd);
-  }
-  else
-  {
-    send(cmd, status_error_command_not_defined,
-         "data");
-  }
+  const auto it_h = handlers_.find(op);
+  const auto h = (it_h != handlers_.end()) ?
+                     it_h->second :
+                     std::bind(&URGSimulator::handleUnknown, this, std::placeholders::_1);
+
+  h(cmd);
 }
 
 void URGSimulator::handleII(const std::string cmd)
 {
-  send(cmd, status_accepted,
-       "data");
+  send(cmd, status_accepted, "data");
 }
 
 void URGSimulator::handleVV(const std::string cmd)
 {
-  send(cmd, status_accepted,
-       "data");
+  send(cmd, status_accepted, "data");
 }
 
 void URGSimulator::handlePP(const std::string cmd)
 {
-  send(cmd, status_accepted,
-       "data");
+  send(cmd, status_accepted, "data");
 }
 
 void URGSimulator::handleTM(const std::string cmd)
 {
-  send(cmd, status_accepted,
-       "data");
+  send(cmd, status_accepted, "data");
+}
+
+void URGSimulator::handleUnknown(const std::string cmd)
+{
+  send(cmd, status_error_command_not_defined, "");
 }
 
 void URGSimulator::reset()
