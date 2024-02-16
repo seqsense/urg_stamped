@@ -86,9 +86,10 @@ void URGSimulator::processInput(
 
   const std::string op = cmd.substr(0, 2);
   const auto it_h = handlers_.find(op);
-  const auto h = (it_h != handlers_.end()) ?
-                     it_h->second :
-                     std::bind(&URGSimulator::handleUnknown, this, std::placeholders::_1);
+  const auto h =
+      (it_h != handlers_.end()) ?
+          it_h->second :
+          std::bind(&URGSimulator::handleUnknown, this, std::placeholders::_1);
 
   h(cmd);
 }
