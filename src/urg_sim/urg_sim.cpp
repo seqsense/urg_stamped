@@ -95,22 +95,22 @@ void URGSimulator::processInput(
 
 void URGSimulator::handleII(const std::string cmd)
 {
-  send(cmd, status_accepted, "data");
+  send(cmd, status_accepted, "data\n");
 }
 
 void URGSimulator::handleVV(const std::string cmd)
 {
-  send(cmd, status_accepted, "data");
+  send(cmd, status_accepted, "data\n");
 }
 
 void URGSimulator::handlePP(const std::string cmd)
 {
-  send(cmd, status_accepted, "data");
+  send(cmd, status_accepted, "data\n");
 }
 
 void URGSimulator::handleTM(const std::string cmd)
 {
-  send(cmd, status_accepted, "data");
+  send(cmd, status_accepted, "data\n");
 }
 
 void URGSimulator::handleUnknown(const std::string cmd)
@@ -133,7 +133,7 @@ void URGSimulator::send(
       boost::asio::buffer(
           echo + "\n" +
           encode::withChecksum(status) + "\n" +
-          data + "\n\n"));
+          data + "\n"));
 }
 
 void URGSimulator::spin()
