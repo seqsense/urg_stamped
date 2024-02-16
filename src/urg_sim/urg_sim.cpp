@@ -15,6 +15,7 @@
  */
 
 #include <iostream>
+#include <sstream>
 #include <string>
 
 #include <boost/asio/error.hpp>
@@ -96,17 +97,47 @@ void URGSimulator::processInput(
 
 void URGSimulator::handleII(const std::string cmd)
 {
-  response(cmd, status_accepted, "data\n");
+  const KeyValues kvs =
+      {
+          {"MODL", "UTM-30LX-EW"},
+          {"LASR", "OFF"},
+          {"SCSP", "2400"},
+          {"MESM", "000 Idle"},
+          {"SBPS", "Ethernet 100 [Mbps]"},
+          {"TIME", "e4y0"},
+          {"STAT", "Stable 000 stable"},
+      };
+  responseKeyValues(cmd, status_accepted, kvs);
 }
 
 void URGSimulator::handleVV(const std::string cmd)
 {
-  response(cmd, status_accepted, "data\n");
+  const KeyValues kvs =
+      {
+          {"VEND", "Hokuyo Automatic Co., Ltd."},
+          {"PROD", "UTM-30LX-EW"},
+          {"FIRM", "1.1.0 (2011-09-30)"},
+          {"PROT", "SCIP 2.2"},
+          {"SERI", "H0123456"},
+      };
+  responseKeyValues(cmd, status_accepted, kvs);
 }
 
 void URGSimulator::handlePP(const std::string cmd)
 {
-  response(cmd, status_accepted, "data\n");
+  const KeyValues kvs =
+      {
+          {"MODL", "UTM-30LX-EW"},
+          {"DMIN", "23"},
+          {"DMAX", "60000"},
+          {"PROT", "SCIP 2.2"},
+          {"ARES", "1440"},
+          {"AMIN", "0"},
+          {"AMAX", "1080"},
+          {"AFRT", "540"},
+          {"SCAN", "2400"},
+      };
+  responseKeyValues(cmd, status_accepted, kvs);
 }
 
 void URGSimulator::handleTM(const std::string cmd)
@@ -145,6 +176,20 @@ void URGSimulator::response(
           this,
           text,
           boost::asio::placeholders::error));
+}
+
+void URGSimulator::responseKeyValues(
+    const std::string echo,
+    const std::string status,
+    const std::vector<std::pair<std::string, std::string>> kvs)
+{
+  std::stringstream ss;
+  for (const auto& kv : kvs)
+  {
+    const std::string line = kv.first + ":" + kv.second;
+    ss << line << ";" << encode::checksum(line) << "\n";
+  }
+  response(echo, status, ss.str());
 }
 
 void URGSimulator::send(

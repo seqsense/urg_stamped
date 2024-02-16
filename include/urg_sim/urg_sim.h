@@ -72,6 +72,9 @@ public:
   void spin();
 
 private:
+  using KeyValue = std::pair<std::string, std::string>;
+  using KeyValues = std::vector<KeyValue>;
+
   const URGSimulator::Params params_;
 
   boost::asio::io_service io_service_;
@@ -97,6 +100,10 @@ private:
       const std::string echo,
       const std::string status,
       const std::string data);
+  void responseKeyValues(
+      const std::string echo,
+      const std::string status,
+      const KeyValues kv);
   void send(
       const std::string data,
       const boost::system::error_code& ec);
