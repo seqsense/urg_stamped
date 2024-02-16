@@ -51,6 +51,7 @@ public:
     , acceptor_(io_service_, endpoint)
     , socket_(io_service_)
     , input_process_timer_(io_service_)
+    , output_process_timer_(io_service_)
     , rand_engine_(std::random_device()())
     , comm_delay_distribution_(
           params.comm_delay_base, params.comm_delay_sigma)
@@ -78,6 +79,7 @@ private:
   boost::asio::ip::tcp::socket socket_;
   boost::asio::streambuf input_buf_;
   boost::asio::deadline_timer input_process_timer_;
+  boost::asio::deadline_timer output_process_timer_;
 
   std::default_random_engine rand_engine_;
   std::normal_distribution<double> comm_delay_distribution_;
@@ -85,16 +87,19 @@ private:
   boost::posix_time::ptime timestamp_origin_;
   std::map<std::string, std::function<void(const std::string)>> handlers_;
 
-  void onRead(const boost::system::error_code& error);
+  void onRead(const boost::system::error_code& ec);
   void processInput(
       const std::string cmd,
-      const boost::system::error_code& error);
+      const boost::system::error_code& ec);
   void asyncRead();
   void reset();
-  void send(
+  void response(
       const std::string echo,
       const std::string status,
       const std::string data);
+  void send(
+      const std::string data,
+      const boost::system::error_code& ec);
 
   void handleII(const std::string cmd);
   void handleVV(const std::string cmd);

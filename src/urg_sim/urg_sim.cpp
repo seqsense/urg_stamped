@@ -80,7 +80,7 @@ void URGSimulator::onRead(const boost::system::error_code& ec)
 
 void URGSimulator::processInput(
     const std::string cmd,
-    const boost::system::error_code& error)
+    const boost::system::error_code& ec)
 {
   std::cerr << "processInput " << cmd << std::endl;
 
@@ -96,27 +96,27 @@ void URGSimulator::processInput(
 
 void URGSimulator::handleII(const std::string cmd)
 {
-  send(cmd, status_accepted, "data\n");
+  response(cmd, status_accepted, "data\n");
 }
 
 void URGSimulator::handleVV(const std::string cmd)
 {
-  send(cmd, status_accepted, "data\n");
+  response(cmd, status_accepted, "data\n");
 }
 
 void URGSimulator::handlePP(const std::string cmd)
 {
-  send(cmd, status_accepted, "data\n");
+  response(cmd, status_accepted, "data\n");
 }
 
 void URGSimulator::handleTM(const std::string cmd)
 {
-  send(cmd, status_accepted, "data\n");
+  response(cmd, status_accepted, "data\n");
 }
 
 void URGSimulator::handleUnknown(const std::string cmd)
 {
-  send(cmd, status_error_command_not_defined, "");
+  response(cmd, status_error_command_not_defined, "");
 }
 
 void URGSimulator::reset()
@@ -124,17 +124,34 @@ void URGSimulator::reset()
   timestamp_origin_ = boost::posix_time::microsec_clock::universal_time();
 }
 
-void URGSimulator::send(
+void URGSimulator::response(
     const std::string echo,
     const std::string status,
     const std::string data)
 {
-  boost::asio::write(
-      socket_,
-      boost::asio::buffer(
-          echo + "\n" +
-          encode::withChecksum(status) + "\n" +
-          data + "\n"));
+  const double delay_sec = comm_delay_distribution_(rand_engine_);
+  const auto delay = boost::posix_time::microseconds(
+      static_cast<long>(delay_sec * 1e6));
+
+  const std::string text =
+      echo + "\n" +
+      encode::withChecksum(status) + "\n" +
+      data + "\n";
+
+  input_process_timer_.expires_from_now(delay);
+  input_process_timer_.async_wait(
+      boost::bind(
+          &URGSimulator::send,
+          this,
+          text,
+          boost::asio::placeholders::error));
+}
+
+void URGSimulator::send(
+    const std::string data,
+    const boost::system::error_code& ec)
+{
+  boost::asio::write(socket_, boost::asio::buffer(data));
 }
 
 void URGSimulator::spin()
