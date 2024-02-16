@@ -17,7 +17,9 @@
 #ifndef URG_SIM_URG_SIM_H
 #define URG_SIM_URG_SIM_H
 
+#include <functional>
 #include <list>
+#include <map>
 #include <random>
 
 #include <boost/asio/deadline_timer.hpp>
@@ -52,6 +54,12 @@ public:
     , rand_engine_(std::random_device()())
     , comm_delay_distribution_(
           params.comm_delay_base, params.comm_delay_sigma)
+    , handlers_({
+          {"II", std::bind(&URGSimulator::handleII, this, std::placeholders::_1)},
+          {"VV", std::bind(&URGSimulator::handleVV, this, std::placeholders::_1)},
+          {"PP", std::bind(&URGSimulator::handlePP, this, std::placeholders::_1)},
+          {"TM", std::bind(&URGSimulator::handleTM, this, std::placeholders::_1)},
+      })
   {
   }
 
@@ -75,6 +83,7 @@ private:
   std::normal_distribution<double> comm_delay_distribution_;
 
   boost::posix_time::ptime timestamp_origin_;
+  std::map<std::string, std::function<void(const std::string)>> handlers_;
 
   void onRead(const boost::system::error_code& error);
   void processInput(
@@ -86,6 +95,11 @@ private:
       const std::string echo,
       const std::string status,
       const std::string data);
+
+  void handleII(const std::string cmd);
+  void handleVV(const std::string cmd);
+  void handlePP(const std::string cmd);
+  void handleTM(const std::string cmd);
 };
 
 }  // namespace urg_sim
