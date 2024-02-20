@@ -184,6 +184,7 @@ void URGSimulator::handleBM(const std::string cmd)
     return;
   }
   laser_ = true;
+  sensor_state_ == SensorState::SINGLE_SCAN;
   response(cmd, status_ok);
 }
 
@@ -200,6 +201,7 @@ void URGSimulator::handleQT(const std::string cmd)
     return;
   }
   laser_ = false;
+  sensor_state_ == SensorState::IDLE;
   response(cmd, status_ok);
 }
 
@@ -223,6 +225,7 @@ void URGSimulator::reset()
 {
   timestamp_epoch_ = boost::posix_time::microsec_clock::universal_time();
   laser_ = false;
+  sensor_state_ == SensorState::IDLE;
 }
 
 void URGSimulator::response(
