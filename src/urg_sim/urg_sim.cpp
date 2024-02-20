@@ -112,11 +112,13 @@ void URGSimulator::handleII(const std::string cmd)
     time = encode::encode(
         std::vector<uint32_t>(1, stamp), encode::CED4);
   }
+  const int32_t rpm =
+      static_cast<int32_t>(60.0 / params_.scan_interval);
   const KeyValues kvs =
       {
           {"MODL", "UTM-30LX-EW"},
           {"LASR", "OFF"},
-          {"SCSP", "2400"},
+          {"SCSP", std::to_string(rpm)},
           {"MESM", "000 Idle"},
           {"SBPS", "Ethernet 100 [Mbps]"},
           {"TIME", time},
@@ -140,6 +142,8 @@ void URGSimulator::handleVV(const std::string cmd)
 
 void URGSimulator::handlePP(const std::string cmd)
 {
+  const int32_t rpm =
+      static_cast<int32_t>(60.0 / params_.scan_interval);
   const KeyValues kvs =
       {
           {"MODL", "UTM-30LX-EW"},
@@ -150,7 +154,7 @@ void URGSimulator::handlePP(const std::string cmd)
           {"AMIN", "0"},
           {"AMAX", "1080"},
           {"AFRT", "540"},
-          {"SCAN", "2400"},
+          {"SCAN", std::to_string(rpm)},
       };
   responseKeyValues(cmd, status_accepted, kvs);
 }
