@@ -41,6 +41,15 @@ public:
     double clock_rate;
     bool hex_ii_timestamp;
   };
+  enum SensorState
+  {
+    BOOTING,
+    IDLE,
+    SINGLE_SCAN,
+    MULTI_SCAN,
+    TIME_ADJUSTMENT,
+    ERROR_DETECTED,
+  };
 
   inline URGSimulator(
       const boost::asio::ip::tcp::endpoint& endpoint,
@@ -65,7 +74,7 @@ public:
           {"RT", std::bind(&URGSimulator::handleRS, this, std::placeholders::_1)},
       })
     , laser_(false)
-    , abnormal_(false)
+    , sensor_state_(SensorState::IDLE)
   {
     reset();
   }
@@ -96,7 +105,7 @@ private:
   boost::posix_time::ptime timestamp_epoch_;
   std::map<std::string, std::function<void(const std::string)>> handlers_;
   bool laser_;
-  bool abnormal_;
+  SensorState sensor_state_;
 
   void onRead(const boost::system::error_code& ec);
   void processInput(

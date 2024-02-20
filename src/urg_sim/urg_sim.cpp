@@ -163,7 +163,7 @@ void URGSimulator::handlePP(const std::string cmd)
 
 void URGSimulator::handleTM(const std::string cmd)
 {
-  if (abnormal_)
+  if (sensor_state_ == SensorState::ERROR_DETECTED)
   {
     response(cmd, status_error_abnormal);
     return;
@@ -173,7 +173,7 @@ void URGSimulator::handleTM(const std::string cmd)
 
 void URGSimulator::handleBM(const std::string cmd)
 {
-  if (abnormal_)
+  if (sensor_state_ == SensorState::ERROR_DETECTED)
   {
     response(cmd, status_error_abnormal);
     return;
@@ -189,7 +189,7 @@ void URGSimulator::handleBM(const std::string cmd)
 
 void URGSimulator::handleQT(const std::string cmd)
 {
-  if (abnormal_)
+  if (sensor_state_ == SensorState::ERROR_DETECTED)
   {
     response(cmd, status_error_abnormal);
     return;
@@ -205,7 +205,7 @@ void URGSimulator::handleQT(const std::string cmd)
 
 void URGSimulator::handleRS(const std::string cmd)
 {
-  if (abnormal_)
+  if (sensor_state_ == SensorState::ERROR_DETECTED)
   {
     response(cmd, status_error_abnormal);
     return;
