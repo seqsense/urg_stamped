@@ -15,6 +15,7 @@
  */
 
 #include <iostream>
+#include <vector>
 
 #include <boost/asio/ip/tcp.hpp>
 
@@ -22,10 +23,11 @@
 
 int main(int argc, char** argv)
 {
-  const urg_sim::URGSimulator::Params params = {
-      .comm_delay_base = 0.001,
-      .comm_delay_sigma = 0.0002,
-  };
+  const urg_sim::URGSimulator::Params params =
+      {
+          .comm_delay_base = 0.001,
+          .comm_delay_sigma = 0.0002,
+      };
   urg_sim::URGSimulator sim(
       boost::asio::ip::tcp::endpoint(
           boost::asio::ip::tcp::v4(),

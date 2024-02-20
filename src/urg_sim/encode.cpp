@@ -15,7 +15,7 @@
  */
 
 #include <string>
-#include <iostream>
+#include <vector>
 
 #include <urg_sim/encode.h>
 

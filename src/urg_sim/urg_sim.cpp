@@ -17,6 +17,8 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include <boost/asio/error.hpp>
 #include <boost/asio/ip/tcp.hpp>
@@ -58,7 +60,7 @@ void URGSimulator::onRead(const boost::system::error_code& ec)
   const auto now = boost::posix_time::microsec_clock::universal_time();
   const double delay_sec = comm_delay_distribution_(rand_engine_);
   const auto delay = boost::posix_time::microseconds(
-      static_cast<long>(delay_sec * 1e6));
+      static_cast<int64_t>(delay_sec * 1e6));
   const auto when = now + delay;
 
   std::istream stream(&input_buf_);
@@ -175,7 +177,7 @@ void URGSimulator::response(
 {
   const double delay_sec = comm_delay_distribution_(rand_engine_);
   const auto delay = boost::posix_time::microseconds(
-      static_cast<long>(delay_sec * 1e6));
+      static_cast<int64_t>(delay_sec * 1e6));
 
   const std::string text =
       echo + "\n" +
