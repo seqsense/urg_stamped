@@ -41,6 +41,7 @@ public:
     double response_delay_sigma;
     double scan_interval;
     double clock_rate;
+    bool hex_ii_timestamp;
   };
 
   inline URGSimulator(
@@ -62,6 +63,7 @@ public:
           {"TM", std::bind(&URGSimulator::handleTM, this, std::placeholders::_1)},
       })
   {
+    reset();
   }
 
   inline boost::asio::ip::tcp::endpoint getLocalEndpoint() const
@@ -87,7 +89,7 @@ private:
   std::default_random_engine rand_engine_;
   std::normal_distribution<double> comm_delay_distribution_;
 
-  boost::posix_time::ptime timestamp_origin_;
+  boost::posix_time::ptime timestamp_epoch_;
   std::map<std::string, std::function<void(const std::string)>> handlers_;
 
   void onRead(const boost::system::error_code& ec);
@@ -113,6 +115,8 @@ private:
   void handlePP(const std::string cmd);
   void handleTM(const std::string cmd);
   void handleUnknown(const std::string cmd);
+
+  uint32_t timestamp();
 };
 
 }  // namespace urg_sim

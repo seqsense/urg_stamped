@@ -15,6 +15,7 @@
  */
 
 #include <string>
+#include <iostream>
 
 #include <urg_sim/encode.h>
 
@@ -36,6 +37,20 @@ std::string checksum(const std::string& s)
 std::string withChecksum(const std::string& s)
 {
   return s + checksum(s);
+}
+
+std::string encode(const std::vector<uint32_t>& v, const EncodeType ced)
+{
+  std::string out;
+
+  for (const uint32_t w : v)
+  {
+    for (int i = 0; i < ced; ++i)
+    {
+      out += ((w >> ((ced - i - 1) * 6)) & 0x3F) + 0x30;
+    }
+  }
+  return out;
 }
 
 }  // namespace encode

@@ -97,6 +97,19 @@ void URGSimulator::processInput(
 
 void URGSimulator::handleII(const std::string cmd)
 {
+  const uint32_t stamp = timestamp();
+  std::string time;
+  if (params_.hex_ii_timestamp)
+  {
+    std::stringstream ss;
+    ss << std::setfill('0') << std::setw(6) << std::hex << stamp;
+    time = ss.str();
+  }
+  else
+  {
+    time = encode::encode(
+        std::vector<uint32_t>(1, stamp), encode::CED4);
+  }
   const KeyValues kvs =
       {
           {"MODL", "UTM-30LX-EW"},
@@ -104,7 +117,7 @@ void URGSimulator::handleII(const std::string cmd)
           {"SCSP", "2400"},
           {"MESM", "000 Idle"},
           {"SBPS", "Ethernet 100 [Mbps]"},
-          {"TIME", "e4y0"},
+          {"TIME", time},
           {"STAT", "Stable 000 stable"},
       };
   responseKeyValues(cmd, status_accepted, kvs);
@@ -152,7 +165,7 @@ void URGSimulator::handleUnknown(const std::string cmd)
 
 void URGSimulator::reset()
 {
-  timestamp_origin_ = boost::posix_time::microsec_clock::universal_time();
+  timestamp_epoch_ = boost::posix_time::microsec_clock::universal_time();
 }
 
 void URGSimulator::response(
@@ -197,6 +210,13 @@ void URGSimulator::send(
     const boost::system::error_code& ec)
 {
   boost::asio::write(socket_, boost::asio::buffer(data));
+}
+
+uint32_t URGSimulator::timestamp()
+{
+  const auto now = boost::posix_time::microsec_clock::universal_time();
+  const uint32_t diff = (now - timestamp_epoch_).total_milliseconds();
+  return diff & 0xFFFFFF;
 }
 
 void URGSimulator::spin()

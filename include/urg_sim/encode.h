@@ -18,6 +18,7 @@
 #define URG_SIM_ENCODE_H
 
 #include <string>
+#include <vector>
 
 namespace urg_sim
 {
@@ -26,6 +27,15 @@ namespace encode
 
 std::string checksum(const std::string& a);
 std::string withChecksum(const std::string& s);
+
+enum EncodeType
+{
+  CED2 = 2,
+  CED3 = 3,
+  CED4 = 4,
+};
+
+std::string encode(const std::vector<uint32_t>& v, const EncodeType ced);
 
 }  // namespace encode
 }  // namespace urg_sim
