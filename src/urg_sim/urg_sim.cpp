@@ -118,7 +118,7 @@ void URGSimulator::handleII(const std::string cmd)
   const KeyValues kvs =
       {
           {"MODL", "UTM-30LX-EW"},
-          {"LASR", "OFF"},
+          {"LASR", laser_ ? "ON" : "OFF"},
           {"SCSP", std::to_string(rpm)},
           {"MESM", "000 Idle"},
           {"SBPS", "Ethernet 100 [Mbps]"},
