@@ -28,7 +28,7 @@ namespace encode
 std::string checksum(const std::string& a);
 std::string withChecksum(const std::string& s);
 
-enum EncodeType
+enum class EncodeType
 {
   CED2 = 2,
   CED3 = 3,

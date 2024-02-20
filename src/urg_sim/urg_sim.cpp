@@ -112,7 +112,7 @@ void URGSimulator::handleII(const std::string cmd)
   else
   {
     time = encode::encode(
-        std::vector<uint32_t>(1, stamp), encode::CED4);
+        std::vector<uint32_t>(1, stamp), encode::EncodeType::CED4);
   }
   const int32_t rpm =
       static_cast<int32_t>(60.0 / params_.scan_interval);

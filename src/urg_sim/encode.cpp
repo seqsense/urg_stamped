@@ -45,9 +45,9 @@ std::string encode(const std::vector<uint32_t>& v, const EncodeType ced)
 
   for (const uint32_t w : v)
   {
-    for (int i = 0; i < ced; ++i)
+    for (int i = 0; i < static_cast<int>(ced); ++i)
     {
-      out += ((w >> ((ced - i - 1) * 6)) & 0x3F) + 0x30;
+      out += ((w >> ((static_cast<int>(ced) - i - 1) * 6)) & 0x3F) + 0x30;
     }
   }
   return out;
