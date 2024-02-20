@@ -61,6 +61,8 @@ public:
           {"TM", std::bind(&URGSimulator::handleTM, this, std::placeholders::_1)},
           {"BM", std::bind(&URGSimulator::handleBM, this, std::placeholders::_1)},
           {"QT", std::bind(&URGSimulator::handleQT, this, std::placeholders::_1)},
+          {"RS", std::bind(&URGSimulator::handleRS, this, std::placeholders::_1)},
+          {"RT", std::bind(&URGSimulator::handleRS, this, std::placeholders::_1)},
       })
     , laser_(false)
   {
@@ -118,6 +120,7 @@ private:
   void handleTM(const std::string cmd);
   void handleBM(const std::string cmd);
   void handleQT(const std::string cmd);
+  void handleRS(const std::string cmd);
   void handleUnknown(const std::string cmd);
 
   uint32_t timestamp();

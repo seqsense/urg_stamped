@@ -187,6 +187,12 @@ void URGSimulator::handleQT(const std::string cmd)
   response(cmd, status_ok);
 }
 
+void URGSimulator::handleRS(const std::string cmd)
+{
+  reset();
+  response(cmd, status_ok);
+}
+
 void URGSimulator::handleUnknown(const std::string cmd)
 {
   response(cmd, status_error_command_not_defined);
@@ -195,6 +201,7 @@ void URGSimulator::handleUnknown(const std::string cmd)
 void URGSimulator::reset()
 {
   timestamp_epoch_ = boost::posix_time::microsec_clock::universal_time();
+  laser_ = false;
 }
 
 void URGSimulator::response(
