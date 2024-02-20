@@ -21,6 +21,9 @@
 #include <list>
 #include <map>
 #include <random>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include <boost/asio/deadline_timer.hpp>
 #include <boost/asio/io_service.hpp>
@@ -63,16 +66,17 @@ public:
     , rand_engine_(std::random_device()())
     , comm_delay_distribution_(
           params.comm_delay_base, params.comm_delay_sigma)
-    , handlers_({
-          {"II", std::bind(&URGSimulator::handleII, this, std::placeholders::_1)},
-          {"VV", std::bind(&URGSimulator::handleVV, this, std::placeholders::_1)},
-          {"PP", std::bind(&URGSimulator::handlePP, this, std::placeholders::_1)},
-          {"TM", std::bind(&URGSimulator::handleTM, this, std::placeholders::_1)},
-          {"BM", std::bind(&URGSimulator::handleBM, this, std::placeholders::_1)},
-          {"QT", std::bind(&URGSimulator::handleQT, this, std::placeholders::_1)},
-          {"RS", std::bind(&URGSimulator::handleRS, this, std::placeholders::_1)},
-          {"RT", std::bind(&URGSimulator::handleRS, this, std::placeholders::_1)},
-      })
+    , handlers_(
+          {
+              {"II", std::bind(&URGSimulator::handleII, this, std::placeholders::_1)},
+              {"VV", std::bind(&URGSimulator::handleVV, this, std::placeholders::_1)},
+              {"PP", std::bind(&URGSimulator::handlePP, this, std::placeholders::_1)},
+              {"TM", std::bind(&URGSimulator::handleTM, this, std::placeholders::_1)},
+              {"BM", std::bind(&URGSimulator::handleBM, this, std::placeholders::_1)},
+              {"QT", std::bind(&URGSimulator::handleQT, this, std::placeholders::_1)},
+              {"RS", std::bind(&URGSimulator::handleRS, this, std::placeholders::_1)},
+              {"RT", std::bind(&URGSimulator::handleRS, this, std::placeholders::_1)},
+          })  // NOLINT(whitespace/braces)
     , laser_(false)
     , sensor_state_(SensorState::IDLE)
   {
