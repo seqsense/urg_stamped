@@ -37,7 +37,8 @@ namespace urg_sim
 
 namespace
 {
-const char* status_accepted = "00";
+const char* status_ok = "00";
+const char* status_already = "02";
 const char* status_error_command_not_defined = "0E";
 }  // namespace
 
@@ -124,7 +125,7 @@ void URGSimulator::handleII(const std::string cmd)
           {"TIME", time},
           {"STAT", "Stable 000 stable"},
       };
-  responseKeyValues(cmd, status_accepted, kvs);
+  responseKeyValues(cmd, status_ok, kvs);
 }
 
 void URGSimulator::handleVV(const std::string cmd)
@@ -137,7 +138,7 @@ void URGSimulator::handleVV(const std::string cmd)
           {"PROT", "SCIP 2.2"},
           {"SERI", "H0123456"},
       };
-  responseKeyValues(cmd, status_accepted, kvs);
+  responseKeyValues(cmd, status_ok, kvs);
 }
 
 void URGSimulator::handlePP(const std::string cmd)
@@ -156,17 +157,39 @@ void URGSimulator::handlePP(const std::string cmd)
           {"AFRT", "540"},
           {"SCAN", std::to_string(rpm)},
       };
-  responseKeyValues(cmd, status_accepted, kvs);
+  responseKeyValues(cmd, status_ok, kvs);
 }
 
 void URGSimulator::handleTM(const std::string cmd)
 {
-  response(cmd, status_accepted, "data\n");
+  response(cmd, status_ok, "data\n");
+}
+
+void URGSimulator::handleBM(const std::string cmd)
+{
+  if (laser_)
+  {
+    response(cmd, status_already);
+    return;
+  }
+  laser_ = true;
+  response(cmd, status_ok);
+}
+
+void URGSimulator::handleQT(const std::string cmd)
+{
+  if (!laser_)
+  {
+    response(cmd, status_already);
+    return;
+  }
+  laser_ = false;
+  response(cmd, status_ok);
 }
 
 void URGSimulator::handleUnknown(const std::string cmd)
 {
-  response(cmd, status_error_command_not_defined, "");
+  response(cmd, status_error_command_not_defined);
 }
 
 void URGSimulator::reset()

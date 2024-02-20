@@ -37,8 +37,6 @@ public:
   {
     double comm_delay_base;
     double comm_delay_sigma;
-    double response_delay_base;
-    double response_delay_sigma;
     double scan_interval;
     double clock_rate;
     bool hex_ii_timestamp;
@@ -61,7 +59,10 @@ public:
           {"VV", std::bind(&URGSimulator::handleVV, this, std::placeholders::_1)},
           {"PP", std::bind(&URGSimulator::handlePP, this, std::placeholders::_1)},
           {"TM", std::bind(&URGSimulator::handleTM, this, std::placeholders::_1)},
+          {"BM", std::bind(&URGSimulator::handleBM, this, std::placeholders::_1)},
+          {"QT", std::bind(&URGSimulator::handleQT, this, std::placeholders::_1)},
       })
+    , laser_(false)
   {
     reset();
   }
@@ -91,6 +92,7 @@ private:
 
   boost::posix_time::ptime timestamp_epoch_;
   std::map<std::string, std::function<void(const std::string)>> handlers_;
+  bool laser_;
 
   void onRead(const boost::system::error_code& ec);
   void processInput(
@@ -101,7 +103,7 @@ private:
   void response(
       const std::string echo,
       const std::string status,
-      const std::string data);
+      const std::string data = "");
   void responseKeyValues(
       const std::string echo,
       const std::string status,
@@ -114,6 +116,8 @@ private:
   void handleVV(const std::string cmd);
   void handlePP(const std::string cmd);
   void handleTM(const std::string cmd);
+  void handleBM(const std::string cmd);
+  void handleQT(const std::string cmd);
   void handleUnknown(const std::string cmd);
 
   uint32_t timestamp();

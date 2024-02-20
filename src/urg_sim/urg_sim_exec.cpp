@@ -27,6 +27,9 @@ int main(int argc, char** argv)
       {
           .comm_delay_base = 0.001,
           .comm_delay_sigma = 0.0002,
+          .scan_interval = 0.025,
+          .clock_rate = 1.0,
+          .hex_ii_timestamp = false,
       };
   urg_sim::URGSimulator sim(
       boost::asio::ip::tcp::endpoint(
