@@ -65,6 +65,7 @@ public:
           {"RT", std::bind(&URGSimulator::handleRS, this, std::placeholders::_1)},
       })
     , laser_(false)
+    , abnormal_(false)
   {
     reset();
   }
@@ -95,6 +96,7 @@ private:
   boost::posix_time::ptime timestamp_epoch_;
   std::map<std::string, std::function<void(const std::string)>> handlers_;
   bool laser_;
+  bool abnormal_;
 
   void onRead(const boost::system::error_code& ec);
   void processInput(

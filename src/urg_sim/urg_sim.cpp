@@ -40,6 +40,7 @@ namespace
 const char* status_ok = "00";
 const char* status_already = "02";
 const char* status_error_command_not_defined = "0E";
+const char* status_error_abnormal = "0L";
 }  // namespace
 
 void URGSimulator::asyncRead()
@@ -162,11 +163,21 @@ void URGSimulator::handlePP(const std::string cmd)
 
 void URGSimulator::handleTM(const std::string cmd)
 {
+  if (abnormal_)
+  {
+    response(cmd, status_error_abnormal);
+    return;
+  }
   response(cmd, status_ok, "data\n");
 }
 
 void URGSimulator::handleBM(const std::string cmd)
 {
+  if (abnormal_)
+  {
+    response(cmd, status_error_abnormal);
+    return;
+  }
   if (laser_)
   {
     response(cmd, status_already);
@@ -178,6 +189,11 @@ void URGSimulator::handleBM(const std::string cmd)
 
 void URGSimulator::handleQT(const std::string cmd)
 {
+  if (abnormal_)
+  {
+    response(cmd, status_error_abnormal);
+    return;
+  }
   if (!laser_)
   {
     response(cmd, status_already);
@@ -189,6 +205,11 @@ void URGSimulator::handleQT(const std::string cmd)
 
 void URGSimulator::handleRS(const std::string cmd)
 {
+  if (abnormal_)
+  {
+    response(cmd, status_error_abnormal);
+    return;
+  }
   reset();
   response(cmd, status_ok);
 }
