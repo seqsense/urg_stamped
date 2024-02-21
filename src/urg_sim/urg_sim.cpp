@@ -333,8 +333,8 @@ void URGSimulator::response(
       encode::withChecksum(status) + "\n" +
       data + "\n";
 
-  input_process_timer_.expires_from_now(delay);
-  input_process_timer_.async_wait(
+  output_process_timer_.expires_from_now(delay);
+  output_process_timer_.async_wait(
       boost::bind(
           &URGSimulator::send,
           this,
