@@ -204,7 +204,55 @@ void URGSimulator::handleTM(const std::string cmd)
     response(cmd, status_error_abnormal);
     return;
   }
-  response(cmd, status_ok, "data\n");
+  if (cmd.size() < 3)
+  {
+    response(cmd, "01");
+    return;
+  }
+  switch (cmd[2])
+  {
+    case '0':
+      switch (sensor_state_)
+      {
+        case SensorState::IDLE:
+        case SensorState::SINGLE_SCAN:
+          response(cmd, status_ok);
+          sensor_state_ = SensorState::TIME_ADJUSTMENT;
+          return;
+        case SensorState::TIME_ADJUSTMENT:
+          response(cmd, "02");
+          return;
+        default:
+          response(cmd, status_error_denied);
+          return;
+      }
+      break;
+    case '1':
+      // Actual sensors return timestamp even without entering TIME_ADJUSTMENT state.
+      break;
+    case '2':
+      switch (sensor_state_)
+      {
+        case SensorState::TIME_ADJUSTMENT:
+          response(cmd, status_ok);
+          sensor_state_ = SensorState::IDLE;
+          return;
+        case SensorState::IDLE:
+          response(cmd, "03");
+          return;
+        default:
+          response(cmd, status_error_denied);
+          return;
+      }
+      break;
+    default:
+      response(cmd, "01");
+      return;
+  }
+  const uint32_t stamp = timestamp();
+  const std::string time = encode::encode(
+      std::vector<uint32_t>(1, stamp), encode::EncodeType::CED4);
+  response(cmd, status_ok, encode::withChecksum(time) + "\n");
 }
 
 void URGSimulator::handleBM(const std::string cmd)
