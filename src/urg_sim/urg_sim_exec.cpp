@@ -25,6 +25,8 @@ int main(int argc, char** argv)
 {
   const urg_sim::URGSimulator::Params params =
       {
+          .model = urg_sim::URGSimulator::Model::UTM,
+          .boot_duration = 5.0,
           .comm_delay_base = 0.001,
           .comm_delay_sigma = 0.0002,
           .scan_interval = 0.025,

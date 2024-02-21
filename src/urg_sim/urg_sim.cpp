@@ -116,18 +116,41 @@ void URGSimulator::handleII(const std::string cmd)
   }
   const int32_t rpm =
       static_cast<int32_t>(60.0 / params_.scan_interval);
+
+  std::string mesm;
+  std::string stat;
+  switch (params_.model)
+  {
+    case Model::UTM:
+      switch (sensor_state_)
+      {
+        case SensorState::BOOTING:
+          mesm = "001 Booting";
+          break;
+        case SensorState::IDLE:
+          mesm = "000 Idle";
+          break;
+      }
+      stat = "Stable 000 no error.";
+      break;
+    case Model::UST:
+      mesm = "Measuring by Sensitive Mode";
+      stat = "sensor is working normally";
+      break;
+  }
+
   const KeyValues kvs =
       {
           {"MODL", "UTM-30LX-EW"},
           {"LASR", laser_ ? "ON" : "OFF"},
           {"SCSP", std::to_string(rpm)},
-          {"MESM", "000 Idle"},
+          {"MESM", mesm},
           {"SBPS", "Ethernet 100 [Mbps]"},
           {"TIME", time},
-          {"STAT", "Stable 000 stable"},
+          {"STAT", stat},
       };
   responseKeyValues(cmd, status_ok, kvs);
-}
+}  // namespace urg_sim
 
 void URGSimulator::handleVV(const std::string cmd)
 {
@@ -236,6 +259,29 @@ void URGSimulator::reset()
   timestamp_epoch_ = boost::posix_time::microsec_clock::universal_time();
   laser_ = false;
   sensor_state_ == SensorState::IDLE;
+}
+
+void URGSimulator::reboot()
+{
+  if (socket_.is_open())
+  {
+    socket_.close();
+  }
+  sensor_state_ = SensorState::BOOTING;
+
+  const auto delay = boost::posix_time::microseconds(
+      static_cast<int64_t>(params_.boot_duration * 1e6));
+  boot_timer_.expires_from_now(delay);
+  boot_timer_.async_wait(
+      boost::bind(
+          &URGSimulator::booted,
+          this));
+  reset();
+}
+
+void URGSimulator::booted()
+{
+  sensor_state_ = SensorState::IDLE;
 }
 
 void URGSimulator::response(

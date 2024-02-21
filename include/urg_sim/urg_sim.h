@@ -36,15 +36,22 @@ namespace urg_sim
 class URGSimulator
 {
 public:
+  enum class Model
+  {
+    UTM,
+    UST,
+  };
   struct Params
   {
+    Model model;
+    double boot_duration;
     double comm_delay_base;
     double comm_delay_sigma;
     double scan_interval;
     double clock_rate;
     bool hex_ii_timestamp;
   };
-  enum SensorState
+  enum class SensorState
   {
     BOOTING,
     IDLE,
@@ -63,6 +70,7 @@ public:
     , socket_(io_service_)
     , input_process_timer_(io_service_)
     , output_process_timer_(io_service_)
+    , boot_timer_(io_service_)
     , rand_engine_(std::random_device()())
     , comm_delay_distribution_(
           params.comm_delay_base, params.comm_delay_sigma)
@@ -80,7 +88,7 @@ public:
     , laser_(false)
     , sensor_state_(SensorState::IDLE)
   {
-    reset();
+    reboot();
   }
 
   inline boost::asio::ip::tcp::endpoint getLocalEndpoint() const
@@ -102,6 +110,7 @@ private:
   boost::asio::streambuf input_buf_;
   boost::asio::deadline_timer input_process_timer_;
   boost::asio::deadline_timer output_process_timer_;
+  boost::asio::deadline_timer boot_timer_;
 
   std::default_random_engine rand_engine_;
   std::normal_distribution<double> comm_delay_distribution_;
@@ -117,6 +126,8 @@ private:
       const boost::system::error_code& ec);
   void asyncRead();
   void reset();
+  void reboot();
+  void booted();
   void response(
       const std::string echo,
       const std::string status,
