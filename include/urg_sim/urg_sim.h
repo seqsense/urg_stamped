@@ -60,6 +60,13 @@ public:
     TIME_ADJUSTMENT,
     ERROR_DETECTED,
   };
+  struct RawScanData
+  {
+    uint32_t timestamp;
+    boost::posix_time::ptime full_time;
+    std::vector<uint32_t> ranges;
+    std::vector<uint32_t> intencities;
+  };
 
   inline URGSimulator(
       const boost::asio::ip::tcp::endpoint& endpoint,
@@ -71,6 +78,7 @@ public:
     , input_process_timer_(io_service_)
     , output_process_timer_(io_service_)
     , boot_timer_(io_service_)
+    , scan_timer_(io_service_)
     , rand_engine_(std::random_device()())
     , comm_delay_distribution_(
           params.comm_delay_base, params.comm_delay_sigma)
@@ -110,6 +118,7 @@ private:
   boost::asio::deadline_timer input_process_timer_;
   boost::asio::deadline_timer output_process_timer_;
   boost::asio::deadline_timer boot_timer_;
+  boost::asio::deadline_timer scan_timer_;
 
   std::default_random_engine rand_engine_;
   std::normal_distribution<double> comm_delay_distribution_;
@@ -118,6 +127,8 @@ private:
   std::map<std::string, std::function<void(const std::string)>> handlers_;
   SensorState sensor_state_;
   boost::posix_time::ptime last_rb_;
+  RawScanData last_raw_scan_;
+  boost::posix_time::ptime next_scan_;
 
   void onRead(const boost::system::error_code& ec);
   void processInput(
@@ -141,6 +152,8 @@ private:
   void accept();
   void accepted(
       const boost::system::error_code& ec);
+  void nextScan();
+  void scan();
 
   void handleII(const std::string cmd);
   void handleVV(const std::string cmd);

@@ -380,6 +380,9 @@ void URGSimulator::booted()
   {
     asyncRead();
   }
+
+  next_scan_ = boost::posix_time::microsec_clock::universal_time();
+  nextScan();
 }
 
 void URGSimulator::response(
@@ -454,6 +457,39 @@ void URGSimulator::accepted(
   {
     asyncRead();
   }
+}
+
+void URGSimulator::nextScan()
+{
+  next_scan_ +=
+      boost::posix_time::microseconds(
+          static_cast<int64_t>(params_.scan_interval * 1e6));
+  scan_timer_.expires_at(next_scan_);
+  scan_timer_.async_wait(
+      boost::bind(
+          &URGSimulator::scan,
+          this));
+}
+
+void URGSimulator::scan()
+{
+  if (sensor_state_ == SensorState::BOOTING)
+  {
+    return;
+  }
+
+  switch (sensor_state_)
+  {
+    case SensorState::SINGLE_SCAN:
+    case SensorState::MULTI_SCAN:
+      break;
+    default:
+      nextScan();
+      return;
+  }
+
+  std::cerr << "Scan" << std::endl;
+  nextScan();
 }
 
 void URGSimulator::spin()
