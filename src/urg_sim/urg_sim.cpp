@@ -71,8 +71,6 @@ void URGSimulator::onRead(const boost::system::error_code& ec)
   std::string line;
   while (std::getline(stream, line))
   {
-    std::cerr << "onRead " << line << std::endl;
-
     input_process_timer_.expires_at(when);
     input_process_timer_.async_wait(
         boost::bind(
@@ -89,8 +87,6 @@ void URGSimulator::processInput(
     const std::string cmd,
     const boost::system::error_code& ec)
 {
-  std::cerr << "processInput " << cmd << std::endl;
-
   const std::string op = cmd.substr(0, 2);
   const auto it_h = handlers_.find(op);
   const auto h =
