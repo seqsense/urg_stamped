@@ -241,6 +241,10 @@ void URGSimulator::handleRS(const std::string cmd)
 
 void URGSimulator::handleUnknown(const std::string cmd)
 {
+  if (cmd == "")
+  {
+    return;
+  }
   response(cmd, status_error_command_not_defined);
 }
 
