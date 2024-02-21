@@ -42,6 +42,7 @@ const char* status_ok = "00";
 const char* status_already = "02";
 const char* status_error_command_not_defined = "0E";
 const char* status_error_abnormal = "0L";
+const char* status_error_denied = "10";
 }  // namespace
 
 void URGSimulator::asyncRead()
@@ -120,6 +121,7 @@ void URGSimulator::handleII(const std::string cmd)
 
   std::string mesm;
   std::string stat;
+  std::string lasr;
   switch (params_.model)
   {
     case Model::UTM:
@@ -139,11 +141,21 @@ void URGSimulator::handleII(const std::string cmd)
       stat = "sensor is working normally";
       break;
   }
+  switch (sensor_state_)
+  {
+    case SensorState::SINGLE_SCAN:
+    case SensorState::MULTI_SCAN:
+      lasr = "ON";
+      break;
+    default:
+      lasr = "OFF";
+      break;
+  }
 
   const KeyValues kvs =
       {
           {"MODL", "UTM-30LX-EW"},
-          {"LASR", laser_ ? "ON" : "OFF"},
+          {"LASR", lasr},
           {"SCSP", std::to_string(rpm)},
           {"MESM", mesm},
           {"SBPS", "Ethernet 100 [Mbps]"},
@@ -197,36 +209,44 @@ void URGSimulator::handleTM(const std::string cmd)
 
 void URGSimulator::handleBM(const std::string cmd)
 {
-  if (sensor_state_ == SensorState::ERROR_DETECTED)
+  switch (sensor_state_)
   {
-    response(cmd, status_error_abnormal);
-    return;
+    case SensorState::ERROR_DETECTED:
+      response(cmd, status_error_abnormal);
+      return;
+    case SensorState::IDLE:
+      sensor_state_ = SensorState::SINGLE_SCAN;
+      response(cmd, status_ok);
+      return;
+    case SensorState::SINGLE_SCAN:
+    case SensorState::MULTI_SCAN:
+      response(cmd, status_already);
+      return;
+    default:
+      response(cmd, status_error_denied);
+      return;
   }
-  if (laser_)
-  {
-    response(cmd, status_already);
-    return;
-  }
-  laser_ = true;
-  sensor_state_ == SensorState::SINGLE_SCAN;
-  response(cmd, status_ok);
 }
 
 void URGSimulator::handleQT(const std::string cmd)
 {
-  if (sensor_state_ == SensorState::ERROR_DETECTED)
+  switch (sensor_state_)
   {
-    response(cmd, status_error_abnormal);
-    return;
+    case SensorState::ERROR_DETECTED:
+      response(cmd, status_error_abnormal);
+      return;
+    case SensorState::SINGLE_SCAN:
+    case SensorState::MULTI_SCAN:
+      sensor_state_ = SensorState::IDLE;
+      response(cmd, status_ok);
+      return;
+    case SensorState::IDLE:
+      response(cmd, status_already);
+      return;
+    default:
+      response(cmd, status_error_denied);
+      return;
   }
-  if (!laser_)
-  {
-    response(cmd, status_already);
-    return;
-  }
-  laser_ = false;
-  sensor_state_ == SensorState::IDLE;
-  response(cmd, status_ok);
 }
 
 void URGSimulator::handleRS(const std::string cmd)
@@ -282,7 +302,6 @@ void URGSimulator::handleDisconnect()
 void URGSimulator::reset()
 {
   timestamp_epoch_ = boost::posix_time::microsec_clock::universal_time();
-  laser_ = false;
   sensor_state_ == SensorState::IDLE;
 }
 

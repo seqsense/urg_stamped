@@ -86,7 +86,6 @@ public:
               {"RT", std::bind(&URGSimulator::handleRS, this, std::placeholders::_1)},
               {"RB", std::bind(&URGSimulator::handleRB, this, std::placeholders::_1)},
           })  // NOLINT(whitespace/braces)
-    , laser_(false)
     , sensor_state_(SensorState::IDLE)
   {
   }
@@ -117,7 +116,6 @@ private:
 
   boost::posix_time::ptime timestamp_epoch_;
   std::map<std::string, std::function<void(const std::string)>> handlers_;
-  bool laser_;
   SensorState sensor_state_;
   boost::posix_time::ptime last_rb_;
 
