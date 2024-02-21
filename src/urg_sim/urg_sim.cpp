@@ -282,6 +282,10 @@ void URGSimulator::reboot()
 void URGSimulator::booted()
 {
   sensor_state_ = SensorState::IDLE;
+  if (params_.model == Model::UST)
+  {
+    asyncRead();
+  }
 }
 
 void URGSimulator::response(
@@ -340,7 +344,10 @@ void URGSimulator::spin()
   while (true)
   {
     acceptor_.accept(socket_);
-    asyncRead();
+    if (params_.model == Model::UTM)
+    {
+      asyncRead();
+    }
     io_service_.run();
     io_service_.reset();
   }
