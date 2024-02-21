@@ -50,6 +50,10 @@ public:
     double scan_interval;
     double clock_rate;
     bool hex_ii_timestamp;
+    int angle_resolution;
+    int angle_min;
+    int angle_max;
+    int angle_front;
   };
   enum class SensorState
   {

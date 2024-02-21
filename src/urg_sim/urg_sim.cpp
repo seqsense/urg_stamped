@@ -184,10 +184,10 @@ void URGSimulator::handlePP(const std::string cmd)
           {"DMIN", "23"},
           {"DMAX", "60000"},
           {"PROT", "SCIP 2.2"},
-          {"ARES", "1440"},
-          {"AMIN", "0"},
-          {"AMAX", "1080"},
-          {"AFRT", "540"},
+          {"ARES", std::to_string(params_.angle_resolution)},
+          {"AMIN", std::to_string(params_.angle_min)},
+          {"AMAX", std::to_string(params_.angle_max)},
+          {"AFRT", std::to_string(params_.angle_front)},
           {"SCAN", std::to_string(rpm)},
       };
   responseKeyValues(cmd, status_ok, kvs);

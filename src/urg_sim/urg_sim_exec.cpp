@@ -32,6 +32,10 @@ int main(int argc, char** argv)
           .scan_interval = 0.025,
           .clock_rate = 1.0,
           .hex_ii_timestamp = false,
+          .angle_resolution = 1440,
+          .angle_min = 0,
+          .angle_max = 1080,
+          .angle_front = 540,
       };
   urg_sim::URGSimulator sim(
       boost::asio::ip::tcp::endpoint(
