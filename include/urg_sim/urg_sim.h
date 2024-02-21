@@ -84,11 +84,11 @@ public:
               {"QT", std::bind(&URGSimulator::handleQT, this, std::placeholders::_1)},
               {"RS", std::bind(&URGSimulator::handleRS, this, std::placeholders::_1)},
               {"RT", std::bind(&URGSimulator::handleRS, this, std::placeholders::_1)},
+              {"RB", std::bind(&URGSimulator::handleRB, this, std::placeholders::_1)},
           })  // NOLINT(whitespace/braces)
     , laser_(false)
     , sensor_state_(SensorState::IDLE)
   {
-    reboot();
   }
 
   inline boost::asio::ip::tcp::endpoint getLocalEndpoint() const
@@ -119,6 +119,7 @@ private:
   std::map<std::string, std::function<void(const std::string)>> handlers_;
   bool laser_;
   SensorState sensor_state_;
+  boost::posix_time::ptime last_rb_;
 
   void onRead(const boost::system::error_code& ec);
   void processInput(
@@ -139,6 +140,9 @@ private:
   void send(
       const std::string data,
       const boost::system::error_code& ec);
+  void accept();
+  void accepted(
+      const boost::system::error_code& ec);
 
   void handleII(const std::string cmd);
   void handleVV(const std::string cmd);
@@ -147,6 +151,7 @@ private:
   void handleBM(const std::string cmd);
   void handleQT(const std::string cmd);
   void handleRS(const std::string cmd);
+  void handleRB(const std::string cmd);
   void handleUnknown(const std::string cmd);
   void handleDisconnect();
 

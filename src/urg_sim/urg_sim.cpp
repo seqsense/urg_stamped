@@ -27,6 +27,7 @@
 #include <boost/asio/write.hpp>
 #include <boost/bind/bind.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/move/move.hpp>
 #include <boost/system/error_code.hpp>
 
 #include <urg_sim/urg_sim.h>
@@ -239,6 +240,25 @@ void URGSimulator::handleRS(const std::string cmd)
   response(cmd, status_ok);
 }
 
+void URGSimulator::handleRB(const std::string cmd)
+{
+  const auto now = boost::posix_time::microsec_clock::universal_time();
+  if (last_rb_ == boost::posix_time::not_a_date_time ||
+      now - last_rb_ > boost::posix_time::seconds(1))
+  {
+    response(cmd, "01");
+    last_rb_ = now;
+    return;
+  }
+  response(cmd, "00");
+
+  boot_timer_.expires_from_now(boost::posix_time::seconds(1));
+  boot_timer_.async_wait(
+      boost::bind(
+          &URGSimulator::reboot,
+          this));
+}
+
 void URGSimulator::handleUnknown(const std::string cmd)
 {
   if (cmd == "")
@@ -256,6 +276,7 @@ void URGSimulator::handleDisconnect()
     sensor_state_ = SensorState::IDLE;
   }
   socket_.close();
+  accept();
 }
 
 void URGSimulator::reset()
@@ -267,10 +288,7 @@ void URGSimulator::reset()
 
 void URGSimulator::reboot()
 {
-  if (socket_.is_open())
-  {
-    socket_.close();
-  }
+  std::cerr << "Booting" << std::endl;
   sensor_state_ = SensorState::BOOTING;
 
   const auto delay = boost::posix_time::microseconds(
@@ -281,10 +299,19 @@ void URGSimulator::reboot()
           &URGSimulator::booted,
           this));
   reset();
+
+  if (socket_.is_open())
+  {
+    std::cerr << "Closing" << std::endl;
+    socket_.close();
+    accept();
+  }
+  accept();
 }
 
 void URGSimulator::booted()
 {
+  std::cerr << "Booted" << std::endl;
   sensor_state_ = SensorState::IDLE;
   if (params_.model == Model::UST)
   {
@@ -343,17 +370,36 @@ uint32_t URGSimulator::timestamp()
   return diff & 0xFFFFFF;
 }
 
+void URGSimulator::accept()
+{
+  std::cerr << "Accepting" << std::endl;
+  acceptor_.async_accept(
+      socket_,
+      boost::bind(
+          &URGSimulator::accepted,
+          this,
+          boost::asio::placeholders::error));
+}
+
+void URGSimulator::accepted(
+    const boost::system::error_code& ec)
+{
+  std::cerr << "Accepted connection from "
+            << socket_.remote_endpoint() << std::endl;
+  if (params_.model == Model::UTM ||
+      sensor_state_ != SensorState::BOOTING)
+  {
+    asyncRead();
+  }
+}
+
 void URGSimulator::spin()
 {
+  reboot();
+
   while (true)
   {
-    acceptor_.accept(socket_);
-    if (params_.model == Model::UTM)
-    {
-      asyncRead();
-    }
     io_service_.run();
-    io_service_.reset();
   }
 }
 
