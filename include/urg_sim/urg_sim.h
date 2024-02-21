@@ -137,6 +137,7 @@ private:
   void handleQT(const std::string cmd);
   void handleRS(const std::string cmd);
   void handleUnknown(const std::string cmd);
+  void handleDisconnect();
 
   uint32_t timestamp();
 };

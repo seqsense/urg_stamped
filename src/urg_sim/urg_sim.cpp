@@ -53,10 +53,10 @@ void URGSimulator::asyncRead()
 
 void URGSimulator::onRead(const boost::system::error_code& ec)
 {
-  if (ec == boost::asio::error::eof)
+  if (ec)
   {
-    std::cerr << "Connection closed" << std::endl;
-    io_service_.stop();
+    std::cerr << "Connection closed: " << ec.message() << std::endl;
+    handleDisconnect();
     return;
   }
   const auto now = boost::posix_time::microsec_clock::universal_time();
@@ -221,6 +221,16 @@ void URGSimulator::handleUnknown(const std::string cmd)
   response(cmd, status_error_command_not_defined);
 }
 
+void URGSimulator::handleDisconnect()
+{
+  if (sensor_state_ != SensorState::BOOTING &&
+      sensor_state_ != SensorState::ERROR_DETECTED)
+  {
+    sensor_state_ = SensorState::IDLE;
+  }
+  socket_.close();
+}
+
 void URGSimulator::reset()
 {
   timestamp_epoch_ = boost::posix_time::microsec_clock::universal_time();
@@ -281,9 +291,13 @@ uint32_t URGSimulator::timestamp()
 
 void URGSimulator::spin()
 {
-  acceptor_.accept(socket_);
-  asyncRead();
-  io_service_.run();
+  while (true)
+  {
+    acceptor_.accept(socket_);
+    asyncRead();
+    io_service_.run();
+    io_service_.reset();
+  }
 }
 
 }  // namespace urg_sim
