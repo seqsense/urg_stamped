@@ -170,7 +170,8 @@ private:
   void handleUnknown(const std::string cmd);
   void handleDisconnect();
 
-  uint32_t timestamp();
+  uint32_t timestamp(
+      const boost::posix_time::ptime& now = boost::posix_time::microsec_clock::universal_time());
 };
 
 }  // namespace urg_sim

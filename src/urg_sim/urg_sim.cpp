@@ -429,9 +429,8 @@ void URGSimulator::send(
   boost::asio::write(socket_, boost::asio::buffer(data));
 }
 
-uint32_t URGSimulator::timestamp()
+uint32_t URGSimulator::timestamp(const boost::posix_time::ptime& now)
 {
-  const auto now = boost::posix_time::microsec_clock::universal_time();
   const uint32_t diff = (now - timestamp_epoch_).total_milliseconds();
   return diff & 0xFFFFFF;
 }
@@ -489,6 +488,24 @@ void URGSimulator::scan()
   }
 
   std::cerr << "Scan" << std::endl;
+
+  last_raw_scan_.timestamp = timestamp(next_scan_);
+  last_raw_scan_.full_time = next_scan_;
+  const int num_points = params_.angle_max - params_.angle_min;
+  last_raw_scan_.ranges.resize(num_points);
+  last_raw_scan_.intencities.resize(num_points);
+
+  const double busy_seconds =
+      params_.scan_interval *
+      static_cast<double>(params_.angle_max) /
+      static_cast<double>(params_.angle_resolution);
+  boost::asio::deadline_timer scan_wait(io_service_);
+  scan_wait.expires_at(
+      next_scan_ +
+      boost::posix_time::microseconds(
+          static_cast<int64_t>(busy_seconds * 1e6)));
+  scan_wait.wait();
+
   nextScan();
 }
 
