@@ -26,7 +26,7 @@ namespace encode
 
 std::string checksum(const std::string& s)
 {
-  char sum;
+  char sum = 0;
   for (const char c : s)
   {
     sum += c;

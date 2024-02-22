@@ -129,9 +129,6 @@ void URGSimulator::handleII(const std::string cmd)
     case Model::UTM:
       switch (sensor_state_)
       {
-        case SensorState::IDLE:
-          mesm = "000 Idle";
-          break;
         case SensorState::BOOTING:
           mesm = "001 Booting";
           break;
@@ -140,6 +137,9 @@ void URGSimulator::handleII(const std::string cmd)
           break;
         case SensorState::MULTI_SCAN:
           mesm = "004 Multi_scan";
+          break;
+        default:
+          mesm = "000 Idle";
           break;
       }
       stat = "Stable 000 no error.";
@@ -434,7 +434,7 @@ void URGSimulator::handleDisconnect()
 void URGSimulator::reset()
 {
   timestamp_epoch_ = boost::posix_time::microsec_clock::universal_time();
-  sensor_state_ == SensorState::IDLE;
+  sensor_state_ = SensorState::IDLE;
 }
 
 void URGSimulator::reboot()
@@ -644,7 +644,7 @@ void URGSimulator::sendScan()
   ss << encode::withChecksum(time) + "\n";
 
   const std::string encoded = encode::encode(data, encode::EncodeType::CED3);
-  for (int i = 0; i < encoded.size(); i += 64)
+  for (size_t i = 0; i < encoded.size(); i += 64)
   {
     const std::string line = encoded.substr(i, 64);
     ss << encode::withChecksum(line) << "\n";
