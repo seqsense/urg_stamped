@@ -167,9 +167,7 @@ private:
       const std::string echo,
       const std::string status,
       const KeyValues kv);
-  void send(
-      const std::string data,
-      const boost::system::error_code& ec);
+  void send(const std::string data);
   void accept();
   void accepted(
       const boost::system::error_code& ec);

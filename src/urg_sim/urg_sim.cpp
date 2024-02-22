@@ -485,8 +485,7 @@ void URGSimulator::response(
       boost::bind(
           &URGSimulator::send,
           this,
-          text,
-          boost::asio::placeholders::error));
+          text));
 }
 
 void URGSimulator::responseKeyValues(
@@ -503,11 +502,15 @@ void URGSimulator::responseKeyValues(
   response(echo, status, ss.str());
 }
 
-void URGSimulator::send(
-    const std::string data,
-    const boost::system::error_code& ec)
+void URGSimulator::send(const std::string data)
 {
-  boost::asio::write(socket_, boost::asio::buffer(data));
+  boost::system::error_code ec;
+  boost::asio::write(socket_, boost::asio::buffer(data), ec);
+  if (ec)
+  {
+    std::cerr << "Send failed: " << ec.message() << std::endl;
+    return;
+  }
 }
 
 uint32_t URGSimulator::timestamp(const boost::posix_time::ptime& now)
@@ -530,6 +533,12 @@ void URGSimulator::accept()
 void URGSimulator::accepted(
     const boost::system::error_code& ec)
 {
+  if (ec)
+  {
+    std::cerr << "Failed to accept: " << ec.message() << std::endl;
+    accept();
+    return;
+  }
   std::cerr << "Accepted connection from "
             << socket_.remote_endpoint() << std::endl;
   if (params_.model == Model::UTM ||
