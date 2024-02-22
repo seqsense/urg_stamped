@@ -43,6 +43,7 @@ const char* status_already = "02";
 const char* status_error_command_not_defined = "0E";
 const char* status_error_abnormal = "0L";
 const char* status_error_denied = "10";
+const char* status_error_command_short = "0C";
 }  // namespace
 
 void URGSimulator::asyncRead()
@@ -202,7 +203,7 @@ void URGSimulator::handleTM(const std::string cmd)
   }
   if (cmd.size() < 3)
   {
-    response(cmd, "01");
+    response(cmd, status_error_command_short);
     return;
   }
   switch (cmd[2])
@@ -314,7 +315,7 @@ void URGSimulator::handleRB(const std::string cmd)
     last_rb_ = now;
     return;
   }
-  response(cmd, "00");
+  response(cmd, status_ok);
 
   boot_timer_.expires_from_now(boost::posix_time::seconds(1));
   boot_timer_.async_wait(
