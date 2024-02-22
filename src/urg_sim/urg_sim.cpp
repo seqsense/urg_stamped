@@ -44,6 +44,7 @@ const char* status_error_command_not_defined = "0E";
 const char* status_error_abnormal = "0L";
 const char* status_error_denied = "10";
 const char* status_error_command_short = "0C";
+const char* status_error_command_long = "0D";
 }  // namespace
 
 void URGSimulator::asyncRead()
@@ -100,6 +101,10 @@ void URGSimulator::processInput(
 
 void URGSimulator::handleII(const std::string cmd)
 {
+  if (!validateExtraString(cmd, 2))
+  {
+    return;
+  }
   const uint32_t stamp = timestamp();
   std::string time;
   if (params_.hex_ii_timestamp)
@@ -164,6 +169,10 @@ void URGSimulator::handleII(const std::string cmd)
 
 void URGSimulator::handleVV(const std::string cmd)
 {
+  if (!validateExtraString(cmd, 2))
+  {
+    return;
+  }
   const KeyValues kvs =
       {
           {"VEND", "Hokuyo Automatic Co., Ltd."},
@@ -177,6 +186,10 @@ void URGSimulator::handleVV(const std::string cmd)
 
 void URGSimulator::handlePP(const std::string cmd)
 {
+  if (!validateExtraString(cmd, 2))
+  {
+    return;
+  }
   const int32_t rpm =
       static_cast<int32_t>(60.0 / params_.scan_interval);
   const KeyValues kvs =
@@ -201,9 +214,8 @@ void URGSimulator::handleTM(const std::string cmd)
     response(cmd, status_error_abnormal);
     return;
   }
-  if (cmd.size() < 3)
+  if (!validateExtraString(cmd, 3))
   {
-    response(cmd, status_error_command_short);
     return;
   }
   switch (cmd[2])
@@ -254,6 +266,10 @@ void URGSimulator::handleTM(const std::string cmd)
 
 void URGSimulator::handleBM(const std::string cmd)
 {
+  if (!validateExtraString(cmd, 2))
+  {
+    return;
+  }
   switch (sensor_state_)
   {
     case SensorState::ERROR_DETECTED:
@@ -275,6 +291,10 @@ void URGSimulator::handleBM(const std::string cmd)
 
 void URGSimulator::handleQT(const std::string cmd)
 {
+  if (!validateExtraString(cmd, 2))
+  {
+    return;
+  }
   switch (sensor_state_)
   {
     case SensorState::ERROR_DETECTED:
@@ -296,6 +316,10 @@ void URGSimulator::handleQT(const std::string cmd)
 
 void URGSimulator::handleRS(const std::string cmd)
 {
+  if (!validateExtraString(cmd, 2))
+  {
+    return;
+  }
   if (sensor_state_ == SensorState::ERROR_DETECTED)
   {
     response(cmd, status_error_abnormal);
@@ -307,6 +331,10 @@ void URGSimulator::handleRS(const std::string cmd)
 
 void URGSimulator::handleRB(const std::string cmd)
 {
+  if (!validateExtraString(cmd, 2))
+  {
+    return;
+  }
   const auto now = boost::posix_time::microsec_clock::universal_time();
   if (last_rb_ == boost::posix_time::not_a_date_time ||
       now - last_rb_ > boost::posix_time::seconds(1))
@@ -322,6 +350,58 @@ void URGSimulator::handleRB(const std::string cmd)
       boost::bind(
           &URGSimulator::reboot,
           this));
+}
+
+void URGSimulator::handleMX(const std::string cmd)
+{
+  if (!validateExtraString(cmd, 15))
+  {
+    return;
+  }
+  try
+  {
+    measurement_start_step_ = std::stoi(cmd.substr(2, 4));
+    measurement_end_step_ = std::stoi(cmd.substr(6, 4));
+    measurement_grouping_step_ = std::stoi(cmd.substr(10, 2));
+    measurement_skips_ = std::stoi(cmd.substr(12, 1));
+    measurement_scans_ = std::stoi(cmd.substr(13, 2));
+  }
+  catch (const std::invalid_argument& e)
+  {
+    response(cmd, "02");
+    return;
+  }
+  if (measurement_start_step_ > measurement_end_step_)
+  {
+    response(cmd, "05");
+    return;
+  }
+  if (measurement_start_step_ < params_.angle_min ||
+      measurement_end_step_ > params_.angle_max)
+  {
+    response(cmd, "04");
+    return;
+  }
+  if (measurement_grouping_step_ == 0)
+  {
+    measurement_grouping_step_ = 1;
+  }
+  measurement_cnt_ = 0;
+  measurement_sent_ = 0;
+  measurement_cmd_ = cmd.substr(0, 13);
+  measurement_extra_string_ = cmd.substr(15);
+
+  sensor_state_ = SensorState::MULTI_SCAN;
+  switch (cmd[1])
+  {
+    case 'D':
+      measurement_mode_ = MeasurementMode::RANGE;
+      break;
+    case 'E':
+      measurement_mode_ = MeasurementMode::RANGE_INTENSITY;
+      break;
+  }
+  response(cmd, status_ok);
 }
 
 void URGSimulator::handleUnknown(const std::string cmd)
@@ -488,13 +568,11 @@ void URGSimulator::scan()
       return;
   }
 
-  std::cerr << "Scan" << std::endl;
-
   last_raw_scan_.timestamp = timestamp(next_scan_);
   last_raw_scan_.full_time = next_scan_;
   const int num_points = params_.angle_max - params_.angle_min;
   last_raw_scan_.ranges.resize(num_points);
-  last_raw_scan_.intencities.resize(num_points);
+  last_raw_scan_.intensities.resize(num_points);
 
   const double busy_seconds =
       params_.scan_interval *
@@ -507,7 +585,90 @@ void URGSimulator::scan()
           static_cast<int64_t>(busy_seconds * 1e6)));
   scan_wait.wait();
 
+  if (sensor_state_ == SensorState::MULTI_SCAN)
+  {
+    measurement_cnt_++;
+    if (measurement_cnt_ > measurement_skips_)
+    {
+      sendScan();
+      measurement_cnt_ = 0;
+      measurement_sent_++;
+      if (measurement_scans_ != 0 &&
+          measurement_sent_ >= measurement_scans_)
+      {
+        sensor_state_ = SensorState::IDLE;
+      }
+      else if (measurement_scans_ == 0 &&
+               measurement_sent_ >= 100)
+      {
+        measurement_sent_ = 0;
+      }
+    }
+  }
+
   nextScan();
+}
+
+void URGSimulator::sendScan()
+{
+  std::vector<uint32_t> data;
+  for (int i = measurement_start_step_; i <= measurement_end_step_; i += measurement_grouping_step_)
+  {
+    data.push_back(last_raw_scan_.ranges[i]);
+    if (measurement_mode_ == MeasurementMode::RANGE_INTENSITY)
+    {
+      data.push_back(last_raw_scan_.intensities[i]);
+    }
+  }
+  std::stringstream ss;
+
+  const std::string time = encode::encode(
+      std::vector<uint32_t>(1, last_raw_scan_.timestamp),
+      encode::EncodeType::CED4);
+  ss << encode::withChecksum(time) + "\n";
+
+  const std::string encoded = encode::encode(data, encode::EncodeType::CED3);
+  for (int i = 0; i < encoded.size(); i += 64)
+  {
+    const std::string line = encoded.substr(i, 64);
+    ss << encode::withChecksum(line) << "\n";
+  }
+
+  std::stringstream ss_echo;
+  ss_echo << measurement_cmd_;
+  if (measurement_scans_ == 0)
+  {
+    ss_echo << "00";
+  }
+  else
+  {
+    ss_echo
+        << std::setfill('0') << std::setw(2)
+        << measurement_scans_ - measurement_sent_ - 1;
+  }
+  ss_echo << measurement_extra_string_;
+  response(ss_echo.str(), status_ok, ss.str());
+}
+
+bool URGSimulator::validateExtraString(
+    const std::string& cmd,
+    const size_t expected_size)
+{
+  if (cmd.size() < expected_size)
+  {
+    response(cmd, status_error_command_short);
+    return false;
+  }
+  if (cmd.size() == expected_size)
+  {
+    return true;
+  }
+  if (cmd[expected_size] != ';')
+  {
+    response(cmd, status_error_command_long);
+    return false;
+  }
+  return true;
 }
 
 void URGSimulator::spin()

@@ -69,7 +69,12 @@ public:
     uint32_t timestamp;
     boost::posix_time::ptime full_time;
     std::vector<uint32_t> ranges;
-    std::vector<uint32_t> intencities;
+    std::vector<uint32_t> intensities;
+  };
+  enum class MeasurementMode
+  {
+    RANGE,
+    RANGE_INTENSITY,
   };
 
   inline URGSimulator(
@@ -97,6 +102,8 @@ public:
               {"RS", std::bind(&URGSimulator::handleRS, this, std::placeholders::_1)},
               {"RT", std::bind(&URGSimulator::handleRS, this, std::placeholders::_1)},
               {"RB", std::bind(&URGSimulator::handleRB, this, std::placeholders::_1)},
+              {"MD", std::bind(&URGSimulator::handleMX, this, std::placeholders::_1)},
+              {"ME", std::bind(&URGSimulator::handleMX, this, std::placeholders::_1)},
           })  // NOLINT(whitespace/braces)
     , sensor_state_(SensorState::IDLE)
   {
@@ -133,6 +140,16 @@ private:
   boost::posix_time::ptime last_rb_;
   RawScanData last_raw_scan_;
   boost::posix_time::ptime next_scan_;
+  MeasurementMode measurement_mode_;
+  int measurement_start_step_;
+  int measurement_end_step_;
+  int measurement_grouping_step_;
+  int measurement_skips_;
+  int measurement_scans_;
+  int measurement_cnt_;
+  int measurement_sent_;
+  std::string measurement_cmd_;
+  std::string measurement_extra_string_;
 
   void onRead(const boost::system::error_code& ec);
   void processInput(
@@ -158,6 +175,7 @@ private:
       const boost::system::error_code& ec);
   void nextScan();
   void scan();
+  void sendScan();
 
   void handleII(const std::string cmd);
   void handleVV(const std::string cmd);
@@ -167,11 +185,15 @@ private:
   void handleQT(const std::string cmd);
   void handleRS(const std::string cmd);
   void handleRB(const std::string cmd);
+  void handleMX(const std::string cmd);
   void handleUnknown(const std::string cmd);
   void handleDisconnect();
 
   uint32_t timestamp(
       const boost::posix_time::ptime& now = boost::posix_time::microsec_clock::universal_time());
+  bool validateExtraString(
+      const std::string& cmd,
+      const size_t expected_size);
 };
 
 }  // namespace urg_sim
