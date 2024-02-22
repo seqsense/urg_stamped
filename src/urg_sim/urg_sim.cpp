@@ -129,11 +129,17 @@ void URGSimulator::handleII(const std::string cmd)
     case Model::UTM:
       switch (sensor_state_)
       {
+        case SensorState::IDLE:
+          mesm = "000 Idle";
+          break;
         case SensorState::BOOTING:
           mesm = "001 Booting";
           break;
-        case SensorState::IDLE:
-          mesm = "000 Idle";
+        case SensorState::SINGLE_SCAN:
+          mesm = "003 Single_scan";
+          break;
+        case SensorState::MULTI_SCAN:
+          mesm = "004 Multi_scan";
           break;
       }
       stat = "Stable 000 no error.";
@@ -156,7 +162,7 @@ void URGSimulator::handleII(const std::string cmd)
 
   const KeyValues kvs =
       {
-          {"MODL", "UTM-30LX-EW"},
+          {"MODL", model_name_},
           {"LASR", lasr},
           {"SCSP", std::to_string(rpm)},
           {"MESM", mesm},
@@ -176,7 +182,7 @@ void URGSimulator::handleVV(const std::string cmd)
   const KeyValues kvs =
       {
           {"VEND", "Hokuyo Automatic Co., Ltd."},
-          {"PROD", "UTM-30LX-EW"},
+          {"PROD", model_name_},
           {"FIRM", "1.1.0 (2011-09-30)"},
           {"PROT", "SCIP 2.2"},
           {"SERI", "H0123456"},
@@ -192,9 +198,10 @@ void URGSimulator::handlePP(const std::string cmd)
   }
   const int32_t rpm =
       static_cast<int32_t>(60.0 / params_.scan_interval);
+
   const KeyValues kvs =
       {
-          {"MODL", "UTM-30LX-EW"},
+          {"MODL", model_name_},
           {"DMIN", "23"},
           {"DMAX", "60000"},
           {"PROT", "SCIP 2.2"},

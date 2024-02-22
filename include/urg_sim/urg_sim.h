@@ -107,6 +107,15 @@ public:
           })  // NOLINT(whitespace/braces)
     , sensor_state_(SensorState::IDLE)
   {
+    switch (params_.model)
+    {
+      case Model::UTM:
+        model_name_ = "UTM-30LX-EW";
+        break;
+      case Model::UST:
+        model_name_ = "UST-30LC";
+        break;
+    }
   }
 
   inline boost::asio::ip::tcp::endpoint getLocalEndpoint() const
@@ -121,6 +130,7 @@ private:
   using KeyValues = std::vector<KeyValue>;
 
   const URGSimulator::Params params_;
+  std::string model_name_;
 
   boost::asio::io_service io_service_;
   boost::asio::ip::tcp::acceptor acceptor_;
