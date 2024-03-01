@@ -584,11 +584,14 @@ void URGSimulator::scan()
       return;
   }
 
-  last_raw_scan_.timestamp = timestamp(next_scan_);
-  last_raw_scan_.full_time = next_scan_;
   const int num_points = params_.angle_max - params_.angle_min;
-  last_raw_scan_.ranges.resize(num_points);
-  last_raw_scan_.intensities.resize(num_points);
+  RawScanData::Ptr raw_scan(new RawScanData);
+  raw_scan->timestamp = timestamp(next_scan_);
+  raw_scan->full_time = next_scan_;
+  raw_scan->ranges.resize(num_points);
+  raw_scan->intensities.resize(num_points);
+  raw_scan_data_cb_(raw_scan);
+  last_raw_scan_ = raw_scan;
 
   const double busy_seconds =
       params_.scan_interval *
@@ -630,16 +633,16 @@ void URGSimulator::sendScan()
   std::vector<uint32_t> data;
   for (int i = measurement_start_step_; i <= measurement_end_step_; i += measurement_grouping_step_)
   {
-    data.push_back(last_raw_scan_.ranges[i]);
+    data.push_back(last_raw_scan_->ranges[i]);
     if (measurement_mode_ == MeasurementMode::RANGE_INTENSITY)
     {
-      data.push_back(last_raw_scan_.intensities[i]);
+      data.push_back(last_raw_scan_->intensities[i]);
     }
   }
   std::stringstream ss;
 
   const std::string time = encode::encode(
-      std::vector<uint32_t>(1, last_raw_scan_.timestamp),
+      std::vector<uint32_t>(1, last_raw_scan_->timestamp),
       encode::EncodeType::CED4);
   ss << encode::withChecksum(time) + "\n";
 

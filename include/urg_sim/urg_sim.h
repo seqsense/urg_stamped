@@ -33,6 +33,25 @@
 namespace urg_sim
 {
 
+struct RawScanData
+{
+  uint32_t timestamp;
+  boost::posix_time::ptime full_time;
+  std::vector<uint32_t> ranges;
+  std::vector<uint32_t> intensities;
+
+  using Ptr = std::shared_ptr<RawScanData>;
+};
+
+using RawScanDataCallback = std::function<void(const RawScanData::Ptr)>;
+
+namespace
+{
+void nopRawScanDataCallback(const RawScanData::Ptr)
+{
+}
+}  // namespace
+
 class URGSimulator
 {
 public:
@@ -64,13 +83,6 @@ public:
     TIME_ADJUSTMENT,
     ERROR_DETECTED,
   };
-  struct RawScanData
-  {
-    uint32_t timestamp;
-    boost::posix_time::ptime full_time;
-    std::vector<uint32_t> ranges;
-    std::vector<uint32_t> intensities;
-  };
   enum class MeasurementMode
   {
     RANGE,
@@ -79,7 +91,8 @@ public:
 
   inline URGSimulator(
       const boost::asio::ip::tcp::endpoint& endpoint,
-      const URGSimulator::Params& params)
+      const URGSimulator::Params& params,
+      const RawScanDataCallback raw_scan_data_cb = nopRawScanDataCallback)
     : params_(params)
     , io_service_()
     , acceptor_(io_service_, endpoint)
@@ -88,6 +101,7 @@ public:
     , output_process_timer_(io_service_)
     , boot_timer_(io_service_)
     , scan_timer_(io_service_)
+    , raw_scan_data_cb_(raw_scan_data_cb)
     , rand_engine_(std::random_device()())
     , comm_delay_distribution_(
           params.comm_delay_base, params.comm_delay_sigma)
@@ -142,6 +156,7 @@ private:
   boost::asio::deadline_timer output_process_timer_;
   boost::asio::deadline_timer boot_timer_;
   boost::asio::deadline_timer scan_timer_;
+  RawScanDataCallback raw_scan_data_cb_;
 
   std::default_random_engine rand_engine_;
   std::normal_distribution<double> comm_delay_distribution_;
@@ -151,7 +166,7 @@ private:
   std::map<std::string, std::function<void(const std::string)>> handlers_;
   SensorState sensor_state_;
   boost::posix_time::ptime last_rb_;
-  RawScanData last_raw_scan_;
+  RawScanData::Ptr last_raw_scan_;
   boost::posix_time::ptime next_scan_;
   MeasurementMode measurement_mode_;
   int measurement_start_step_;
