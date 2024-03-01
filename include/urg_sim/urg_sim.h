@@ -91,6 +91,7 @@ public:
     , rand_engine_(std::random_device()())
     , comm_delay_distribution_(
           params.comm_delay_base, params.comm_delay_sigma)
+    , killed_(false)
     , handlers_(
           {
               {"II", std::bind(&URGSimulator::handleII, this, std::placeholders::_1)},
@@ -124,6 +125,7 @@ public:
   }
 
   void spin();
+  void kill();
 
 private:
   using KeyValue = std::pair<std::string, std::string>;
@@ -144,6 +146,7 @@ private:
   std::default_random_engine rand_engine_;
   std::normal_distribution<double> comm_delay_distribution_;
 
+  bool killed_;
   boost::posix_time::ptime timestamp_epoch_;
   std::map<std::string, std::function<void(const std::string)>> handlers_;
   SensorState sensor_state_;

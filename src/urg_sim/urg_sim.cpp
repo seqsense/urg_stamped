@@ -691,10 +691,16 @@ void URGSimulator::spin()
 {
   reboot();
 
-  while (true)
+  while (!killed_)
   {
     io_service_.run();
   }
+}
+
+void URGSimulator::kill()
+{
+  killed_ = true;
+  io_service_.stop();
 }
 
 }  // namespace urg_sim
