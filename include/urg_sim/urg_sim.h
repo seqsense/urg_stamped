@@ -20,6 +20,7 @@
 #include <functional>
 #include <list>
 #include <map>
+#include <memory>
 #include <random>
 #include <string>
 #include <utility>
