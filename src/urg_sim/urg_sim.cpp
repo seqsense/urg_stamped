@@ -309,11 +309,9 @@ void URGSimulator::handleQT(const std::string cmd)
       return;
     case SensorState::SINGLE_SCAN:
     case SensorState::MULTI_SCAN:
+    case SensorState::IDLE:
       sensor_state_ = SensorState::IDLE;
       response(cmd, status_ok);
-      return;
-    case SensorState::IDLE:
-      response(cmd, status_already);
       return;
     default:
       response(cmd, status_error_denied);
