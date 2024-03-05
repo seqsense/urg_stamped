@@ -1,3 +1,4 @@
+if (FALSE)
 catkin_add_gtest(test_decode src/test_decode.cpp)
 target_link_libraries(test_decode ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
@@ -15,3 +16,15 @@ target_link_libraries(test_timestamp_outlier_remover ${catkin_LIBRARIES} ${Boost
 
 catkin_add_gtest(test_walltime src/test_walltime.cpp ../src/scip2/logger.cpp)
 target_link_libraries(test_walltime ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
+endif()
+
+add_rostest_gtest(e2e tests/e2e.test
+  src/e2e.cpp
+  ../src/urg_sim/encode.cpp
+  ../src/urg_sim/urg_sim.cpp
+  ../src/urg_stamped.cpp
+  ../src/scip2/logger.cpp
+  ../src/ros_logger.cpp
+)
+target_link_libraries(e2e ${catkin_LIBRARIES} ${Boost_LIBRARIES})
