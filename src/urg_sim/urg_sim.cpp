@@ -664,7 +664,7 @@ void URGSimulator::sendScan()
         << measurement_scans_ - measurement_sent_ - 1;
   }
   ss_echo << measurement_extra_string_;
-  response(ss_echo.str(), status_ok, ss.str());
+  response(ss_echo.str(), "99", ss.str());
 }
 
 bool URGSimulator::validateExtraString(
