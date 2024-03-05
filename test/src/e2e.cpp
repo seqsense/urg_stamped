@@ -20,7 +20,7 @@
 #include <boost/asio/ip/tcp.hpp>
 
 #include <ros/ros.h>
-#include <sensor_msgs/PointCloud2.h>
+#include <sensor_msgs/LaserScan.h>
 
 #include <urg_stamped/urg_stamped.h>
 #include <urg_sim/urg_sim.h>
@@ -33,7 +33,8 @@ public:
   E2E()
     : nh_()
     , pnh_("~")
-    , sub_cloud_(nh_.subscribe("cloud", 1, &E2E::cbCloud, this))
+    , sub_scan_(nh_.subscribe("scan", 10, &E2E::cbScan, this))
+    , cnt_(0)
   {
   }
 
@@ -42,7 +43,7 @@ public:
     const urg_sim::URGSimulator::Params params =
         {
             .model = urg_sim::URGSimulator::Model::UTM,
-            .boot_duration = 5.0,
+            .boot_duration = 0.05,
             .comm_delay_base = 0.001,
             .comm_delay_sigma = 0.0002,
             .scan_interval = 0.025,
@@ -60,6 +61,7 @@ public:
         params,
         std::bind(&E2E::cbRawScanData, this, std::placeholders::_1));
     th_sim_ = std::thread(std::bind(&urg_sim::URGSimulator::spin, sim_));
+    ros::Duration(0.1).sleep();  // Wait boot
 
     pnh_.setParam("ip_address", "127.0.0.1");
     pnh_.setParam("ip_port", sim_->getLocalEndpoint().port());
@@ -69,7 +71,7 @@ public:
 
     const ros::Time deadline = ros::Time::now() + ros::Duration(5);
     ros::Rate wait(1);
-    while (clouds_.size() == 0)
+    while (scans_.size() == 0)
     {
       wait.sleep();
       ros::spinOnce();
@@ -88,25 +90,26 @@ public:
 private:
   ros::NodeHandle nh_;
   ros::NodeHandle pnh_;
-  ros::Subscriber sub_cloud_;
+  ros::Subscriber sub_scan_;
 
   urg_sim::URGSimulator* sim_;
   urg_stamped::UrgStampedNode* node_;
   std::thread th_sim_;
   std::thread th_node_;
 
-  std::vector<sensor_msgs::PointCloud2::ConstPtr> clouds_;
+  std::vector<sensor_msgs::LaserScan::ConstPtr> scans_;
   std::vector<urg_sim::RawScanData::Ptr> raw_scans_;
+  size_t cnt_;
 
-  void cbCloud(const sensor_msgs::PointCloud2::ConstPtr& msg)
+  void cbScan(const sensor_msgs::LaserScan::ConstPtr& msg)
   {
-    std::cerr << "cbCloud" << std::endl;
-    clouds_.push_back(msg);
+    scans_.push_back(msg);
   }
 
   void cbRawScanData(const urg_sim::RawScanData::Ptr data)
   {
-    std::cerr << "cbRawScanData" << std::endl;
+    data->ranges[0] = cnt_;
+    cnt_++;
     raw_scans_.push_back(data);
   }
 };
