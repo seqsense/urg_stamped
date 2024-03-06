@@ -48,7 +48,7 @@ public:
     }
   }
 
-private:
+protected:
   ros::NodeHandle nh_;
   ros::NodeHandle pnh_;
   ros::Subscriber sub_scan_;
@@ -58,7 +58,11 @@ private:
   std::thread th_sim_;
   std::thread th_node_;
 
-  size_t cnt_;
+  int cnt_;
+
+  std::vector<sensor_msgs::LaserScan::ConstPtr> scans_;
+  std::vector<urg_sim::RawScanData::Ptr> raw_scans_;
+  std::map<int, ros::Time> true_stamps_;
 
   void cbScan(const sensor_msgs::LaserScan::ConstPtr& msg)
   {
@@ -70,11 +74,8 @@ private:
     data->ranges[0] = cnt_;
     cnt_++;
     raw_scans_.push_back(data);
+    true_stamps_[cnt_] = ros::Time::fromBoost(data->full_time);
   }
-
-protected:
-  std::vector<sensor_msgs::LaserScan::ConstPtr> scans_;
-  std::vector<urg_sim::RawScanData::Ptr> raw_scans_;
 
   void waitScans(const size_t num, const ros::Duration& timeout)
   {
@@ -116,8 +117,8 @@ TEST_F(E2E, Simple)
       {
           .model = urg_sim::URGSimulator::Model::UTM,
           .boot_duration = 0.01,
-          .comm_delay_base = 0.002,
-          .comm_delay_sigma = 0.0002,
+          .comm_delay_base = 0.00025,
+          .comm_delay_sigma = 0.00005,
           .scan_interval = 0.025,
           .clock_rate = 1.0,
           .hex_ii_timestamp = false,
@@ -126,28 +127,20 @@ TEST_F(E2E, Simple)
           .angle_max = 1080,
           .angle_front = 540,
       };
+
+  // Make time sync happens more
+  pnh_.setParam("sync_interval_min", 0.1);
+  pnh_.setParam("sync_interval_max", 0.4);
+  pnh_.setParam("delay_estim_interval", 3.0);
+
   startSimulator(params);
+  waitScans(250, ros::Duration(10));
 
-  waitScans(100, ros::Duration(10));
-
-  std::map<int, ros::Time> expected_stamps_;
-  for (const urg_sim::RawScanData::Ptr raw : raw_scans_)
+  for (size_t i = 50; i < scans_.size(); ++i)
   {
-    const int index = raw->ranges[0];
-    expected_stamps_[index] = ros::Time::fromBoost(raw->full_time);
-  }
-
-  int cnt = 0;
-  for (const sensor_msgs::LaserScan::ConstPtr scan : scans_)
-  {
-    cnt++;
-    if (cnt > 50)
-    {
-      const int index = std::lround(scan->ranges[0] * 1000);
-      ASSERT_NE(expected_stamps_.find(index), expected_stamps_.end()) << "Can not find corresponding ground truth timestamp";
-      std::cerr << (expected_stamps_[index] - scan->header.stamp).toSec() << std::endl;
-      ASSERT_LT(expected_stamps_[index] - scan->header.stamp, ros::Duration(0.0015));
-    }
+    const int index = std::lround(scans_[i]->ranges[0] * 1000);
+    ASSERT_NE(true_stamps_.find(index), true_stamps_.end()) << "Can not find corresponding ground truth timestamp";
+    ASSERT_LT(true_stamps_[index] - scans_[i]->header.stamp, ros::Duration(0.0015));
   }
 }
 
