@@ -116,8 +116,8 @@ TEST_F(E2E, Simple)
       {
           .model = urg_sim::URGSimulator::Model::UTM,
           .boot_duration = 0.01,
-          .comm_delay_base = 0.0001,
-          .comm_delay_sigma = 0.00001,
+          .comm_delay_base = 0.002,
+          .comm_delay_sigma = 0.0002,
           .scan_interval = 0.025,
           .clock_rate = 1.0,
           .hex_ii_timestamp = false,
@@ -145,6 +145,7 @@ TEST_F(E2E, Simple)
     {
       const int index = std::lround(scan->ranges[0] * 1000);
       ASSERT_NE(expected_stamps_.find(index), expected_stamps_.end()) << "Can not find corresponding ground truth timestamp";
+      std::cerr << (expected_stamps_[index] - scan->header.stamp).toSec() << std::endl;
       ASSERT_LT(expected_stamps_[index] - scan->header.stamp, ros::Duration(0.0015));
     }
   }
