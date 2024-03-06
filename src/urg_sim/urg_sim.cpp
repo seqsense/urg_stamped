@@ -546,6 +546,7 @@ void URGSimulator::accepted(
   }
   std::cerr << "Accepted connection from "
             << socket_.remote_endpoint() << std::endl;
+  socket_.set_option(boost::asio::ip::tcp::no_delay(true));
   if (params_.model == Model::UTM ||
       sensor_state_ != SensorState::BOOTING)
   {
