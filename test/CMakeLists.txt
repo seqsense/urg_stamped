@@ -23,8 +23,6 @@ add_rostest_gtest(e2e tests/e2e.test
   src/e2e.cpp
   ../src/urg_sim/encode.cpp
   ../src/urg_sim/urg_sim.cpp
-  ../src/urg_stamped.cpp
-  ../src/scip2/logger.cpp
-  ../src/ros_logger.cpp
 )
 target_link_libraries(e2e ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+add_dependencies(e2e urg_stamped)
