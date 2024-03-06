@@ -2,5 +2,5 @@
 <launch>
   <env name="GCOV_PREFIX" value="/tmp/gcov/e2e" />
 
-  <test test-name="e2e" pkg="urg_stamped" type="e2e" />
+  <test test-name="e2e" pkg="urg_stamped" type="e2e" time-limit="30.0" />
 </launch>
