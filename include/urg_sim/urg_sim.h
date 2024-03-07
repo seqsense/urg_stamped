@@ -161,7 +161,7 @@ private:
   boost::asio::deadline_timer output_process_timer_;
   boost::asio::deadline_timer boot_timer_;
   boost::asio::deadline_timer scan_timer_;
-  std::mutex mu_;
+  std::mutex mu_;  // Mutex for sensor_state_ and boot_cnt_ for access from CI thread
 
   RawScanDataCallback raw_scan_data_cb_;
 

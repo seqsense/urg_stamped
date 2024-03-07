@@ -39,6 +39,7 @@ namespace urg_sim
 
 namespace
 {
+// Common status code across the commands
 const char* status_ok = "00";
 const char* status_already = "02";
 const char* status_error_command_not_defined = "0E";
@@ -90,6 +91,7 @@ void URGSimulator::processInput(
     const std::string cmd,
     const boost::system::error_code& ec)
 {
+  // Find handler from command string
   const std::string op = cmd.substr(0, 2);
   const auto it_h = handlers_.find(op);
   const auto h =
@@ -358,6 +360,7 @@ void URGSimulator::handleRB(const std::string cmd)
   {
     return;
   }
+  // Two RB commands within one second triggers sensor reboot
   const auto now = boost::posix_time::microsec_clock::universal_time();
   if (last_rb_ == boost::posix_time::not_a_date_time ||
       now - last_rb_ > boost::posix_time::seconds(1))
