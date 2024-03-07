@@ -15,6 +15,7 @@
  */
 
 #include <iostream>
+#include <mutex>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -124,40 +125,44 @@ void URGSimulator::handleII(const std::string cmd)
   std::string mesm;
   std::string stat;
   std::string lasr;
-  switch (params_.model)
   {
-    case Model::UTM:
-      switch (sensor_state_)
-      {
-        case SensorState::BOOTING:
-          mesm = "001 Booting";
-          break;
-        case SensorState::SINGLE_SCAN:
-          mesm = "003 Single_scan";
-          break;
-        case SensorState::MULTI_SCAN:
-          mesm = "004 Multi_scan";
-          break;
-        default:
-          mesm = "000 Idle";
-          break;
-      }
-      stat = "Stable 000 no error.";
-      break;
-    case Model::UST:
-      mesm = "Measuring by Sensitive Mode";
-      stat = "sensor is working normally";
-      break;
-  }
-  switch (sensor_state_)
-  {
-    case SensorState::SINGLE_SCAN:
-    case SensorState::MULTI_SCAN:
-      lasr = "ON";
-      break;
-    default:
-      lasr = "OFF";
-      break;
+    std::lock_guard<std::mutex> lock(mu_);
+
+    switch (params_.model)
+    {
+      case Model::UTM:
+        switch (sensor_state_)
+        {
+          case SensorState::BOOTING:
+            mesm = "001 Booting";
+            break;
+          case SensorState::SINGLE_SCAN:
+            mesm = "003 Single_scan";
+            break;
+          case SensorState::MULTI_SCAN:
+            mesm = "004 Multi_scan";
+            break;
+          default:
+            mesm = "000 Idle";
+            break;
+        }
+        stat = "Stable 000 no error.";
+        break;
+      case Model::UST:
+        mesm = "Measuring by Sensitive Mode";
+        stat = "sensor is working normally";
+        break;
+    }
+    switch (sensor_state_)
+    {
+      case SensorState::SINGLE_SCAN:
+      case SensorState::MULTI_SCAN:
+        lasr = "ON";
+        break;
+      default:
+        lasr = "OFF";
+        break;
+    }
   }
 
   const KeyValues kvs =
@@ -216,6 +221,8 @@ void URGSimulator::handlePP(const std::string cmd)
 
 void URGSimulator::handleTM(const std::string cmd)
 {
+  std::lock_guard<std::mutex> lock(mu_);
+
   if (sensor_state_ == SensorState::ERROR_DETECTED)
   {
     response(cmd, status_error_abnormal);
@@ -277,6 +284,9 @@ void URGSimulator::handleBM(const std::string cmd)
   {
     return;
   }
+
+  std::lock_guard<std::mutex> lock(mu_);
+
   switch (sensor_state_)
   {
     case SensorState::ERROR_DETECTED:
@@ -302,6 +312,9 @@ void URGSimulator::handleQT(const std::string cmd)
   {
     return;
   }
+
+  std::lock_guard<std::mutex> lock(mu_);
+
   switch (sensor_state_)
   {
     case SensorState::ERROR_DETECTED:
@@ -325,12 +338,17 @@ void URGSimulator::handleRS(const std::string cmd)
   {
     return;
   }
+
+  std::lock_guard<std::mutex> lock(mu_);
+
   if (sensor_state_ == SensorState::ERROR_DETECTED)
   {
     response(cmd, status_error_abnormal);
     return;
   }
-  reset();
+  timestamp_epoch_ = boost::posix_time::microsec_clock::universal_time();
+  sensor_state_ = SensorState::IDLE;
+
   response(cmd, status_ok);
 }
 
@@ -363,6 +381,9 @@ void URGSimulator::handleMX(const std::string cmd)
   {
     return;
   }
+
+  std::lock_guard<std::mutex> lock(mu_);
+
   try
   {
     measurement_start_step_ = std::stoi(cmd.substr(2, 4));
@@ -420,6 +441,8 @@ void URGSimulator::handleUnknown(const std::string cmd)
 
 void URGSimulator::handleDisconnect()
 {
+  std::lock_guard<std::mutex> lock(mu_);
+
   if (sensor_state_ != SensorState::BOOTING &&
       sensor_state_ != SensorState::ERROR_DETECTED)
   {
@@ -429,16 +452,13 @@ void URGSimulator::handleDisconnect()
   accept();
 }
 
-void URGSimulator::reset()
-{
-  timestamp_epoch_ = boost::posix_time::microsec_clock::universal_time();
-  sensor_state_ = SensorState::IDLE;
-}
-
 void URGSimulator::reboot()
 {
   std::cerr << "Booting" << std::endl;
-  sensor_state_ = SensorState::BOOTING;
+  {
+    std::lock_guard<std::mutex> lock(mu_);
+    sensor_state_ = SensorState::BOOTING;
+  }
 
   const auto delay = boost::posix_time::microseconds(
       static_cast<int64_t>(params_.boot_duration * 1e6));
@@ -447,7 +467,7 @@ void URGSimulator::reboot()
       boost::bind(
           &URGSimulator::booted,
           this));
-  reset();
+  timestamp_epoch_ = boost::posix_time::microsec_clock::universal_time();
 
   if (socket_.is_open())
   {
@@ -461,7 +481,12 @@ void URGSimulator::reboot()
 void URGSimulator::booted()
 {
   std::cerr << "Booted" << std::endl;
-  sensor_state_ = SensorState::IDLE;
+  {
+    std::lock_guard<std::mutex> lock(mu_);
+    sensor_state_ = SensorState::IDLE;
+    boot_cnt_++;
+  }
+
   if (params_.model == Model::UST)
   {
     asyncRead();
@@ -547,10 +572,15 @@ void URGSimulator::accepted(
   std::cerr << "Accepted connection from "
             << socket_.remote_endpoint() << std::endl;
   socket_.set_option(boost::asio::ip::tcp::no_delay(true));
-  if (params_.model == Model::UTM ||
-      sensor_state_ != SensorState::BOOTING)
+
   {
-    asyncRead();
+    std::lock_guard<std::mutex> lock(mu_);
+
+    if (params_.model == Model::UTM ||
+        sensor_state_ != SensorState::BOOTING)
+    {
+      asyncRead();
+    }
   }
 }
 
@@ -568,19 +598,23 @@ void URGSimulator::nextScan()
 
 void URGSimulator::scan()
 {
-  if (sensor_state_ == SensorState::BOOTING)
   {
-    return;
-  }
+    std::lock_guard<std::mutex> lock(mu_);
 
-  switch (sensor_state_)
-  {
-    case SensorState::SINGLE_SCAN:
-    case SensorState::MULTI_SCAN:
-      break;
-    default:
-      nextScan();
+    if (sensor_state_ == SensorState::BOOTING)
+    {
       return;
+    }
+
+    switch (sensor_state_)
+    {
+      case SensorState::SINGLE_SCAN:
+      case SensorState::MULTI_SCAN:
+        break;
+      default:
+        nextScan();
+        return;
+    }
   }
 
   const int num_points = params_.angle_max - params_.angle_min;
@@ -603,23 +637,27 @@ void URGSimulator::scan()
           static_cast<int64_t>(busy_seconds * 1e6)));
   scan_wait.wait();
 
-  if (sensor_state_ == SensorState::MULTI_SCAN)
   {
-    measurement_cnt_++;
-    if (measurement_cnt_ > measurement_skips_)
+    std::lock_guard<std::mutex> lock(mu_);
+
+    if (sensor_state_ == SensorState::MULTI_SCAN)
     {
-      sendScan();
-      measurement_cnt_ = 0;
-      measurement_sent_++;
-      if (measurement_scans_ != 0 &&
-          measurement_sent_ >= measurement_scans_)
+      measurement_cnt_++;
+      if (measurement_cnt_ > measurement_skips_)
       {
-        sensor_state_ = SensorState::IDLE;
-      }
-      else if (measurement_scans_ == 0 &&
-               measurement_sent_ >= 100)
-      {
-        measurement_sent_ = 0;
+        sendScan();
+        measurement_cnt_ = 0;
+        measurement_sent_++;
+        if (measurement_scans_ != 0 &&
+            measurement_sent_ >= measurement_scans_)
+        {
+          sensor_state_ = SensorState::IDLE;
+        }
+        else if (measurement_scans_ == 0 &&
+                 measurement_sent_ >= 100)
+        {
+          measurement_sent_ = 0;
+        }
       }
     }
   }
@@ -703,6 +741,18 @@ void URGSimulator::kill()
 {
   killed_ = true;
   io_service_.stop();
+}
+
+void URGSimulator::setState(const SensorState s)
+{
+  std::lock_guard<std::mutex> lock(mu_);
+  sensor_state_ = s;
+}
+
+int URGSimulator::getBootCnt()
+{
+  std::lock_guard<std::mutex> lock(mu_);
+  return boot_cnt_;
 }
 
 }  // namespace urg_sim

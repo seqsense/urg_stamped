@@ -21,6 +21,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <random>
 #include <string>
 #include <utility>
@@ -122,6 +123,7 @@ public:
               {"ME", std::bind(&URGSimulator::handleMX, this, std::placeholders::_1)},
           })  // NOLINT(whitespace/braces)
     , sensor_state_(SensorState::IDLE)
+    , boot_cnt_(0)
   {
     switch (params_.model)
     {
@@ -141,6 +143,8 @@ public:
 
   void spin();
   void kill();
+  void setState(const SensorState s);
+  int getBootCnt();
 
 private:
   using KeyValue = std::pair<std::string, std::string>;
@@ -157,6 +161,8 @@ private:
   boost::asio::deadline_timer output_process_timer_;
   boost::asio::deadline_timer boot_timer_;
   boost::asio::deadline_timer scan_timer_;
+  std::mutex mu_;
+
   RawScanDataCallback raw_scan_data_cb_;
 
   std::default_random_engine rand_engine_;
@@ -179,6 +185,7 @@ private:
   int measurement_sent_;
   std::string measurement_cmd_;
   std::string measurement_extra_string_;
+  int boot_cnt_;
 
   void onRead(const boost::system::error_code& ec);
   void processInput(

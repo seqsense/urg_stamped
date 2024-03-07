@@ -66,6 +66,7 @@ public:
   E2E()
     : nh_("")
     , pnh_("~")
+    , sim_killed_(false)
     , cnt_(0)
   {
   }
@@ -86,6 +87,7 @@ protected:
 
   urg_sim::URGSimulator* sim_;
   std::thread th_sim_;
+  bool sim_killed_;
 
   int cnt_;
 
@@ -129,7 +131,10 @@ protected:
         std::bind(&E2E::cbRawScanData, this, std::placeholders::_1));
     th_sim_ = std::thread(std::bind(&urg_sim::URGSimulator::spin, sim_));
     ros::Duration(0.1).sleep();  // Wait boot
+  }
 
+  void startUrgStamped(const bool wait_ready = true)
+  {
     nh_.setParam("/urg_stamped/ip_address", "127.0.0.1");
     nh_.setParam("/urg_stamped/ip_port", sim_->getLocalEndpoint().port());
 
@@ -138,7 +143,10 @@ protected:
 
     sub_scan_ = nh_.subscribe("scan", 100, &E2E::cbScan, this);
     ROS_ERROR("scan pub: %d", sub_scan_.getNumPublishers());
-    waitScans(1, ros::Duration(5));
+    if (wait_ready)
+    {
+      waitScans(1, ros::Duration(5));
+    }
   }
 };
 
@@ -183,12 +191,18 @@ INSTANTIATE_TEST_CASE_P(
 
 TEST_P(E2EWithParam, Simple)
 {
+  startSimulator(GetParam());
+  if (HasFailure())
+  {
+    return;
+  }
+
   // Make time sync happens more
   pnh_.setParam("/urg_stamped/sync_interval_min", 0.1);
   pnh_.setParam("/urg_stamped/sync_interval_max", 0.4);
   pnh_.setParam("/urg_stamped/delay_estim_interval", 3.0);
-
-  startSimulator(GetParam());
+  pnh_.setParam("/urg_stamped/error_limit", 4);
+  startUrgStamped();
   if (HasFailure())
   {
     return;
@@ -205,6 +219,45 @@ TEST_P(E2EWithParam, Simple)
     const int index = std::lround(scans_[i]->ranges[0] * 1000);
     ASSERT_NE(true_stamps_.find(index), true_stamps_.end()) << "Can not find corresponding ground truth timestamp";
     ASSERT_LT(true_stamps_[index] - scans_[i]->header.stamp, ros::Duration(0.0015));
+  }
+}
+
+TEST_F(E2E, RebootOnError)
+{
+  const urg_sim::URGSimulator::Params params =
+      {
+          .model = urg_sim::URGSimulator::Model::UTM,
+          .boot_duration = 0.01,
+          .comm_delay_base = 0.00025,
+          .comm_delay_sigma = 0.00005,
+          .scan_interval = 0.025,
+          .clock_rate = 1.0,
+          .hex_ii_timestamp = false,
+          .angle_resolution = 1440,
+          .angle_min = 0,
+          .angle_max = 1080,
+          .angle_front = 540,
+      };
+
+  startSimulator(params);
+  if (HasFailure())
+  {
+    return;
+  }
+  sim_->setState(urg_sim::URGSimulator::SensorState::ERROR_DETECTED);
+
+  pnh_.setParam("/urg_stamped/error_limit", 0);
+  startUrgStamped(false);
+  if (HasFailure())
+  {
+    return;
+  }
+
+  ASSERT_GE(sim_->getBootCnt(), 1);
+
+  if (HasFailure())
+  {
+    return;
   }
 }
 
