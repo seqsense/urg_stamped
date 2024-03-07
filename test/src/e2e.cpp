@@ -142,7 +142,6 @@ protected:
     ros::Duration(1).sleep();  // Wait node respawn
 
     sub_scan_ = nh_.subscribe("scan", 100, &E2E::cbScan, this);
-    ROS_ERROR("scan pub: %d", sub_scan_.getNumPublishers());
   }
 };
 
