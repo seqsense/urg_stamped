@@ -133,7 +133,7 @@ protected:
     ros::Duration(0.1).sleep();  // Wait boot
   }
 
-  void startUrgStamped(const bool wait_ready = true)
+  void startUrgStamped()
   {
     nh_.setParam("/urg_stamped/ip_address", "127.0.0.1");
     nh_.setParam("/urg_stamped/ip_port", sim_->getLocalEndpoint().port());
@@ -143,10 +143,6 @@ protected:
 
     sub_scan_ = nh_.subscribe("scan", 100, &E2E::cbScan, this);
     ROS_ERROR("scan pub: %d", sub_scan_.getNumPublishers());
-    if (wait_ready)
-    {
-      waitScans(1, ros::Duration(5));
-    }
   }
 };
 
@@ -191,28 +187,16 @@ INSTANTIATE_TEST_CASE_P(
 
 TEST_P(E2EWithParam, Simple)
 {
-  startSimulator(GetParam());
-  if (HasFailure())
-  {
-    return;
-  }
+  ASSERT_NO_FATAL_FAILURE(startSimulator(GetParam()));
 
   // Make time sync happens more
   pnh_.setParam("/urg_stamped/sync_interval_min", 0.1);
   pnh_.setParam("/urg_stamped/sync_interval_max", 0.4);
   pnh_.setParam("/urg_stamped/delay_estim_interval", 3.0);
   pnh_.setParam("/urg_stamped/error_limit", 4);
-  startUrgStamped();
-  if (HasFailure())
-  {
-    return;
-  }
+  ASSERT_NO_FATAL_FAILURE(startUrgStamped());
 
-  waitScans(100, ros::Duration(10));
-  if (HasFailure())
-  {
-    return;
-  }
+  ASSERT_NO_FATAL_FAILURE(waitScans(100, ros::Duration(10)));
 
   for (size_t i = 50; i < scans_.size(); ++i)
   {
@@ -239,26 +223,13 @@ TEST_F(E2E, RebootOnError)
           .angle_front = 540,
       };
 
-  startSimulator(params);
-  if (HasFailure())
-  {
-    return;
-  }
+  ASSERT_NO_FATAL_FAILURE(startSimulator(params));
   sim_->setState(urg_sim::URGSimulator::SensorState::ERROR_DETECTED);
 
   pnh_.setParam("/urg_stamped/error_limit", 0);
-  startUrgStamped(false);
-  if (HasFailure())
-  {
-    return;
-  }
+  ASSERT_NO_FATAL_FAILURE(startUrgStamped());
 
   ASSERT_GE(sim_->getBootCnt(), 1);
-
-  if (HasFailure())
-  {
-    return;
-  }
 }
 
 int main(int argc, char** argv)
