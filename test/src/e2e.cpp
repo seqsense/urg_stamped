@@ -138,6 +138,7 @@ protected:
     nh_.setParam("/urg_stamped/ip_address", "127.0.0.1");
     nh_.setParam("/urg_stamped/ip_port", sim_->getLocalEndpoint().port());
 
+    // Shutdown urg_stamped to initialize internal state and reload parameters
     ASSERT_TRUE(shutdownUrgStamped());
     ros::Duration(1).sleep();  // Wait node respawn
 
@@ -188,7 +189,7 @@ TEST_P(E2EWithParam, Simple)
 {
   ASSERT_NO_FATAL_FAILURE(startSimulator(GetParam()));
 
-  // Make time sync happens more
+  // Make time sync happens frequently
   pnh_.setParam("/urg_stamped/sync_interval_min", 0.1);
   pnh_.setParam("/urg_stamped/sync_interval_max", 0.4);
   pnh_.setParam("/urg_stamped/delay_estim_interval", 3.0);
@@ -228,7 +229,8 @@ TEST_F(E2E, RebootOnError)
   pnh_.setParam("/urg_stamped/error_limit", 0);
   ASSERT_NO_FATAL_FAILURE(startUrgStamped());
 
-  ASSERT_GE(sim_->getBootCnt(), 1);
+  ros::Duration(1).sleep();
+  ASSERT_GE(sim_->getBootCnt(), 2);
 }
 
 int main(int argc, char** argv)
