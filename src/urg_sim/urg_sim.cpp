@@ -476,7 +476,6 @@ void URGSimulator::reboot()
   {
     std::cerr << "Closing" << std::endl;
     socket_.close();
-    accept();
   }
   accept();
 }
