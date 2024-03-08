@@ -25,6 +25,13 @@ add_executable(urg_stamped
 )
 target_link_libraries(urg_stamped ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
+add_executable(urg_sim
+  src/urg_sim/encode.cpp
+  src/urg_sim/urg_sim.cpp
+  src/urg_sim/urg_sim_exec.cpp
+)
+target_link_libraries(urg_sim ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
 
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
@@ -34,23 +41,7 @@ if(CATKIN_ENABLE_TESTING)
   roslint_cpp()
   roslint_add_test()
 
-  catkin_add_gtest(test_decode test/src/test_decode.cpp)
-  target_link_libraries(test_decode ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-
-  catkin_add_gtest(test_device_time_origin test/src/test_device_time_origin.cpp)
-  target_link_libraries(test_device_time_origin ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-
-  catkin_add_gtest(test_first_order_filter test/src/test_first_order_filter.cpp)
-  catkin_add_gtest(test_param test/src/test_param.cpp)
-
-  catkin_add_gtest(test_timestamp_moving_average test/src/test_timestamp_moving_average.cpp)
-  target_link_libraries(test_timestamp_moving_average ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-
-  catkin_add_gtest(test_timestamp_outlier_remover test/src/test_timestamp_outlier_remover.cpp)
-  target_link_libraries(test_timestamp_outlier_remover ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-
-  catkin_add_gtest(test_walltime test/src/test_walltime.cpp src/scip2/logger.cpp)
-  target_link_libraries(test_walltime ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+  add_subdirectory(test)
 endif()
 
 install(TARGETS

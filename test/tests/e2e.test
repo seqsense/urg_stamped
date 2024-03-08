@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+  <env name="GCOV_PREFIX" value="/tmp/gcov/e2e" />
+
+  <test test-name="e2e" pkg="urg_stamped" type="e2e" time-limit="60.0" />
+
+  <node name="urg_stamped" pkg="urg_stamped" type="urg_stamped" respawn="true">
+    <param name="ip_address" value="127.0.0.1" />
+  </node>
+</launch>
