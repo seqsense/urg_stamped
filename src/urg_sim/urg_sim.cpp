@@ -223,6 +223,11 @@ void URGSimulator::handlePP(const std::string cmd)
 
 void URGSimulator::handleTM(const std::string cmd)
 {
+  if (!validateExtraString(cmd, 3))
+  {
+    return;
+  }
+
   std::lock_guard<std::mutex> lock(mu_);
 
   if (sensor_state_ == SensorState::ERROR_DETECTED)
@@ -230,10 +235,7 @@ void URGSimulator::handleTM(const std::string cmd)
     response(cmd, status_error_abnormal);
     return;
   }
-  if (!validateExtraString(cmd, 3))
-  {
-    return;
-  }
+
   switch (cmd[2])
   {
     case '0':
