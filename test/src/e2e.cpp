@@ -139,7 +139,11 @@ protected:
     nh_.setParam("/urg_stamped/ip_port", sim_->getLocalEndpoint().port());
 
     // Shutdown urg_stamped to initialize internal state and reload parameters
-    ASSERT_TRUE(shutdownUrgStamped());
+    if (!shutdownUrgStamped())
+    {
+      ros::Duration(1).sleep();  // Retry
+      ASSERT_TRUE(shutdownUrgStamped());
+    }
     ros::Duration(1).sleep();  // Wait node respawn
 
     sub_scan_ = nh_.subscribe("scan", 100, &E2E::cbScan, this);
