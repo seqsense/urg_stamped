@@ -463,6 +463,11 @@ void URGSimulator::reboot()
     sensor_state_ = SensorState::BOOTING;
   }
 
+  input_process_timer_.cancel();
+  output_process_timer_.cancel();
+  boot_timer_.cancel();
+  scan_timer_.cancel();
+
   const auto delay = boost::posix_time::microseconds(
       static_cast<int64_t>(params_.boot_duration * 1e6));
   boot_timer_.expires_from_now(delay);
