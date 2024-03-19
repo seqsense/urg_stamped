@@ -103,9 +103,9 @@ protected:
   void cbRawScanData(const urg_sim::RawScanData::Ptr data)
   {
     data->ranges[0] = cnt_;
-    cnt_++;
     raw_scans_.push_back(data);
     true_stamps_[cnt_] = ros::Time::fromBoost(data->full_time);
+    cnt_++;
   }
 
   void waitScans(const size_t num, const ros::Duration& timeout)
@@ -206,7 +206,7 @@ TEST_P(E2EWithParam, Simple)
   {
     const int index = std::lround(scans_[i]->ranges[0] * 1000);
     ASSERT_NE(true_stamps_.find(index), true_stamps_.end()) << "Can not find corresponding ground truth timestamp";
-    ASSERT_LT(true_stamps_[index] - scans_[i]->header.stamp, ros::Duration(0.0015));
+    EXPECT_LT(std::abs((true_stamps_[index] - scans_[i]->header.stamp).toSec()), 0.0015) << "scan " << i;
   }
 }
 
