@@ -24,6 +24,7 @@
 
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
+#include <urg_stamped/Status.h>
 
 #include <ros/network.h>
 #include <ros/xmlrpc_manager.h>
@@ -84,10 +85,12 @@ protected:
   ros::NodeHandle nh_;
   ros::NodeHandle pnh_;
   ros::Subscriber sub_scan_;
+  ros::Subscriber sub_status_;
 
   urg_sim::URGSimulator* sim_;
   std::thread th_sim_;
   bool sim_killed_;
+  urg_stamped::Status::ConstPtr status_msg_;
 
   int cnt_;
 
@@ -98,6 +101,11 @@ protected:
   void cbScan(const sensor_msgs::LaserScan::ConstPtr& msg)
   {
     scans_.push_back(msg);
+  }
+
+  void cbStatus(const urg_stamped::Status ::ConstPtr& msg)
+  {
+    status_msg_ = msg;
   }
 
   void cbRawScanData(const urg_sim::RawScanData::Ptr data)
@@ -147,6 +155,7 @@ protected:
     ros::Duration(1).sleep();  // Wait node respawn
 
     sub_scan_ = nh_.subscribe("scan", 100, &E2E::cbScan, this);
+    sub_status_ = nh_.subscribe("/urg_stamped/status", 10, &E2E::cbStatus, this);
   }
 };
 
@@ -191,7 +200,8 @@ INSTANTIATE_TEST_CASE_P(
 
 TEST_P(E2EWithParam, Simple)
 {
-  ASSERT_NO_FATAL_FAILURE(startSimulator(GetParam()));
+  const auto param = GetParam();
+  ASSERT_NO_FATAL_FAILURE(startSimulator(param));
 
   // Make time sync happens frequently
   pnh_.setParam("/urg_stamped/sync_interval_min", 0.1);
@@ -208,6 +218,10 @@ TEST_P(E2EWithParam, Simple)
     ASSERT_NE(true_stamps_.find(index), true_stamps_.end()) << "Can not find corresponding ground truth timestamp";
     EXPECT_LT(std::abs((true_stamps_[index] - scans_[i]->header.stamp).toSec()), 0.0015) << "scan " << i;
   }
+
+  ASSERT_TRUE(static_cast<bool>(status_msg_));
+  ASSERT_NEAR(status_msg_->sensor_clock_gain, 1.0, 1e-3);
+  ASSERT_NEAR(status_msg_->communication_delay.toSec(), param.comm_delay_base * 2, 1e-4);
 }
 
 TEST_F(E2E, RebootOnError)
