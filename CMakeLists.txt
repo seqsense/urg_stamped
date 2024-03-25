@@ -6,13 +6,26 @@ set(CATKIN_DEPENDS
   sensor_msgs
 )
 
+set(MESSAGE_DEPENDS
+  std_msgs
+)
+
 ## Find catkin and any catkin packages
-find_package(catkin REQUIRED COMPONENTS ${CATKIN_DEPENDS})
-find_package(Boost 1.53 REQUIRED system chrono thread)
+find_package(catkin REQUIRED COMPONENTS
+  ${CATKIN_DEPENDS}
+  message_generation
+  ${MESSAGE_DEPENDS}
+)
+
+add_message_files(FILES Status.msg)
+
+generate_messages(DEPENDENCIES ${MESSAGE_DEPENDS})
 
 catkin_package(
   CATKIN_DEPENDS ${CATKIN_DEPENDS}
 )
+
+find_package(Boost 1.53 REQUIRED system chrono thread)
 
 add_compile_options(-std=c++11)
 include_directories(${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} include)
@@ -24,6 +37,7 @@ add_executable(urg_stamped
   src/ros_logger.cpp
 )
 target_link_libraries(urg_stamped ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+add_dependencies(urg_stamped ${catkin_EXPORTED_TARGETS})
 
 add_executable(urg_sim
   src/urg_sim/encode.cpp

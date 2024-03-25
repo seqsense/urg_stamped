@@ -66,6 +66,7 @@ protected:
   ros::NodeHandle nh_;
   ros::NodeHandle pnh_;
   ros::Publisher pub_scan_;
+  ros::Publisher pub_status_;
   ros::Timer timer_sync_;
   ros::Timer timer_delay_estim_;
   ros::Timer timer_retry_tm_;
@@ -189,6 +190,7 @@ protected:
   void delayEstimation(const ros::TimerEvent& event = ros::TimerEvent());
   void retryTM(const ros::TimerEvent& event = ros::TimerEvent());
   void updateOrigin(const ros::Time& now, const ros::Time& origin, const ros::Time& time_at_device_timestamp);
+  void publishStatus();
 
   void errorCountIncrement(const std::string& status = "");
 
