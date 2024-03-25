@@ -173,6 +173,7 @@ void UrgStampedNode::cbTM(
         device_time_origins_.clear();
       }
 
+      std::cerr << "TM1 send" << std::endl;
       scip_->sendCommand(
           "TM1",
           boost::bind(&UrgStampedNode::cbTMSend, this, boost::arg<1>()));
@@ -186,6 +187,7 @@ void UrgStampedNode::cbTM(
         errorCountIncrement(status);
         break;
       }
+      std::cerr << "TM1 response recv" << std::endl;
 
       const auto delay =
           ros::Time::fromBoost(time_read) -
@@ -285,6 +287,7 @@ void UrgStampedNode::cbTM(
       }
 
       ros::Duration(0.005).sleep();
+      std::cerr << "TM1 send" << std::endl;
       scip_->sendCommand(
           "TM1",
           boost::bind(&UrgStampedNode::cbTMSend, this, boost::arg<1>()));

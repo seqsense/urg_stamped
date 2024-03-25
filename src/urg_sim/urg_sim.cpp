@@ -71,6 +71,11 @@ void URGSimulator::onRead(const boost::system::error_code& ec)
       static_cast<int64_t>(delay_sec * 1e6));
   const auto when = now + delay;
 
+  const auto ts = (boost::posix_time::microsec_clock::universal_time() -
+                   boost::posix_time::time_from_string("2024-03-25 00:00:00.000"))
+                      .total_nanoseconds();
+  std::cerr << "sim recv " << ts << std::endl;
+
   std::istream stream(&input_buf_);
   std::string line;
   while (std::getline(stream, line))
@@ -228,6 +233,10 @@ void URGSimulator::handleTM(const std::string cmd)
     return;
   }
 
+  const auto ts = (boost::posix_time::microsec_clock::universal_time() -
+                   boost::posix_time::time_from_string("2024-03-25 00:00:00.000"))
+                      .total_nanoseconds();
+  std::cerr << "sim processing TM " << ts << std::endl;
   std::lock_guard<std::mutex> lock(mu_);
 
   if (sensor_state_ == SensorState::ERROR_DETECTED)
@@ -543,6 +552,10 @@ void URGSimulator::responseKeyValues(
 
 void URGSimulator::send(const std::string data)
 {
+  const auto ts = (boost::posix_time::microsec_clock::universal_time() -
+                   boost::posix_time::time_from_string("2024-03-25 00:00:00.000"))
+                      .total_nanoseconds();
+  std::cerr << "sim send " << ts << std::endl;
   boost::system::error_code ec;
   boost::asio::write(socket_, boost::asio::buffer(data), ec);
   if (ec)
