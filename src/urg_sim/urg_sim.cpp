@@ -554,7 +554,7 @@ void URGSimulator::send(const std::string data)
 
 uint32_t URGSimulator::timestamp(const boost::posix_time::ptime& now)
 {
-  const uint32_t diff = (now - timestamp_epoch_).total_milliseconds();
+  const uint32_t diff = params_.clock_rate * (now - timestamp_epoch_).total_microseconds() / 1000.0;
   return diff & 0xFFFFFF;
 }
 
