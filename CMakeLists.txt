@@ -21,8 +21,10 @@ add_message_files(FILES Status.msg)
 
 generate_messages(DEPENDENCIES ${MESSAGE_DEPENDS})
 
-catkin_package(
-  CATKIN_DEPENDS ${CATKIN_DEPENDS}
+catkin_package(CATKIN_DEPENDS
+  ${CATKIN_DEPENDS}
+  message_runtime
+  ${MESSAGE_DEPENDS}
 )
 
 find_package(Boost 1.53 REQUIRED system chrono thread)
