@@ -17,6 +17,7 @@
 #ifndef URG_SIM_URG_SIM_H
 #define URG_SIM_URG_SIM_H
 
+#include <atomic>
 #include <functional>
 #include <list>
 #include <map>
@@ -165,7 +166,7 @@ private:
   std::default_random_engine rand_engine_;
   std::normal_distribution<double> comm_delay_distribution_;
 
-  bool killed_;
+  std::atomic<bool> killed_;
   boost::posix_time::ptime timestamp_epoch_;
   std::map<std::string, std::function<void(const std::string)>> handlers_;
   SensorState sensor_state_;
