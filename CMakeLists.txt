@@ -4,9 +4,6 @@ project(urg_stamped)
 set(CATKIN_DEPENDS
   roscpp
   sensor_msgs
-)
-
-set(MESSAGE_DEPENDS
   std_msgs
 )
 
@@ -14,17 +11,15 @@ set(MESSAGE_DEPENDS
 find_package(catkin REQUIRED COMPONENTS
   ${CATKIN_DEPENDS}
   message_generation
-  ${MESSAGE_DEPENDS}
 )
 
 add_message_files(FILES Status.msg)
 
-generate_messages(DEPENDENCIES ${MESSAGE_DEPENDS})
+generate_messages(DEPENDENCIES std_msgs)
 
 catkin_package(CATKIN_DEPENDS
   ${CATKIN_DEPENDS}
   message_runtime
-  ${MESSAGE_DEPENDS}
 )
 
 find_package(Boost 1.53 REQUIRED system chrono thread)
