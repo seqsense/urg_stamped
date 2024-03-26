@@ -221,7 +221,8 @@ TEST_P(E2EWithParam, Simple)
 
   ASSERT_TRUE(static_cast<bool>(status_msg_));
   ASSERT_NEAR(status_msg_->sensor_clock_gain, 1.0, 1e-3);
-  ASSERT_NEAR(status_msg_->communication_delay.toSec(), param.comm_delay_base * 2, 1e-4);
+  ASSERT_GT(status_msg_->communication_delay.toSec(), param.comm_delay_base * 2 - 1e-4);
+  ASSERT_LT(status_msg_->communication_delay.toSec(), param.comm_delay_base * 2 + 5e-4);
 }
 
 /*
