@@ -794,7 +794,6 @@ bool UrgStampedNode::detectDeviceTimeJump(
 
 void UrgStampedNode::publishStatus()
 {
-  ROS_ERROR("Publish status");
   urg_stamped::Status msg;
   msg.header.stamp = ros::Time::now();
   msg.sensor_clock_origin = device_time_origin_.origin_;
