@@ -18,6 +18,7 @@
 #include <mutex>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -80,13 +81,12 @@ void URGSimulator::onRead(const boost::system::error_code& ec)
   std::string line;
   while (std::getline(stream, line))
   {
-    input_process_timer_.expires_at(when);
-    input_process_timer_.async_wait(
+    input_fifo_.post(
         boost::bind(
             &URGSimulator::processInput,
             this,
             line,
-            boost::asio::placeholders::error));
+            when));
   }
 
   asyncRead();
@@ -94,7 +94,7 @@ void URGSimulator::onRead(const boost::system::error_code& ec)
 
 void URGSimulator::processInput(
     const std::string cmd,
-    const boost::system::error_code& ec)
+    const boost::posix_time::ptime& when)
 {
   // Find handler from command string
   const std::string op = cmd.substr(0, 2);
@@ -103,6 +103,10 @@ void URGSimulator::processInput(
       (it_h != handlers_.end()) ?
           it_h->second :
           std::bind(&URGSimulator::handleUnknown, this, std::placeholders::_1);
+
+  boost::asio::deadline_timer wait(io_service_);
+  wait.expires_at(when);
+  wait.wait();
 
   h(cmd);
 }
@@ -474,8 +478,8 @@ void URGSimulator::reboot()
     sensor_state_ = SensorState::BOOTING;
   }
 
-  input_process_timer_.cancel();
-  output_process_timer_.cancel();
+  input_fifo_.stop();
+  output_fifo_.stop();
   boot_timer_.cancel();
   scan_timer_.cancel();
 
@@ -519,21 +523,23 @@ void URGSimulator::response(
     const std::string status,
     const std::string data)
 {
+  const auto now = boost::posix_time::microsec_clock::universal_time();
   const double delay_sec = comm_delay_distribution_(rand_engine_);
   const auto delay = boost::posix_time::microseconds(
       static_cast<int64_t>(delay_sec * 1e6));
+  const auto when = now + delay;
 
   const std::string text =
       echo + "\n" +
       encode::withChecksum(status) + "\n" +
       data + "\n";
 
-  output_process_timer_.expires_from_now(delay);
-  output_process_timer_.async_wait(
+  output_fifo_.post(
       boost::bind(
           &URGSimulator::send,
           this,
-          text));
+          text,
+          when));
 }
 
 void URGSimulator::responseKeyValues(
@@ -550,8 +556,14 @@ void URGSimulator::responseKeyValues(
   response(echo, status, ss.str());
 }
 
-void URGSimulator::send(const std::string data)
+void URGSimulator::send(
+    const std::string data,
+    const boost::posix_time::ptime& when)
 {
+  boost::asio::deadline_timer wait(io_service_);
+  wait.expires_at(when);
+  wait.wait();
+
   const auto ts = (boost::posix_time::microsec_clock::universal_time() -
                    boost::posix_time::time_from_string("2024-03-25 00:00:00.000"))
                       .total_nanoseconds();
@@ -753,9 +765,35 @@ void URGSimulator::spin()
 {
   reboot();
 
+  std::thread th_input_queue(
+      std::bind(&URGSimulator::fifo, this, std::ref(input_fifo_)));
+  std::thread th_output_queue(
+      std::bind(&URGSimulator::fifo, this, std::ref(output_fifo_)));
+
   while (!killed_)
   {
     io_service_.run();
+  }
+
+  th_input_queue.join();
+  th_output_queue.join();
+}
+
+void URGSimulator::fifo(boost::asio::io_service& fifo)
+{
+  std::function<void(const boost::system::error_code& ec)> keepalive;
+  keepalive = [&fifo, &keepalive](const boost::system::error_code& ec)
+  {
+    boost::asio::deadline_timer keepalive_timer(fifo);
+    keepalive_timer.expires_from_now(boost::posix_time::hours(1));
+    keepalive_timer.async_wait(keepalive);
+  };
+  while (!killed_)
+  {
+    const boost::system::error_code ec;
+    keepalive(ec);
+    fifo.run();
+    fifo.reset();
   }
 }
 
@@ -763,6 +801,8 @@ void URGSimulator::kill()
 {
   killed_ = true;
   io_service_.stop();
+  input_fifo_.stop();
+  output_fifo_.stop();
 }
 
 void URGSimulator::setState(const SensorState s)
