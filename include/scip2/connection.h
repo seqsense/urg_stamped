@@ -22,7 +22,6 @@
 
 #include <boost/asio.hpp>
 #include <boost/bind/bind.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <scip2/logger.h>
 
@@ -126,8 +125,6 @@ protected:
       close();
       return;
     }
-    const auto ts = (time_read - boost::posix_time::time_from_string("2024-03-25 00:00:00.000")).total_nanoseconds();
-    std::cerr << "drv recv " << ts << std::endl;
     clearWatchdog();
     receive(buf_, time_read);
     asyncRead();
@@ -135,8 +132,6 @@ protected:
   void onSend(const boost::system::error_code& error, CallbackSend cb)
   {
     const auto time_send = boost::posix_time::microsec_clock::universal_time();
-    const auto ts = (time_send - boost::posix_time::time_from_string("2024-03-25 00:00:00.000")).total_nanoseconds();
-    std::cerr << "drv send " << ts << std::endl;
     if (error)
     {
       logger::fatal() << "Send error" << std::endl;
