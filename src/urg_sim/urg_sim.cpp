@@ -76,12 +76,7 @@ void URGSimulator::onRead(const boost::system::error_code& ec)
   std::string line;
   while (std::getline(stream, line))
   {
-    input_fifo_.post(
-        boost::bind(
-            &URGSimulator::processInput,
-            this,
-            line,
-            when));
+    input_fifo_.post(boost::bind(&URGSimulator::processInput, this, line, when));
   }
 
   asyncRead();
@@ -525,12 +520,7 @@ void URGSimulator::response(
       encode::withChecksum(status) + "\n" +
       data + "\n";
 
-  output_fifo_.post(
-      boost::bind(
-          &URGSimulator::send,
-          this,
-          text,
-          when));
+  output_fifo_.post(boost::bind(&URGSimulator::send, this, text, when));
 }
 
 void URGSimulator::responseKeyValues(
