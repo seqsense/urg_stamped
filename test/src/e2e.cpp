@@ -225,7 +225,6 @@ TEST_P(E2EWithParam, Simple)
   ASSERT_LT(status_msg_->communication_delay.toSec(), param.comm_delay_base * 2 + 5e-4);
 }
 
-/*
 TEST_F(E2E, RebootOnError)
 {
   const urg_sim::URGSimulator::Params params =
@@ -252,7 +251,6 @@ TEST_F(E2E, RebootOnError)
   ros::Duration(1).sleep();
   ASSERT_GE(sim_->getBootCnt(), 2);
 }
-*/
 
 int main(int argc, char** argv)
 {
