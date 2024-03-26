@@ -16,7 +16,9 @@
 
 #include <ros/console.h>
 #include <ros/ros.h>
+
 #include <sensor_msgs/LaserScan.h>
+#include <urg_stamped/Status.h>
 
 #include <boost/bind/bind.hpp>
 #include <boost/format.hpp>
@@ -306,6 +308,7 @@ void UrgStampedNode::cbTM(
           << ")"
           << std::endl;
       tm_success_ = true;
+      publishStatus();
       break;
     }
   }
@@ -493,6 +496,7 @@ void UrgStampedNode::cbII(
 
     const auto now = ros::Time::fromBoost(time_read);
     updateOrigin(now, origin, time_at_device_timestamp);
+    publishStatus();
 
     scip2::logger::debug()
         << "on scan delay: " << std::setprecision(6) << std::fixed << delay
@@ -788,6 +792,16 @@ bool UrgStampedNode::detectDeviceTimeJump(
   return jumped;
 }
 
+void UrgStampedNode::publishStatus()
+{
+  urg_stamped::Status msg;
+  msg.header.stamp = ros::Time::now();
+  msg.sensor_clock_origin = device_time_origin_.origin_;
+  msg.sensor_clock_gain = device_time_origin_.gain_;
+  msg.communication_delay = estimated_communication_delay_;
+  pub_status_.publish(msg);
+}
+
 UrgStampedNode::UrgStampedNode()
   : nh_("")
   , pnh_("~")
@@ -847,6 +861,7 @@ UrgStampedNode::UrgStampedNode()
   }
 
   pub_scan_ = nh_.advertise<sensor_msgs::LaserScan>("scan", 10);
+  pub_status_ = pnh_.advertise<urg_stamped::Status>("status", 1, true);
 
   device_.reset(new scip2::ConnectionTcp(ip, port));
   device_->registerCloseCallback(

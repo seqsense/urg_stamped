@@ -17,6 +17,7 @@
 #ifndef URG_SIM_URG_SIM_H
 #define URG_SIM_URG_SIM_H
 
+#include <atomic>
 #include <functional>
 #include <list>
 #include <map>
@@ -96,11 +97,8 @@ public:
       const URGSimulator::Params& params,
       const RawScanDataCallback raw_scan_data_cb = nopRawScanDataCallback)
     : params_(params)
-    , io_service_()
     , acceptor_(io_service_, endpoint)
     , socket_(io_service_)
-    , input_process_timer_(io_service_)
-    , output_process_timer_(io_service_)
     , boot_timer_(io_service_)
     , scan_timer_(io_service_)
     , raw_scan_data_cb_(raw_scan_data_cb)
@@ -154,11 +152,11 @@ private:
   std::string model_name_;
 
   boost::asio::io_service io_service_;
+  boost::asio::io_service input_fifo_;
+  boost::asio::io_service output_fifo_;
   boost::asio::ip::tcp::acceptor acceptor_;
   boost::asio::ip::tcp::socket socket_;
   boost::asio::streambuf input_buf_;
-  boost::asio::deadline_timer input_process_timer_;
-  boost::asio::deadline_timer output_process_timer_;
   boost::asio::deadline_timer boot_timer_;
   boost::asio::deadline_timer scan_timer_;
   std::mutex mu_;  // Mutex for sensor_state_ and boot_cnt_ for access from CI thread
@@ -168,7 +166,7 @@ private:
   std::default_random_engine rand_engine_;
   std::normal_distribution<double> comm_delay_distribution_;
 
-  bool killed_;
+  std::atomic<bool> killed_;
   boost::posix_time::ptime timestamp_epoch_;
   std::map<std::string, std::function<void(const std::string)>> handlers_;
   SensorState sensor_state_;
@@ -190,7 +188,7 @@ private:
   void onRead(const boost::system::error_code& ec);
   void processInput(
       const std::string cmd,
-      const boost::system::error_code& ec);
+      const boost::posix_time::ptime& when);
   void asyncRead();
   void reset();
   void reboot();
@@ -203,13 +201,16 @@ private:
       const std::string echo,
       const std::string status,
       const KeyValues kv);
-  void send(const std::string data);
+  void send(
+      const std::string data,
+      const boost::posix_time::ptime& when);
   void accept();
   void accepted(
       const boost::system::error_code& ec);
   void nextScan();
   void scan();
   void sendScan();
+  void fifo(boost::asio::io_service& fifo);
 
   void handleII(const std::string cmd);
   void handleVV(const std::string cmd);
