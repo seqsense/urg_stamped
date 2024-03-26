@@ -767,8 +767,7 @@ void URGSimulator::fifo(boost::asio::io_service& fifo)
   };
   while (!killed_)
   {
-    const boost::system::error_code ec;
-    keepalive(ec);
+    keepalive(boost::system::error_code());
     fifo.run();
     fifo.reset();
   }
