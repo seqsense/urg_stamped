@@ -34,6 +34,7 @@
 #include <scip2/scip2.h>
 #include <scip2/walltime.h>
 
+#include <urg_stamped/device_state_estimator.h>
 #include <urg_stamped/device_time_origin.h>
 #include <urg_stamped/first_order_filter.h>
 #include <urg_stamped/timestamp_moving_average.h>
@@ -112,7 +113,6 @@ protected:
   scip2::Walltime<24> walltime_;
 
   std::default_random_engine random_engine_;
-  std::uniform_real_distribution<double> sync_interval_;
   ros::Time last_sync_time_;
 
   ros::Time t0_;
@@ -141,6 +141,8 @@ protected:
   int tm_try_count_;
 
   bool cmd_resetting_;
+
+  device_state_estimator::Estimator est_;
 
   void cbM(
       const boost::posix_time::ptime& time_read,
