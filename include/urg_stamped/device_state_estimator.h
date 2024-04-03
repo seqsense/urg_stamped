@@ -97,12 +97,13 @@ public:
 
   inline ros::Time compensate(const ros::Time& t) const
   {
+    const double frac = (t0_ + t1_) / 2;
     double t_integral = std::floor(t.toSec() * 1000) / 1000;
-    if (std::fmod(t.toSec(), 0.001) > (t0_ + t1_) / 2)
+    if (std::fmod(t.toSec(), 0.001) > frac)
     {
       t_integral += 0.001;
     }
-    return ros::Time(t_integral);
+    return ros::Time(t_integral + frac);
   }
 };
 
