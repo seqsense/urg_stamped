@@ -63,6 +63,49 @@ public:
   }
 };
 
+class OriginFracPart
+{
+public:
+  const bool valid_;
+  const double t0_;
+  const double t1_;
+
+  inline OriginFracPart()
+    : valid_(false)
+    , t0_(0)
+    , t1_(0)
+  {
+  }
+
+  inline OriginFracPart(const double t0, const double t1)
+    : valid_(true)
+    , t0_(t0)
+    , t1_(t1)
+  {
+  }
+
+  inline operator bool() const
+  {
+    return valid_;
+  }
+
+  inline bool isOnOverflow(const ros::Time& t) const
+  {
+    const double r = std::fmod(t.toSec(), 0.001);
+    return t0_ < r && r < t1_;
+  }
+
+  inline ros::Time compensate(const ros::Time& t) const
+  {
+    double t_integral = std::floor(t.toSec() * 1000) / 1000;
+    if (std::fmod(t.toSec(), 0.001) > (t0_ + t1_) / 2)
+    {
+      t_integral += 0.001;
+    }
+    return ros::Time(t_integral);
+  }
+};
+
 class Estimator
 {
 public:
@@ -75,8 +118,8 @@ public:
 private:
   std::vector<TMSample> samples_;
 
-  std::vector<TMSample>::const_iterator findMinDelay() const;
-  ros::Duration subMillisecondOrigin() const;
+  std::vector<TMSample>::const_iterator findMinDelay(const OriginFracPart& overflow_range) const;
+  OriginFracPart originFracOverflow() const;
 };
 
 }  // namespace device_state_estimator
