@@ -42,7 +42,10 @@ void Estimator::finishSync()
   const OriginFracPart overflow_range = originFracOverflow();
   if (!overflow_range)
   {
-    scip2::logger::warn() << "failed to find origin fractional part overflow" << std::endl;
+    scip2::logger::warn()
+        << "failed to find origin fractional part overflow: "
+        << overflow_range.t0_ << ", " << overflow_range.t1_
+        << std::endl;
     return;
   }
   const auto min_delay = findMinDelay(overflow_range);
@@ -116,10 +119,11 @@ OriginFracPart Estimator::originFracOverflow() const
     t_min = std::max(t0, t1);
     t_max = std::min(t0, t1) + 0.001;
   }
-  scip2::logger::info()
-      << "min: " << t_min
-      << ", max: " << t_max
-      << std::endl;
+  const double diff = t_max - t_min;
+  if (diff > 0.00025)
+  {
+    return OriginFracPart(t_min, t_max, false);
+  }
   return OriginFracPart(t_min, t_max);
 }
 

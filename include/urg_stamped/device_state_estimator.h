@@ -69,6 +69,7 @@ public:
   const bool valid_;
   const double t0_;
   const double t1_;
+  static constexpr double TOLERANCE = 1e-4;
 
   inline OriginFracPart()
     : valid_(false)
@@ -77,8 +78,8 @@ public:
   {
   }
 
-  inline OriginFracPart(const double t0, const double t1)
-    : valid_(true)
+  inline OriginFracPart(const double t0, const double t1, const bool valid = true)
+    : valid_(valid)
     , t0_(t0)
     , t1_(t1)
   {
@@ -92,7 +93,7 @@ public:
   inline bool isOnOverflow(const ros::Time& t) const
   {
     const double r = std::fmod(t.toSec(), 0.001);
-    return t0_ < r && r < t1_;
+    return t0_ - TOLERANCE < r && r < t1_ + TOLERANCE;
   }
 
   inline ros::Time compensate(const ros::Time& t) const
