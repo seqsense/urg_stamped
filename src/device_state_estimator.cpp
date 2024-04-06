@@ -64,10 +64,10 @@ void Estimator::finishSync()
   const ros::Time t_origin = overflow_range.compensate(min_delay->t_origin_);
   scip2::logger::info()
       << "origin: " << t_origin
-      << " " << min_delay->t_origin_
       << ", delay: " << min_delay->delay_
       << ", device timestamp: " << min_delay->device_wall_stamp_
       << std::endl;
+  state_.raw_clock_origin_ = t_origin;
 }
 
 std::vector<TMSample>::const_iterator Estimator::findMinDelay(const OriginFracPart& overflow_range) const

@@ -22,6 +22,8 @@
 
 #include <ros/time.h>
 
+#include "gtest/gtest_prod.h"
+
 namespace urg_stamped
 {
 namespace device_state_estimator
@@ -30,8 +32,7 @@ namespace device_state_estimator
 class State
 {
 public:
-  using Ptr = std::shared_ptr<State>;
-
+  ros::Time raw_clock_origin_;
   ros::Time clock_origin_;
   double clock_gain_;
   ros::Duration min_comm_delay_;
@@ -73,8 +74,8 @@ public:
 
   inline OriginFracPart()
     : valid_(false)
-    , t0_(0)
-    , t1_(0)
+    , t0_(-1)
+    , t1_(-1)
   {
   }
 
@@ -100,9 +101,9 @@ public:
   {
     const double frac = (t0_ + t1_) / 2;
     double t_integral = std::floor(t.toSec() * 1000) / 1000;
-    if (std::fmod(t.toSec(), 0.001) > frac)
+    if (std::fmod(t.toSec(), 0.001) < frac)
     {
-      t_integral += 0.001;
+      t_integral -= 0.001;
     }
     return ros::Time(t_integral + frac);
   }
@@ -111,7 +112,7 @@ public:
 class Estimator
 {
 public:
-  State::Ptr state_;
+  State state_;
 
   void startSync();
   void push(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp);
@@ -122,6 +123,8 @@ private:
 
   std::vector<TMSample>::const_iterator findMinDelay(const OriginFracPart& overflow_range) const;
   OriginFracPart originFracOverflow() const;
+
+  FRIEND_TEST(DeviceStateEstimator, FindMinDelay);
 };
 
 }  // namespace device_state_estimator
