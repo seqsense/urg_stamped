@@ -30,7 +30,6 @@ namespace device_state_estimator
 ros::Time State::stampToTime(const uint64_t stamp) const
 {
   const double fromOrigin = (stamp_ + (int64_t)(stamp - stamp_) * clock_gain_) / 1000.0;
-  std::cerr << stamp_ << " " << stamp << " " << clock_gain_ << " " << fromOrigin << std::endl;
   return clock_origin_ + ros::Duration(fromOrigin);
 }
 
@@ -44,6 +43,21 @@ void Estimator::pushSyncSample(const ros::Time& t_req, const ros::Time& t_res, c
   samples_.emplace_back(t_req, t_res, device_wall_stamp);
 }
 
+bool Estimator::hasEnoughSyncSamples() const
+{
+  const size_t n = samples_.size();
+  if (n < MIN_SYNC_SAMPLES)
+  {
+    return false;
+  }
+  if (n >= MAX_SYNC_SAMPLES)
+  {
+    return true;
+  }
+  const OriginFracPart overflow_range = originFracOverflow();
+  return overflow_range.t_max_ > overflow_range.t_min_;
+}
+
 void Estimator::finishSync()
 {
   const OriginFracPart overflow_range = originFracOverflow();
@@ -51,7 +65,8 @@ void Estimator::finishSync()
   {
     scip2::logger::warn()
         << "failed to find origin fractional part overflow: "
-        << overflow_range.t0_ << ", " << overflow_range.t1_
+        << overflow_range.t_min_ << ", " << overflow_range.t_max_
+        << ", samples=" << samples_.size()
         << std::endl;
     return;
   }
@@ -131,17 +146,17 @@ OriginFracPart Estimator::originFracOverflow() const
       it_max_origin = it;
     }
   }
-  const double t0 = std::fmod(it_min_origin->t_process_.toSec(), 0.001);
-  const double t1 = std::fmod(it_max_origin->t_process_.toSec(), 0.001);
-  double t_min = std::min(t0, t1);
-  double t_max = std::max(t0, t1);
-  if (t_max - t_min > 0.0005)
+  double t_min = std::fmod(it_min_origin->t_process_.toSec(), 0.001);
+  double t_max = std::fmod(it_max_origin->t_process_.toSec(), 0.001);
+  if (t_min > t_max + 0.0005)
   {
-    t_min = std::max(t0, t1);
-    t_max = std::min(t0, t1) + 0.001;
+    t_max += 0.001;
   }
-  const double diff = t_max - t_min;
-  if (diff > 0.00025)
+  else if (t_max > t_min + 0.0005)
+  {
+    t_min += 0.001;
+  }
+  if (std::abs(t_max - t_min) > 0.00025)
   {
     return OriginFracPart(t_min, t_max, false);
   }

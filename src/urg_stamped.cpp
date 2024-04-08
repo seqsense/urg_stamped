@@ -63,34 +63,10 @@ void UrgStampedNode::cbM(
   }
 
   const uint64_t walltime_device = walltime_.update(scan.timestamp_);
-  if (detectDeviceTimeJump(time_read, walltime_device))
-  {
-    errorCountIncrement(status);
-    return;
-  }
-
-  const auto estimated_timestamp_lf =
-      device_time_origin_.origin_ +
-      ros::Duration().fromNSec(walltime_device * 1e6 * device_time_origin_.gain_) +
-      ros::Duration(msg_base_.time_increment * step_min_);
-
-  if (t0_ == ros::Time(0))
-    t0_ = estimated_timestamp_lf;
-
   const ros::Time time_read_ros = ros::Time::fromBoost(time_read);
-  const auto receive_time =
-      timestamp_outlier_removal_.update(
-          time_read_ros -
-          estimated_communication_delay_ * 0.5 -
-          ros::Duration(msg_base_.scan_time));
 
   sensor_msgs::LaserScan msg(msg_base_);
-  msg.header.stamp =
-      timestamp_moving_average_.update(
-          t0_ +
-          ros::Duration(
-              timestamp_lpf_.update((estimated_timestamp_lf - t0_).toSec()) +
-              timestamp_hpf_.update((receive_time - t0_).toSec())));
+  msg.header.stamp = est_.state_.stampToTime(walltime_device);
 
   if (msg.header.stamp > time_read_ros)
   {
@@ -167,11 +143,7 @@ void UrgStampedNode::cbTM(
       delay_estim_state_ = DelayEstimState::ESTIMATING;
 
       tm_start_time_ = ros::Time::now();
-
-      if (disable_on_scan_sync_)
-      {
-        device_time_origins_.clear();
-      }
+      est_.startSync();
 
       scip_->sendCommand(
           "TM1",
@@ -181,110 +153,18 @@ void UrgStampedNode::cbTM(
     case '1':
     {
       const uint64_t walltime_device = walltime_.update(time_device.timestamp_);
-      if (detectDeviceTimeJump(time_read, walltime_device))
+
+      est_.pushSyncSample(
+          ros::Time::fromBoost(time_tm_request),
+          ros::Time::fromBoost(time_read),
+          walltime_device);
+
+      if (est_.hasEnoughSyncSamples())
       {
-        errorCountIncrement(status);
+        scip_->sendCommand("TM2");
         break;
       }
 
-      const auto delay =
-          ros::Time::fromBoost(time_read) -
-          ros::Time::fromBoost(time_tm_request);
-      communication_delays_.push_back(delay);
-      if (communication_delays_.size() > tm_median_window_)
-        communication_delays_.pop_front();
-
-      const auto origin = device_time_origin::estimator::estimateOriginByAverage(
-          time_tm_request, time_read, walltime_device);
-      device_time_origins_.emplace_back(origin, ros::Time::fromBoost(time_read) - delay * 0.5);
-      if (device_time_origins_.size() > tm_median_window_)
-        device_time_origins_.pop_front();
-
-      if (disable_on_scan_sync_)
-      {
-        if (communication_delays_.size() >= tm_iter_num_)
-        {
-          const size_t i_med = communication_delays_.size() / 2;
-          std::vector<ros::Duration> delays(communication_delays_.begin(), communication_delays_.end());
-          std::sort(delays.begin(), delays.end());
-
-          if (!estimated_communication_delay_init_)
-          {
-            estimated_communication_delay_ = delays[i_med];
-            estimated_communication_delay_init_ = true;
-          }
-          else
-          {
-            estimated_communication_delay_ =
-                estimated_communication_delay_ * (1.0 - communication_delay_filter_alpha_) +
-                delays[i_med] * communication_delay_filter_alpha_;
-          }
-          scip2::logger::debug()
-              << "delay: "
-              << std::setprecision(6) << std::fixed << estimated_communication_delay_.toSec()
-              << ", device timestamp: " << walltime_device
-              << std::endl;
-        }
-
-        if (device_time_origins_.size() >= tm_iter_num_ && estimated_communication_delay_init_)
-        {
-          std::vector<DeviceOriginAt> origins(device_time_origins_.begin(), device_time_origins_.end());
-          std::sort(origins.begin(), origins.end());
-
-          const size_t i_med = device_time_origins_.size() / 2;
-          if (!device_time_origin_init_)
-          {
-            device_time_origin_ = device_time_origin::DriftedTime(origins[i_med].origin_, 1.0);
-            device_time_origin_init_ = true;
-          }
-
-          const auto now = ros::Time::fromBoost(time_read);
-          updateOrigin(now, origins[i_med].origin_, origins[i_med].at_);
-          scip2::logger::debug()
-              << "device time origin: " << device_time_origin_.origin_
-              << ", gain: " << device_time_origin_.gain_
-              << ", origin: " << origins[i_med].origin_
-              << ", at: " << origins[i_med].at_
-              << std::endl;
-          scip_->sendCommand("TM2");
-          break;
-        }
-      }
-      else
-      {
-        // Keeping the original behavior of 0.0.17 when disable_on_scan_sync_ == false
-        // TODO(at-wat): replace by unified algorithm using standard SCIP commands only
-        if (communication_delays_.size() >= tm_iter_num_)
-        {
-          std::vector<ros::Duration> delays(communication_delays_.begin(), communication_delays_.end());
-          std::vector<DeviceOriginAt> origins(device_time_origins_.begin(), device_time_origins_.end());
-          std::sort(delays.begin(), delays.end());
-          std::sort(origins.begin(), origins.end());
-
-          if (!estimated_communication_delay_init_)
-          {
-            estimated_communication_delay_ = delays[tm_iter_num_ / 2];
-            device_time_origin_ = device_time_origin::DriftedTime(origins[tm_iter_num_ / 2].origin_, 1.0);
-          }
-          else
-          {
-            estimated_communication_delay_ =
-                estimated_communication_delay_ * (1.0 - communication_delay_filter_alpha_) +
-                delays[tm_iter_num_ / 2] * communication_delay_filter_alpha_;
-          }
-          estimated_communication_delay_init_ = true;
-          scip2::logger::debug()
-              << "delay: "
-              << std::setprecision(6) << std::fixed << estimated_communication_delay_.toSec()
-              << ", device timestamp: " << walltime_device
-              << ", device time origin: " << origins[tm_iter_num_ / 2].origin_.toSec()
-              << std::endl;
-          scip_->sendCommand("TM2");
-          break;
-        }
-      }
-
-      ros::Duration(0.005).sleep();
       scip_->sendCommand(
           "TM1",
           boost::bind(&UrgStampedNode::cbTMSend, this, boost::arg<1>()));
@@ -292,15 +172,13 @@ void UrgStampedNode::cbTM(
     }
     case '2':
     {
+      est_.finishSync();
+
       delay_estim_state_ = DelayEstimState::IDLE;
       scip_->sendCommand(
           (publish_intensity_ ? "ME" : "MD") +
           (boost::format("%04d%04d") % step_min_ % step_max_).str() +
           "00000");
-      timeSync();
-      timestamp_outlier_removal_.reset();
-      timestamp_moving_average_.reset();
-      t0_ = ros::Time();
       scip2::logger::debug()
           << std::setprecision(6) << std::fixed
           << "Leaving the time synchronization mode (took "
@@ -354,8 +232,6 @@ void UrgStampedNode::cbPP(
   msg_base_.angle_max =
       (std::stoi(amax->second) - std::stoi(afrt->second)) * msg_base_.angle_increment;
 
-  timestamp_outlier_removal_.setInterval(ros::Duration(msg_base_.scan_time));
-  timestamp_moving_average_.setInterval(ros::Duration(msg_base_.scan_time));
   delayEstimation();
 }
 
@@ -460,79 +336,6 @@ void UrgStampedNode::cbII(
     }
     return;
   }
-
-  const auto delay =
-      ros::Time::fromBoost(time_read) -
-      ros::Time::fromBoost(time_ii_request);
-
-  if (delay.toSec() < 0.002)
-  {
-    const auto time = params.find("TIME");
-    if (time == params.end())
-    {
-      scip2::logger::debug() << "II doesn't have timestamp" << std::endl;
-      return;
-    }
-    if (time->second.size() != 6 && time->second.size() != 4)
-    {
-      scip2::logger::debug() << "Timestamp in II is ill-formatted (" << time->second << ")" << std::endl;
-      return;
-    }
-    const uint32_t time_device =
-        time->second.size() == 6 ?
-            std::stoi(time->second, nullptr, 16) :
-            *(scip2::Decoder<4>(time->second).begin());
-
-    const uint64_t walltime_device = walltime_.update(time_device);
-    if (detectDeviceTimeJump(time_read, walltime_device))
-    {
-      errorCountIncrement(status);
-      return;
-    }
-
-    ros::Time time_at_device_timestamp;
-    const auto origin = device_time_origin::estimator::estimateOrigin(
-        time_read, walltime_device, estimated_communication_delay_, time_at_device_timestamp);
-
-    const auto now = ros::Time::fromBoost(time_read);
-    updateOrigin(now, origin, time_at_device_timestamp);
-    publishStatus();
-
-    scip2::logger::debug()
-        << "on scan delay: " << std::setprecision(6) << std::fixed << delay
-        << ", device timestamp: " << walltime_device
-        << ", device time origin: " << origin
-        << ", gain: " << device_time_origin_.gain_ << std::endl;
-  }
-  else
-  {
-    scip2::logger::debug()
-        << "on scan delay (" << std::setprecision(6) << std::fixed << delay
-        << ") is larger than expected; skipping" << std::endl;
-  }
-}
-
-void UrgStampedNode::updateOrigin(
-    const ros::Time& now,
-    const ros::Time& origin,
-    const ros::Time& time_at_device_timestamp)
-{
-  if (last_sync_time_ == ros::Time(0))
-    last_sync_time_ = now;
-
-  const double dt = std::min((now - last_sync_time_).toSec(), 10.0);
-  last_sync_time_ = now;
-
-  const double gain =
-      (time_at_device_timestamp - device_time_origin_.origin_).toSec() /
-      (time_at_device_timestamp - origin).toSec();
-  const double exp_lpf_alpha =
-      dt * (1.0 / 30.0);  // 30 seconds exponential LPF
-  const double updated_gain =
-      (1.0 - exp_lpf_alpha) * device_time_origin_.gain_ + exp_lpf_alpha * gain;
-  device_time_origin_.gain_ = updated_gain;
-  device_time_origin_.origin_ +=
-      ros::Duration(exp_lpf_alpha * (origin - device_time_origin_.origin_).toSec());
 }
 
 void UrgStampedNode::cbQT(
@@ -640,17 +443,6 @@ void UrgStampedNode::sendII()
   scip_->sendCommand(
       "II",
       boost::bind(&UrgStampedNode::cbIISend, this, boost::arg<1>()));
-}
-
-void UrgStampedNode::timeSync(const ros::TimerEvent& event)
-{
-  if (delay_estim_state_ == DelayEstimState::IDLE && !disable_on_scan_sync_)
-  {
-    sendII();
-  }
-  timer_sync_ = nh_.createTimer(
-      ros::Duration(sync_interval_(random_engine_)),
-      &UrgStampedNode::timeSync, this, true);
 }
 
 void UrgStampedNode::delayEstimation(const ros::TimerEvent& event)
@@ -767,38 +559,13 @@ void UrgStampedNode::sleepRandom(const double min, const double max)
   ros::Duration(rnd(random_engine_)).sleep();
 }
 
-bool UrgStampedNode::detectDeviceTimeJump(
-    const boost::posix_time::ptime& time_response,
-    const uint64_t& device_timestamp)
-{
-  ros::Time time_at_device_timestamp;
-  const ros::Time current_origin =
-      device_time_origin::estimator::estimateOrigin(
-          time_response, device_timestamp, estimated_communication_delay_, time_at_device_timestamp);
-
-  const bool jumped = device_time_origin::jump_detector::detectTimeJump(
-      device_time_origin_.origin_, current_origin, allowed_device_time_origin_diff_);
-
-  if (jumped)
-  {
-    scip2::logger::error()
-        << "Device time origin jumped\n"
-           "last origin: "
-        << std::setprecision(3) << std::fixed << device_time_origin_.origin_.toSec()
-        << ", current origin: " << current_origin.toSec()
-        << ", allowed_device_time_origin_diff: " << allowed_device_time_origin_diff_
-        << ", device_timestamp: " << device_timestamp << std::endl;
-  }
-  return jumped;
-}
-
 void UrgStampedNode::publishStatus()
 {
   urg_stamped::Status msg;
   msg.header.stamp = ros::Time::now();
   msg.sensor_clock_origin = device_time_origin_.origin_;
   msg.sensor_clock_gain = device_time_origin_.gain_;
-  msg.communication_delay = estimated_communication_delay_;
+  msg.communication_delay = est_.state_.min_comm_delay_;
   pub_status_.publish(msg);
 }
 
@@ -807,16 +574,7 @@ UrgStampedNode::UrgStampedNode()
   , pnh_("~")
   , failed_(false)
   , delay_estim_state_(DelayEstimState::IDLE)
-  , tm_iter_num_(5)
-  , tm_median_window_(35)
-  , estimated_communication_delay_init_(false)
-  , device_time_origin_init_(false)
-  , communication_delay_filter_alpha_(0.3)
   , last_sync_time_(0)
-  , timestamp_lpf_(20)
-  , timestamp_hpf_(20)
-  , timestamp_outlier_removal_(ros::Duration(0.001), ros::Duration())
-  , timestamp_moving_average_(5, ros::Duration())
   , tm_success_(false)
   , cmd_resetting_(false)
 {
@@ -825,21 +583,14 @@ UrgStampedNode::UrgStampedNode()
 
   std::string ip;
   int port;
-  double sync_interval_min;
-  double sync_interval_max;
   double delay_estim_interval;
 
   pnh_.param("ip_address", ip, std::string("192.168.0.10"));
   pnh_.param("ip_port", port, 10940);
   pnh_.param("frame_id", msg_base_.header.frame_id, std::string("laser"));
   pnh_.param("publish_intensity", publish_intensity_, true);
-  pnh_.param("sync_interval_min", sync_interval_min, 1.0);
-  pnh_.param("sync_interval_max", sync_interval_max, 1.5);
-  pnh_.param("disable_on_scan_sync", disable_on_scan_sync_, false);
-  sync_interval_ = std::uniform_real_distribution<double>(sync_interval_min, sync_interval_max);
-  pnh_.param("delay_estim_interval", delay_estim_interval, 20.0);
+  pnh_.param("delay_estim_interval", delay_estim_interval, 10.0);
   pnh_.param("error_limit", error_count_max_, 4);
-  pnh_.param("allowed_device_time_origin_diff", allowed_device_time_origin_diff_, 1.0);
 
   double tm_interval, tm_timeout;
   pnh_.param("tm_interval", tm_interval, 0.06);

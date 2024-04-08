@@ -81,7 +81,6 @@ protected:
 
   bool publish_intensity_;
   bool failed_;
-  bool disable_on_scan_sync_;
 
   enum class DelayEstimState
   {
@@ -94,32 +93,17 @@ protected:
   };
   DelayEstimState delay_estim_state_;
   boost::posix_time::ptime time_tm_request;
-  std::list<ros::Duration> communication_delays_;
-  std::list<DeviceOriginAt> device_time_origins_;
-  ros::Duration estimated_communication_delay_;
-  size_t tm_iter_num_;
-  size_t tm_median_window_;
-  bool estimated_communication_delay_init_;
-  bool device_time_origin_init_;
-  double communication_delay_filter_alpha_;
   ros::Time tm_start_time_;
 
   boost::posix_time::ptime time_ii_request;
   std::vector<ros::Duration> on_scan_communication_delays_;
 
   device_time_origin::DriftedTime device_time_origin_;
-  double allowed_device_time_origin_diff_;
 
   scip2::Walltime<24> walltime_;
 
   std::default_random_engine random_engine_;
   ros::Time last_sync_time_;
-
-  ros::Time t0_;
-  FirstOrderLPF<double> timestamp_lpf_;
-  FirstOrderHPF<double> timestamp_hpf_;
-  TimestampOutlierRemover timestamp_outlier_removal_;
-  TimestampMovingAverage timestamp_moving_average_;
 
   struct ResponseErrorCount
   {
@@ -191,14 +175,9 @@ protected:
   void timeSync(const ros::TimerEvent& event = ros::TimerEvent());
   void delayEstimation(const ros::TimerEvent& event = ros::TimerEvent());
   void retryTM(const ros::TimerEvent& event = ros::TimerEvent());
-  void updateOrigin(const ros::Time& now, const ros::Time& origin, const ros::Time& time_at_device_timestamp);
   void publishStatus();
 
   void errorCountIncrement(const std::string& status = "");
-
-  bool detectDeviceTimeJump(
-      const boost::posix_time::ptime& time_response,
-      const uint64_t& device_timestamp);
 
   void softReset();
   void hardReset();

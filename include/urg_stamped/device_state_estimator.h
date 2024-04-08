@@ -72,21 +72,21 @@ class OriginFracPart
 {
 public:
   const bool valid_;
-  const double t0_;
-  const double t1_;
+  const double t_min_;
+  const double t_max_;
   static constexpr double TOLERANCE = 1e-4;
 
   inline OriginFracPart()
     : valid_(false)
-    , t0_(-1)
-    , t1_(-1)
+    , t_min_(-1)
+    , t_max_(-1)
   {
   }
 
-  inline OriginFracPart(const double t0, const double t1, const bool valid = true)
+  inline OriginFracPart(const double t_min, const double t_max, const bool valid = true)
     : valid_(valid)
-    , t0_(t0)
-    , t1_(t1)
+    , t_min_(t_min)
+    , t_max_(t_max)
   {
   }
 
@@ -98,12 +98,14 @@ public:
   inline bool isOnOverflow(const ros::Time& t) const
   {
     const double r = std::fmod(t.toSec(), 0.001);
-    return t0_ - TOLERANCE < r && r < t1_ + TOLERANCE;
+    double t0 = std::min(t_min_, t_max_);
+    double t1 = std::max(t_min_, t_max_);
+    return t0 - TOLERANCE < r && r < t1 + TOLERANCE;
   }
 
   inline ros::Time compensate(const ros::Time& t) const
   {
-    const double frac = (t0_ + t1_) / 2;
+    const double frac = (t_min_ + t_max_) / 2;
     double t_integral = std::floor(t.toSec() * 1000) / 1000;
     if (std::fmod(t.toSec(), 0.001) < frac)
     {
@@ -116,10 +118,14 @@ public:
 class Estimator
 {
 public:
+  static constexpr int MIN_SYNC_SAMPLES = 10;
+  static constexpr int MAX_SYNC_SAMPLES = 100;
+
   State state_;
 
   void startSync();
   void pushSyncSample(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp);
+  bool hasEnoughSyncSamples() const;
   void finishSync();
 
 private:
