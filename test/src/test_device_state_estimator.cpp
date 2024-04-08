@@ -80,6 +80,38 @@ TEST(DeviceStateEstimator, RawClockOrigin)
   }
 }
 
+TEST(DeviceStateEstimator, ClockGain)
+{
+  const std::vector<double> gains = {
+      0.999,
+      1.000,
+      1.001,
+  };
+
+  for (const double gain : gains)
+  {
+    Estimator est;
+    SCOPED_TRACE("Gain " + std::to_string(gain));
+
+    for (double t0 = 0; t0 < 50; t0 += 10)
+    {
+      SCOPED_TRACE("T " + std::to_string(t0));
+      est.startSync();
+      for (double t = t0; t < t0 + 0.1; t += 0.0101)
+      {
+        const uint64_t ts = t * gain * 1000;
+        est.push(ros::Time(1 + t), ros::Time(1 + t + 0.0001), ts);
+      }
+      est.finishSync();
+
+      if (t0 > 0)
+      {
+        ASSERT_NEAR(est.state_.clock_gain_, gain, 0.0001);
+      }
+    }
+  }
+}
+
 }  // namespace device_state_estimator
 }  // namespace urg_stamped
 
