@@ -32,7 +32,7 @@ void Estimator::startSync()
   samples_.clear();
 }
 
-void Estimator::push(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
+void Estimator::pushSyncSample(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
 {
   samples_.emplace_back(t_req, t_res, device_wall_stamp);
 }
@@ -84,7 +84,7 @@ void Estimator::finishSync()
       << std::endl;
 }
 
-std::vector<TMSample>::const_iterator Estimator::findMinDelay(const OriginFracPart& overflow_range) const
+std::vector<SyncSample>::const_iterator Estimator::findMinDelay(const OriginFracPart& overflow_range) const
 {
   if (samples_.size() == 0)
   {

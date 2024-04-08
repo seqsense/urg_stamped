@@ -47,7 +47,7 @@ public:
   ros::Duration scan_interval_;
 };
 
-class TMSample
+class SyncSample
 {
 public:
   ros::Time t_req_;
@@ -58,7 +58,7 @@ public:
   ros::Time t_process_;
   ros::Time t_origin_;
 
-  inline TMSample(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
+  inline SyncSample(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
     : t_req_(t_req)
     , t_res_(t_res)
     , device_wall_stamp_(device_wall_stamp)
@@ -120,13 +120,13 @@ public:
   State state_;
 
   void startSync();
-  void push(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp);
+  void pushSyncSample(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp);
   void finishSync();
 
 private:
-  std::vector<TMSample> samples_;
+  std::vector<SyncSample> samples_;
 
-  std::vector<TMSample>::const_iterator findMinDelay(const OriginFracPart& overflow_range) const;
+  std::vector<SyncSample>::const_iterator findMinDelay(const OriginFracPart& overflow_range) const;
   OriginFracPart originFracOverflow() const;
 
   FRIEND_TEST(DeviceStateEstimator, FindMinDelay);
