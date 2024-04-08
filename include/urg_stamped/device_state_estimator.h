@@ -32,12 +32,9 @@ namespace device_state_estimator
 class State
 {
 public:
-  ros::Time raw_clock_origin_;
   ros::Time t_estim_;
   uint64_t stamp_;
-
   ros::Time clock_origin_;
-  uint64_t clock_origin_stamp_;
   double clock_gain_;
 
   ros::Duration min_comm_delay_;
@@ -45,6 +42,8 @@ public:
   // Scan time (timestamp) should be scan_origin_ * n + scan_interval_
   ros::Time scan_origin_;
   ros::Duration scan_interval_;
+
+  ros::Time stampToTime(const uint64_t stamp) const;
 };
 
 class SyncSample

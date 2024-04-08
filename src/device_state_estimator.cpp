@@ -27,6 +27,13 @@ namespace urg_stamped
 namespace device_state_estimator
 {
 
+ros::Time State::stampToTime(const uint64_t stamp) const
+{
+  const double fromOrigin = (stamp_ + (int64_t)(stamp - stamp_) * clock_gain_) / 1000.0;
+  std::cerr << stamp_ << " " << stamp << " " << clock_gain_ << " " << fromOrigin << std::endl;
+  return clock_origin_ + ros::Duration(fromOrigin);
+}
+
 void Estimator::startSync()
 {
   samples_.clear();
@@ -57,22 +64,22 @@ void Estimator::finishSync()
 
   const ros::Time t_origin = overflow_range.compensate(min_delay->t_origin_);
 
-  const ros::Time last_raw_clock_origin = state_.raw_clock_origin_;
+  const ros::Time last_clock_origin = state_.clock_origin_;
   const ros::Time last_t_estim = state_.t_estim_;
   const uint64_t last_stamp = state_.stamp_;
 
-  state_.raw_clock_origin_ = t_origin;
+  state_.clock_origin_ = t_origin;
   state_.stamp_ = min_delay->device_wall_stamp_;
   state_.t_estim_ = min_delay->t_process_;
 
-  if (last_raw_clock_origin.isZero())
+  if (last_clock_origin.isZero())
   {
     return;
   }
 
   const double t_diff = (state_.t_estim_ - last_t_estim).toSec();
   const double origin_diff =
-      (state_.raw_clock_origin_ - last_raw_clock_origin).toSec();
+      (state_.clock_origin_ - last_clock_origin).toSec();
   const double gain = (t_diff - origin_diff) / t_diff;
   state_.clock_gain_ = gain;
 

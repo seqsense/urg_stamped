@@ -25,17 +25,43 @@ namespace urg_stamped
 namespace device_state_estimator
 {
 
+TEST(State, StampToTime)
+{
+  {
+    SCOPED_TRACE("ClockGain 1.5");
+    const State s = {
+        .stamp_ = 1000,
+        .clock_origin_ = ros::Time(100),
+        .clock_gain_ = 1.5,
+    };
+    ASSERT_EQ(ros::Time(99.5), s.stampToTime(0));
+    ASSERT_EQ(ros::Time(101.0), s.stampToTime(1000));
+    ASSERT_EQ(ros::Time(102.5), s.stampToTime(2000));
+  }
+  {
+    SCOPED_TRACE("ClockGain 0.5");
+    const State s = {
+        .stamp_ = 1000,
+        .clock_origin_ = ros::Time(100),
+        .clock_gain_ = 0.5,
+    };
+    ASSERT_EQ(ros::Time(100.5), s.stampToTime(0));
+    ASSERT_EQ(ros::Time(101.0), s.stampToTime(1000));
+    ASSERT_EQ(ros::Time(101.5), s.stampToTime(2000));
+  }
+}
+
 TEST(DeviceStateEstimator, FindMinDelay)
 {
   Estimator est;
 
   est.startSync();
-  est.push(ros::Time(100.0001), ros::Time(100.00015), 100);
-  est.push(ros::Time(101.0002), ros::Time(101.00023), 1100);
-  est.push(ros::Time(102.0003), ros::Time(102.00031), 2100);  // Minimal delay
-  est.push(ros::Time(103.0004), ros::Time(103.00046), 3100);
-  est.push(ros::Time(104.0005), ros::Time(104.00054), 4100);
-  est.push(ros::Time(105.0006), ros::Time(105.00062), 5100);  // Second minimal delay
+  est.pushSyncSample(ros::Time(100.0001), ros::Time(100.00015), 100);
+  est.pushSyncSample(ros::Time(101.0002), ros::Time(101.00023), 1100);
+  est.pushSyncSample(ros::Time(102.0003), ros::Time(102.00031), 2100);  // Minimal delay
+  est.pushSyncSample(ros::Time(103.0004), ros::Time(103.00046), 3100);
+  est.pushSyncSample(ros::Time(104.0005), ros::Time(104.00054), 4100);
+  est.pushSyncSample(ros::Time(105.0006), ros::Time(105.00062), 5100);  // Second minimal delay
 
   {
     SCOPED_TRACE("Without OriginFracPart");
@@ -59,7 +85,7 @@ TEST(DeviceStateEstimator, FindMinDelay)
   {
     SCOPED_TRACE("No samples");
     ASSERT_EQ(est.samples_.end(), est.findMinDelay(OriginFracPart()))
-        << "must return end iterator if no samples are pushed";
+        << "must return end iterator if no samples are pushSyncSampleed";
   }
 }
 
@@ -73,10 +99,10 @@ TEST(DeviceStateEstimator, RawClockOrigin)
     for (double t = 0; t < 0.1; t += 0.0101)
     {
       const uint64_t ts = (t + d) * 1000;
-      est.push(ros::Time(1 + t), ros::Time(1 + t + 0.0001), ts);
+      est.pushSyncSample(ros::Time(1 + t), ros::Time(1 + t + 0.0001), ts);
     }
     est.finishSync();
-    ASSERT_NEAR(est.state_.raw_clock_origin_.toSec(), 1.000 - d, 0.0002);
+    ASSERT_NEAR(est.state_.clock_origin_.toSec(), 1.000 - d, 0.0002);
   }
 }
 
@@ -100,7 +126,7 @@ TEST(DeviceStateEstimator, ClockGain)
       for (double t = t0; t < t0 + 0.1; t += 0.0101)
       {
         const uint64_t ts = t * gain * 1000;
-        est.push(ros::Time(1 + t), ros::Time(1 + t + 0.0001), ts);
+        est.pushSyncSample(ros::Time(1 + t), ros::Time(1 + t + 0.0001), ts);
       }
       est.finishSync();
 
