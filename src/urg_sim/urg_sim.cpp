@@ -758,13 +758,24 @@ void URGSimulator::spin()
 
 void URGSimulator::fifo(boost::asio::io_service& fifo)
 {
+  boost::asio::deadline_timer keepalive_timer(fifo);
   std::function<void(const boost::system::error_code& ec)> keepalive;
-  keepalive = [&fifo, &keepalive](const boost::system::error_code& ec)
+
+  keepalive = [&keepalive_timer, &keepalive](const boost::system::error_code& ec)
   {
-    boost::asio::deadline_timer keepalive_timer(fifo);
+    if (ec == boost::asio::error::operation_aborted)
+    {
+      return;
+    }
+    if (ec)
+    {
+      std::cerr << "fifo keepalive error: " << ec << std::endl;
+      return;
+    }
     keepalive_timer.expires_from_now(boost::posix_time::hours(1));
     keepalive_timer.async_wait(keepalive);
   };
+
   while (!killed_)
   {
     keepalive(boost::system::error_code());
