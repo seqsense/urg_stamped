@@ -33,8 +33,13 @@ class State
 {
 public:
   ros::Time raw_clock_origin_;
+  ros::Time t_estim_;
+  uint64_t stamp_;
+
   ros::Time clock_origin_;
+  uint64_t clock_origin_stamp_;
   double clock_gain_;
+
   ros::Duration min_comm_delay_;
 
   // Scan time (timestamp) should be scan_origin_ * n + scan_interval_
