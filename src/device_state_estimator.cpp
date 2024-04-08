@@ -56,11 +56,6 @@ void Estimator::finishSync()
   }
 
   const ros::Time t_origin = overflow_range.compensate(min_delay->t_origin_);
-  scip2::logger::info()
-      << "origin: " << t_origin
-      << ", delay: " << min_delay->delay_
-      << ", device timestamp: " << min_delay->device_wall_stamp_
-      << std::endl;
 
   const ros::Time last_raw_clock_origin = state_.raw_clock_origin_;
   const ros::Time last_t_estim = state_.t_estim_;
@@ -80,7 +75,13 @@ void Estimator::finishSync()
       (state_.raw_clock_origin_ - last_raw_clock_origin).toSec();
   const double gain = (t_diff - origin_diff) / t_diff;
   state_.clock_gain_ = gain;
-  scip2::logger::info() << "gain: " << gain << std::endl;
+
+  scip2::logger::info()
+      << "origin: " << t_origin
+      << ", gain: " << gain
+      << ", delay: " << min_delay->delay_
+      << ", device timestamp: " << min_delay->device_wall_stamp_
+      << std::endl;
 }
 
 std::vector<TMSample>::const_iterator Estimator::findMinDelay(const OriginFracPart& overflow_range) const
