@@ -27,8 +27,8 @@ int main(int argc, char** argv)
       {
           .model = urg_sim::URGSimulator::Model::UTM,
           .boot_duration = 2.0,
-          .comm_delay_base = 0.001,
-          .comm_delay_sigma = 0.0002,
+          .comm_delay_base = 0.0005,
+          .comm_delay_sigma = 0.00005,
           .scan_interval = 0.025001,
           .clock_rate = 0.99995,
           .hex_ii_timestamp = false,
