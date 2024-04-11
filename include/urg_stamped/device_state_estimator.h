@@ -44,6 +44,11 @@ public:
   ros::Duration scan_interval_;
 
   ros::Time stampToTime(const uint64_t stamp) const;
+
+  inline State()
+    : clock_gain_(1)
+  {
+  }
 };
 
 class SyncSample
