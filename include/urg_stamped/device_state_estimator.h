@@ -39,10 +39,6 @@ public:
 
   ros::Duration min_comm_delay_;
 
-  // Scan time (timestamp) should be scan_origin_ * n + scan_interval_
-  ros::Time scan_origin_;
-  ros::Duration scan_interval_;
-
   ros::Time stampToTime(const uint64_t stamp) const;
 };
 
