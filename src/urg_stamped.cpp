@@ -35,10 +35,6 @@
 #include <scip2/walltime.h>
 #include <scip2/logger.h>
 
-#include <urg_stamped/device_time_origin.h>
-#include <urg_stamped/first_order_filter.h>
-#include <urg_stamped/timestamp_moving_average.h>
-#include <urg_stamped/timestamp_outlier_remover.h>
 #include <urg_stamped/ros_logger.h>
 
 #include <urg_stamped/urg_stamped.h>
@@ -565,8 +561,8 @@ void UrgStampedNode::publishStatus()
 {
   urg_stamped::Status msg;
   msg.header.stamp = ros::Time::now();
-  msg.sensor_clock_origin = device_time_origin_.origin_;
-  msg.sensor_clock_gain = device_time_origin_.gain_;
+  msg.sensor_clock_origin = est_.state_.clock_origin_;
+  msg.sensor_clock_gain = est_.state_.clock_gain_;
   msg.communication_delay = est_.min_comm_delay_;
   pub_status_.publish(msg);
 }

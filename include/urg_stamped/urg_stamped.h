@@ -35,10 +35,6 @@
 #include <scip2/walltime.h>
 
 #include <urg_stamped/device_state_estimator.h>
-#include <urg_stamped/device_time_origin.h>
-#include <urg_stamped/first_order_filter.h>
-#include <urg_stamped/timestamp_moving_average.h>
-#include <urg_stamped/timestamp_outlier_remover.h>
 #include <urg_stamped/ros_logger.h>
 
 namespace urg_stamped
@@ -97,8 +93,6 @@ protected:
 
   boost::posix_time::ptime time_ii_request;
   std::vector<ros::Duration> on_scan_communication_delays_;
-
-  device_time_origin::DriftedTime device_time_origin_;
 
   scip2::Walltime<24> walltime_;
 
