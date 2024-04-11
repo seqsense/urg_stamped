@@ -86,6 +86,10 @@ void Estimator::finishSync()
   state_.clock_origin_ = t_origin;
   state_.stamp_ = min_delay->device_wall_stamp_;
   state_.t_estim_ = min_delay->t_process_;
+  if (state_.min_comm_delay_ > min_delay->delay_)
+  {
+    state_.min_comm_delay_ = min_delay->delay_;
+  }
 
   if (last_clock_origin.isZero())
   {
