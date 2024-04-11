@@ -323,6 +323,9 @@ void URGSimulator::handleQT(const std::string cmd)
     case SensorState::ERROR_DETECTED:
       response(cmd, status_error_abnormal);
       return;
+    case SensorState::BOOTING:
+      response(cmd, status_ok);
+      return;
     case SensorState::SINGLE_SCAN:
     case SensorState::MULTI_SCAN:
     case SensorState::IDLE:
@@ -350,7 +353,10 @@ void URGSimulator::handleRS(const std::string cmd)
     return;
   }
   timestamp_epoch_ = boost::posix_time::microsec_clock::universal_time();
-  sensor_state_ = SensorState::IDLE;
+  if (sensor_state_ != SensorState::BOOTING)
+  {
+    sensor_state_ = SensorState::IDLE;
+  }
 
   response(cmd, status_ok);
 }
