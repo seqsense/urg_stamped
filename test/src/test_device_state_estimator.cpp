@@ -25,11 +25,11 @@ namespace urg_stamped
 namespace device_state_estimator
 {
 
-TEST(State, StampToTime)
+TEST(ClockState, StampToTime)
 {
   {
     SCOPED_TRACE("ClockGain 1.5");
-    const State s = {
+    const ClockState s = {
         .stamp_ = 1000,
         .clock_origin_ = ros::Time(100),
         .clock_gain_ = 1.0 / 1.5,
@@ -40,7 +40,7 @@ TEST(State, StampToTime)
   }
   {
     SCOPED_TRACE("ClockGain 1.0");
-    const State s = {
+    const ClockState s = {
         .stamp_ = 1000,
         .clock_origin_ = ros::Time(100),
         .clock_gain_ = 1.0,
@@ -51,7 +51,7 @@ TEST(State, StampToTime)
   }
   {
     SCOPED_TRACE("ClockGain 0.5");
-    const State s = {
+    const ClockState s = {
         .stamp_ = 1000,
         .clock_origin_ = ros::Time(100),
         .clock_gain_ = 1.0 / 0.5,

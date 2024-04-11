@@ -27,7 +27,7 @@ namespace urg_stamped
 namespace device_state_estimator
 {
 
-ros::Time State::stampToTime(const uint64_t stamp) const
+ros::Time ClockState::stampToTime(const uint64_t stamp) const
 {
   const double fromOrigin = (stamp_ + (int64_t)(stamp - stamp_) / clock_gain_) / 1000.0;
   return clock_origin_ + ros::Duration(fromOrigin);
@@ -82,14 +82,14 @@ void Estimator::finishSync()
     return;
   }
 
-  const State last = state_;
+  const ClockState last = state_;
 
   state_.clock_origin_ = overflow_range.compensate(min_delay->t_origin_);
   state_.stamp_ = min_delay->device_wall_stamp_;
   state_.t_estim_ = min_delay->t_process_;
-  if (state_.min_comm_delay_ > min_delay->delay_)
+  if (min_comm_delay_ > min_delay->delay_)
   {
-    state_.min_comm_delay_ = min_delay->delay_;
+    min_comm_delay_ = min_delay->delay_;
   }
 
   if (last.clock_origin_.isZero())

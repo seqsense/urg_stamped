@@ -29,15 +29,13 @@ namespace urg_stamped
 namespace device_state_estimator
 {
 
-class State
+class ClockState
 {
 public:
   ros::Time t_estim_;
   uint64_t stamp_;
   ros::Time clock_origin_;
   double clock_gain_;
-
-  ros::Duration min_comm_delay_;
 
   ros::Time stampToTime(const uint64_t stamp) const;
 };
@@ -129,7 +127,8 @@ public:
   static constexpr int MIN_SYNC_SAMPLES = 10;
   static constexpr int MAX_SYNC_SAMPLES = 100;
 
-  State state_;
+  ClockState state_;
+  ros::Duration min_comm_delay_;
 
   Estimator();
   void startSync();
