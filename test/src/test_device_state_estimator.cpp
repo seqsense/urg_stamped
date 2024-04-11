@@ -32,7 +32,7 @@ TEST(State, StampToTime)
     const State s = {
         .stamp_ = 1000,
         .clock_origin_ = ros::Time(100),
-        .clock_gain_ = 1.5,
+        .clock_gain_ = 1.0 / 1.5,
     };
     ASSERT_EQ(ros::Time(99.5), s.stampToTime(0));
     ASSERT_EQ(ros::Time(101.0), s.stampToTime(1000));
@@ -54,7 +54,7 @@ TEST(State, StampToTime)
     const State s = {
         .stamp_ = 1000,
         .clock_origin_ = ros::Time(100),
-        .clock_gain_ = 0.5,
+        .clock_gain_ = 1.0 / 0.5,
     };
     ASSERT_EQ(ros::Time(100.5), s.stampToTime(0));
     ASSERT_EQ(ros::Time(101.0), s.stampToTime(1000));

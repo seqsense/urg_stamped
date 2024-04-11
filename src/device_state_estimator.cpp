@@ -29,7 +29,7 @@ namespace device_state_estimator
 
 ros::Time State::stampToTime(const uint64_t stamp) const
 {
-  const double fromOrigin = (stamp_ + (int64_t)(stamp - stamp_) * clock_gain_) / 1000.0;
+  const double fromOrigin = (stamp_ + (int64_t)(stamp - stamp_) / clock_gain_) / 1000.0;
   return clock_origin_ + ros::Duration(fromOrigin);
 }
 
