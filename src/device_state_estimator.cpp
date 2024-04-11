@@ -33,6 +33,11 @@ ros::Time State::stampToTime(const uint64_t stamp) const
   return clock_origin_ + ros::Duration(fromOrigin);
 }
 
+Estimator::Estimator()
+{
+  state_.clock_gain_ = 1.0;
+}
+
 void Estimator::startSync()
 {
   sync_samples_.clear();

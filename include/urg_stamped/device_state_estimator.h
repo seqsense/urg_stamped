@@ -44,11 +44,6 @@ public:
   ros::Duration scan_interval_;
 
   ros::Time stampToTime(const uint64_t stamp) const;
-
-  inline State()
-    : clock_gain_(1)
-  {
-  }
 };
 
 class SyncSample
@@ -140,6 +135,7 @@ public:
 
   State state_;
 
+  Estimator();
   void startSync();
   void pushSyncSample(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp);
   bool hasEnoughSyncSamples() const;

@@ -39,6 +39,17 @@ TEST(State, StampToTime)
     ASSERT_EQ(ros::Time(102.5), s.stampToTime(2000));
   }
   {
+    SCOPED_TRACE("ClockGain 1.0");
+    const State s = {
+        .stamp_ = 1000,
+        .clock_origin_ = ros::Time(100),
+        .clock_gain_ = 1.0,
+    };
+    ASSERT_EQ(ros::Time(100.0), s.stampToTime(0));
+    ASSERT_EQ(ros::Time(101.0), s.stampToTime(1000));
+    ASSERT_EQ(ros::Time(102.0), s.stampToTime(2000));
+  }
+  {
     SCOPED_TRACE("ClockGain 0.5");
     const State s = {
         .stamp_ = 1000,
@@ -84,7 +95,7 @@ TEST(DeviceStateEstimator, FindMinDelay)
 
   {
     SCOPED_TRACE("No samples");
-    ASSERT_EQ(est.samples_.end(), est.findMinDelay(OriginFracPart()))
+    ASSERT_EQ(est.sync_samples_.end(), est.findMinDelay(OriginFracPart()))
         << "must return end iterator if no samples are pushSyncSampleed";
   }
 }
