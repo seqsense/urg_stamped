@@ -35,17 +35,17 @@ ros::Time State::stampToTime(const uint64_t stamp) const
 
 void Estimator::startSync()
 {
-  samples_.clear();
+  sync_samples_.clear();
 }
 
 void Estimator::pushSyncSample(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
 {
-  samples_.emplace_back(t_req, t_res, device_wall_stamp);
+  sync_samples_.emplace_back(t_req, t_res, device_wall_stamp);
 }
 
 bool Estimator::hasEnoughSyncSamples() const
 {
-  const size_t n = samples_.size();
+  const size_t n = sync_samples_.size();
   if (n < MIN_SYNC_SAMPLES)
   {
     return false;
@@ -66,12 +66,12 @@ void Estimator::finishSync()
     scip2::logger::warn()
         << "failed to find origin fractional part overflow: "
         << overflow_range.t_min_ << ", " << overflow_range.t_max_
-        << ", samples=" << samples_.size()
+        << ", samples=" << sync_samples_.size()
         << std::endl;
     return;
   }
   const auto min_delay = findMinDelay(overflow_range);
-  if (min_delay == samples_.cend())
+  if (min_delay == sync_samples_.cend())
   {
     scip2::logger::warn() << "failed to find minimal delay sample" << std::endl;
     return;
@@ -112,12 +112,12 @@ void Estimator::finishSync()
 
 std::vector<SyncSample>::const_iterator Estimator::findMinDelay(const OriginFracPart& overflow_range) const
 {
-  if (samples_.size() == 0)
+  if (sync_samples_.size() == 0)
   {
-    return samples_.cend();
+    return sync_samples_.cend();
   }
-  auto it_min_delay = samples_.cbegin();
-  for (auto it = samples_.cbegin() + 1; it != samples_.cend(); it++)
+  auto it_min_delay = sync_samples_.cbegin();
+  for (auto it = sync_samples_.cbegin() + 1; it != sync_samples_.cend(); it++)
   {
     if (overflow_range.isOnOverflow(it->t_process_))
     {
@@ -133,13 +133,13 @@ std::vector<SyncSample>::const_iterator Estimator::findMinDelay(const OriginFrac
 
 OriginFracPart Estimator::originFracOverflow() const
 {
-  if (samples_.size() == 0)
+  if (sync_samples_.size() == 0)
   {
     return OriginFracPart();
   }
-  auto it_min_origin = samples_.begin();
-  auto it_max_origin = samples_.begin();
-  for (auto it = samples_.begin() + 1; it != samples_.end(); it++)
+  auto it_min_origin = sync_samples_.begin();
+  auto it_max_origin = sync_samples_.begin();
+  for (auto it = sync_samples_.begin() + 1; it != sync_samples_.end(); it++)
   {
     if (it->t_origin_ < it_min_origin->t_origin_)
     {
@@ -165,6 +165,10 @@ OriginFracPart Estimator::originFracOverflow() const
     return OriginFracPart(t_min, t_max, false);
   }
   return OriginFracPart(t_min, t_max);
+}
+
+void Estimator::pushScanSample(const ros::Time& t_recv, const uint64_t device_wall_stamp)
+{
 }
 
 }  // namespace device_state_estimator

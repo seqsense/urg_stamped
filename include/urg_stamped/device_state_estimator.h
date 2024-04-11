@@ -67,7 +67,6 @@ public:
   {
   }
 };
-
 class OriginFracPart
 {
 public:
@@ -115,6 +114,19 @@ public:
   }
 };
 
+class ScanSample
+{
+public:
+  ros::Time t_recv_;
+  uint64_t device_wall_stamp_;
+
+  inline ScanSample(const ros::Time& t_recv, const uint64_t device_wall_stamp)
+    : t_recv_(t_recv)
+    , device_wall_stamp_(device_wall_stamp)
+  {
+  }
+};
+
 class Estimator
 {
 public:
@@ -128,8 +140,11 @@ public:
   bool hasEnoughSyncSamples() const;
   void finishSync();
 
+  void pushScanSample(const ros::Time& t_recv, const uint64_t device_wall_stamp);
+
 private:
-  std::vector<SyncSample> samples_;
+  std::vector<SyncSample> sync_samples_;
+  std::vector<ScanSample> scan_samples_;
 
   std::vector<SyncSample>::const_iterator findMinDelay(const OriginFracPart& overflow_range) const;
   OriginFracPart originFracOverflow() const;

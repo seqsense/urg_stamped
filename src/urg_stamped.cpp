@@ -65,6 +65,8 @@ void UrgStampedNode::cbM(
   const uint64_t walltime_device = walltime_.update(scan.timestamp_);
   const ros::Time time_read_ros = ros::Time::fromBoost(time_read);
 
+  est_.pushScanSample(time_read_ros, walltime_device);
+
   sensor_msgs::LaserScan msg(msg_base_);
   msg.header.stamp = est_.state_.stampToTime(walltime_device);
 
