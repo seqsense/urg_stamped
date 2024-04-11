@@ -102,7 +102,7 @@ void Estimator::finishSync()
   const double gain = (t_diff - origin_diff) / t_diff;
   state_.clock_gain_ = gain;
 
-  scip2::logger::info()
+  scip2::logger::debug()
       << "origin: " << t_origin
       << ", gain: " << gain
       << ", delay: " << min_delay->delay_
