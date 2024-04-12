@@ -31,8 +31,8 @@ TEST(ClockState, StampToTime)
     SCOPED_TRACE("ClockGain 1.5");
     const ClockState s = {
         .stamp_ = 1000,
-        .clock_origin_ = ros::Time(100),
-        .clock_gain_ = 1.0 / 1.5,
+        .origin_ = ros::Time(100),
+        .gain_ = 1.0 / 1.5,
     };
     ASSERT_EQ(ros::Time(99.5), s.stampToTime(0));
     ASSERT_EQ(ros::Time(101.0), s.stampToTime(1000));
@@ -42,8 +42,8 @@ TEST(ClockState, StampToTime)
     SCOPED_TRACE("ClockGain 1.0");
     const ClockState s = {
         .stamp_ = 1000,
-        .clock_origin_ = ros::Time(100),
-        .clock_gain_ = 1.0,
+        .origin_ = ros::Time(100),
+        .gain_ = 1.0,
     };
     ASSERT_EQ(ros::Time(100.0), s.stampToTime(0));
     ASSERT_EQ(ros::Time(101.0), s.stampToTime(1000));
@@ -53,8 +53,8 @@ TEST(ClockState, StampToTime)
     SCOPED_TRACE("ClockGain 0.5");
     const ClockState s = {
         .stamp_ = 1000,
-        .clock_origin_ = ros::Time(100),
-        .clock_gain_ = 1.0 / 0.5,
+        .origin_ = ros::Time(100),
+        .gain_ = 1.0 / 0.5,
     };
     ASSERT_EQ(ros::Time(100.5), s.stampToTime(0));
     ASSERT_EQ(ros::Time(101.0), s.stampToTime(1000));
@@ -113,7 +113,7 @@ TEST(DeviceStateEstimator, RawClockOrigin)
       est.pushSyncSample(ros::Time(1 + t), ros::Time(1 + t + 0.0001), ts);
     }
     est.finishSync();
-    ASSERT_NEAR(est.state_.clock_origin_.toSec(), 1.000 - d, 0.0002);
+    ASSERT_NEAR(est.state_.origin_.toSec(), 1.000 - d, 0.0002);
   }
 }
 
@@ -143,7 +143,7 @@ TEST(DeviceStateEstimator, ClockGain)
 
       if (t0 > 0)
       {
-        ASSERT_NEAR(est.state_.clock_gain_, gain, 0.0001);
+        ASSERT_NEAR(est.state_.gain_, gain, 0.0001);
       }
     }
   }

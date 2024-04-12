@@ -34,8 +34,8 @@ class ClockState
 public:
   ros::Time t_estim_;
   uint64_t stamp_;
-  ros::Time clock_origin_;
-  double clock_gain_;
+  ros::Time origin_;
+  double gain_;
 
   bool initialized_;
 

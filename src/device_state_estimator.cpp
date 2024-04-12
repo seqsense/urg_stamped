@@ -29,13 +29,13 @@ namespace device_state_estimator
 
 ros::Time ClockState::stampToTime(const uint64_t stamp) const
 {
-  const double fromOrigin = (stamp_ + (int64_t)(stamp - stamp_) / clock_gain_) / 1000.0;
-  return clock_origin_ + ros::Duration(fromOrigin);
+  const double fromOrigin = (stamp_ + (int64_t)(stamp - stamp_) / gain_) / 1000.0;
+  return origin_ + ros::Duration(fromOrigin);
 }
 
 Estimator::Estimator()
 {
-  state_.clock_gain_ = 1.0;
+  state_.gain_ = 1.0;
 }
 
 void Estimator::startSync()
@@ -84,7 +84,7 @@ void Estimator::finishSync()
 
   const ClockState last = state_;
 
-  state_.clock_origin_ = overflow_range.compensate(min_delay->t_origin_);
+  state_.origin_ = overflow_range.compensate(min_delay->t_origin_);
   state_.stamp_ = min_delay->device_wall_stamp_;
   state_.t_estim_ = min_delay->t_process_;
   if (min_comm_delay_ > min_delay->delay_)
@@ -92,20 +92,20 @@ void Estimator::finishSync()
     min_comm_delay_ = min_delay->delay_;
   }
 
-  if (last.clock_origin_.isZero())
+  if (last.origin_.isZero())
   {
     return;
   }
 
   const double t_diff = (state_.t_estim_ - last.t_estim_).toSec();
   const double origin_diff =
-      (state_.clock_origin_ - last.clock_origin_).toSec();
+      (state_.origin_ - last.origin_).toSec();
   const double gain = (t_diff - origin_diff) / t_diff;
-  state_.clock_gain_ = gain;
+  state_.gain_ = gain;
   state_.initialized_ = true;
 
   scip2::logger::debug()
-      << "origin: " << state_.clock_origin_
+      << "origin: " << state_.origin_
       << ", gain: " << gain
       << ", delay: " << min_delay->delay_
       << ", device timestamp: " << min_delay->device_wall_stamp_
