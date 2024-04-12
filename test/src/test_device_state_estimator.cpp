@@ -149,7 +149,7 @@ TEST(DeviceStateEstimator, ClockGain)
   }
 }
 
-TEST(DeviceStateEstimator, PushScanSample)
+TEST(DeviceStateEstimator, PushScanSampleRaw)
 {
   Estimator est;
   const double t0 = 100;
@@ -167,12 +167,12 @@ TEST(DeviceStateEstimator, PushScanSample)
   }
   est.finishSync();
 
-  est.pushScanSample(ros::Time(t0 + 30.020), 30000);  // minimal scan stamp to send delay: 20ms
-  est.pushScanSample(ros::Time(t0 + 30.140), 30100);
-  est.pushScanSample(ros::Time(t0 + 30.260), 30200);
+  est.pushScanSampleRaw(ros::Time(t0 + 30.020), 30000);  // minimal scan stamp to send delay: 20ms
+  est.pushScanSampleRaw(ros::Time(t0 + 30.140), 30100);
+  est.pushScanSampleRaw(ros::Time(t0 + 30.260), 30200);
 
-  ASSERT_NEAR(t0 + 31.0000, est.pushScanSample(ros::Time(t0 + 31.0200), 31000).toSec(), 0.0001);
-  ASSERT_NEAR(t0 + 32.0005, est.pushScanSample(ros::Time(t0 + 32.0205), 32000).toSec(), 0.0001);
+  ASSERT_NEAR(t0 + 31.0000, est.pushScanSampleRaw(ros::Time(t0 + 31.0200), 31000).toSec(), 0.0001);
+  ASSERT_NEAR(t0 + 32.0005, est.pushScanSampleRaw(ros::Time(t0 + 32.0205), 32000).toSec(), 0.0001);
 }
 
 }  // namespace device_state_estimator

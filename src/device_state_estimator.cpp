@@ -171,6 +171,13 @@ OriginFracPart Estimator::originFracOverflow() const
 
 ros::Time Estimator::pushScanSample(const ros::Time& t_recv, const uint64_t device_wall_stamp)
 {
+  const ros::Time t_scan_raw = pushScanSampleRaw(t_recv, device_wall_stamp);
+
+  return t_scan_raw;
+}
+
+ros::Time Estimator::pushScanSampleRaw(const ros::Time& t_recv, const uint64_t device_wall_stamp)
+{
   const ros::Time t_stamp = state_.stampToTime(device_wall_stamp);
   if (!state_.initialized_)
   {
