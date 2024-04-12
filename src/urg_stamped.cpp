@@ -562,6 +562,8 @@ void UrgStampedNode::publishStatus()
   msg.sensor_clock_origin = est_.clock_.origin_;
   msg.sensor_clock_gain = est_.clock_.gain_;
   msg.communication_delay = est_.min_comm_delay_;
+  msg.scan_time_origin = est_.scan_.origin_;
+  msg.scan_interval = est_.scan_.interval_;
   pub_status_.publish(msg);
 }
 
