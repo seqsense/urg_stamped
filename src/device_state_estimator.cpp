@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <algorithm>
 #include <memory>
 #include <vector>
 
@@ -29,8 +30,25 @@ namespace device_state_estimator
 
 ros::Time ClockState::stampToTime(const uint64_t stamp) const
 {
-  const double fromOrigin = (stamp_ + (int64_t)(stamp - stamp_) / gain_) / 1000.0;
-  return origin_ + ros::Duration(fromOrigin);
+  const double from_origin = (stamp_ + (int64_t)(stamp - stamp_) / gain_) / 1000.0;
+  return origin_ + ros::Duration(from_origin);
+}
+
+ScanState::ScanState(const std::vector<ScanSample>& samples)
+{
+  std::vector<ScanSample> s(samples);
+  std::sort(s.begin(), s.end());
+  const ScanSample& med = s[s.size() / 2];
+  origin_ = med.t_;
+  interval_ = med.interval_;
+}
+
+ros::Time ScanState::fit(const ros::Time& t) const
+{
+  const double from_origin = (t - origin_).toSec();
+  const double interval = interval_.toSec();
+  const int n = std::lround(from_origin / interval);
+  return origin_ + ros::Duration(interval * n);
 }
 
 Estimator::Estimator()
@@ -173,7 +191,22 @@ ros::Time Estimator::pushScanSample(const ros::Time& t_recv, const uint64_t devi
 {
   const ros::Time t_scan_raw = pushScanSampleRaw(t_recv, device_wall_stamp);
 
-  return t_scan_raw;
+  recent_t_scans_.emplace_back(t_scan_raw);
+  if (recent_t_scans_.size() < SCAN_SAMPLES)
+  {
+    return t_scan_raw;
+  }
+  recent_t_scans_.pop_front();
+
+  std::vector<ScanSample> samples;
+  for (size_t i = 1; i < recent_t_scans_.size(); ++i)
+  {
+    const ros::Duration interval = recent_t_scans_[i] - recent_t_scans_[i - 1];
+    samples.emplace_back(recent_t_scans_[i], interval);
+  }
+  ScanState s(samples);
+  scan_ = s;
+  return s.fit(t_scan_raw);
 }
 
 ros::Time Estimator::pushScanSampleRaw(const ros::Time& t_recv, const uint64_t device_wall_stamp)

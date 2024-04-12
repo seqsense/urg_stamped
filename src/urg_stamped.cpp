@@ -559,8 +559,8 @@ void UrgStampedNode::publishStatus()
 {
   urg_stamped::Status msg;
   msg.header.stamp = ros::Time::now();
-  msg.sensor_clock_origin = est_.state_.clock_origin_;
-  msg.sensor_clock_gain = est_.state_.clock_gain_;
+  msg.sensor_clock_origin = est_.clock_.origin_;
+  msg.sensor_clock_gain = est_.clock_.gain_;
   msg.communication_delay = est_.min_comm_delay_;
   pub_status_.publish(msg);
 }

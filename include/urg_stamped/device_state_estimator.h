@@ -17,6 +17,7 @@
 #ifndef URG_STAMPED_DEVICE_CLOCK_ESTIMATOR_H
 #define URG_STAMPED_DEVICE_CLOCK_ESTIMATOR_H
 
+#include <deque>
 #include <memory>
 #include <vector>
 
@@ -110,15 +111,50 @@ public:
   }
 };
 
+class ScanSample
+{
+public:
+  ros::Time t_;
+  ros::Duration interval_;
+
+  inline ScanSample(const ros::Time& t, const ros::Duration& interval)
+    : t_(t)
+    , interval_(interval)
+  {
+  }
+
+  inline bool operator<(const ScanSample& b) const
+  {
+    return this->interval_ < b.interval_;
+  }
+};
+
+class ScanState
+{
+public:
+  ros::Time origin_;
+  ros::Duration interval_;
+
+  inline ScanState()
+  {
+  }
+
+  ScanState(const std::vector<ScanSample>& samples);
+  ros::Time fit(const ros::Time& t) const;
+};
+
 class Estimator
 {
 public:
   static constexpr int MIN_SYNC_SAMPLES = 10;
   static constexpr int MAX_SYNC_SAMPLES = 100;
+  static constexpr int SCAN_SAMPLES = 5;
 
   ClockState clock_;
   ros::Duration min_comm_delay_;
   ros::Duration min_stamp_to_send_;
+  ScanState scan_;
+  std::deque<ros::Time> recent_t_scans_;
 
   Estimator();
   void startSync();
