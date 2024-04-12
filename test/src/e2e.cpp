@@ -171,7 +171,7 @@ std::vector<urg_sim::URGSimulator::Params> params(
             .boot_duration = 0.01,
             .comm_delay_base = 0.00025,
             .comm_delay_sigma = 0.00005,
-            .scan_interval = 0.02501,
+            .scan_interval = 0.02505,
             .clock_rate = 1.0,
             .hex_ii_timestamp = false,
             .angle_resolution = 1440,
@@ -184,7 +184,7 @@ std::vector<urg_sim::URGSimulator::Params> params(
             .boot_duration = 0.01,
             .comm_delay_base = 0.0005,
             .comm_delay_sigma = 0.0001,
-            .scan_interval = 0.02501,
+            .scan_interval = 0.02505,
             .clock_rate = 1.001,
             .hex_ii_timestamp = false,
             .angle_resolution = 1440,
@@ -197,7 +197,7 @@ std::vector<urg_sim::URGSimulator::Params> params(
             .boot_duration = 0.01,
             .comm_delay_base = 0.0005,
             .comm_delay_sigma = 0.0001,
-            .scan_interval = 0.02501,
+            .scan_interval = 0.02505,
             .clock_rate = 0.999,
             .hex_ii_timestamp = false,
             .angle_resolution = 1440,
@@ -210,7 +210,7 @@ std::vector<urg_sim::URGSimulator::Params> params(
             .boot_duration = 0.01,
             .comm_delay_base = 0.00025,
             .comm_delay_sigma = 0.00005,
-            .scan_interval = 0.02501,
+            .scan_interval = 0.02505,
             .clock_rate = 1.0,
             .hex_ii_timestamp = true,
             .angle_resolution = 1440,
@@ -230,7 +230,7 @@ TEST_P(E2EWithParam, Simple)
   ASSERT_NO_FATAL_FAILURE(startSimulator(param));
 
   // Make time sync happens frequently
-  pnh_.setParam("/urg_stamped/delay_estim_interval", 2.0);
+  pnh_.setParam("/urg_stamped/delay_estim_interval", 1.0);
   pnh_.setParam("/urg_stamped/error_limit", 4);
   pnh_.setParam("/urg_stamped/debug", true);
   ASSERT_NO_FATAL_FAILURE(startUrgStamped());
