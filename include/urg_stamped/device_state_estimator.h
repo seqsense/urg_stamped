@@ -163,14 +163,14 @@ public:
   bool hasEnoughSyncSamples() const;
   void finishSync();
 
-  ros::Time pushScanSample(const ros::Time& t_recv, const uint64_t device_wall_stamp);
+  std::pair<ros::Time, bool> pushScanSample(const ros::Time& t_recv, const uint64_t device_wall_stamp);
 
 private:
   std::vector<SyncSample> sync_samples_;
 
   std::vector<SyncSample>::const_iterator findMinDelay(const OriginFracPart& overflow_range) const;
   OriginFracPart originFracOverflow() const;
-  ros::Time pushScanSampleRaw(const ros::Time& t_recv, const uint64_t device_wall_stamp);
+  std::pair<ros::Time, bool> pushScanSampleRaw(const ros::Time& t_recv, const uint64_t device_wall_stamp);
 
   FRIEND_TEST(DeviceStateEstimator, FindMinDelay);
   FRIEND_TEST(DeviceStateEstimator, PushScanSampleRaw);

@@ -61,8 +61,18 @@ void UrgStampedNode::cbM(
   const uint64_t walltime_device = walltime_.update(scan.timestamp_);
   const ros::Time time_read_ros = ros::Time::fromBoost(time_read);
 
+  std::pair<ros::Time, bool> t_scan = est_.pushScanSample(time_read_ros, walltime_device);
   sensor_msgs::LaserScan msg(msg_base_);
-  msg.header.stamp = est_.pushScanSample(time_read_ros, walltime_device);
+  msg.header.stamp = t_scan.first;
+  if (!t_scan.second)
+  {
+    scip2::logger::info()
+        << std::setprecision(6) << std::fixed
+        << "dropped a scan with large time estimation error (estimated: "
+        << msg.header.stamp.toSec() << ", stamp: " << walltime_device << ")"
+        << std::endl;
+    return;
+  }
 
   if (msg.header.stamp > time_read_ros)
   {

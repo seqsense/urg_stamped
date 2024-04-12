@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include <ros/time.h>
@@ -187,11 +188,15 @@ OriginFracPart Estimator::originFracOverflow() const
   return OriginFracPart(t_min, t_max);
 }
 
-ros::Time Estimator::pushScanSample(const ros::Time& t_recv, const uint64_t device_wall_stamp)
+std::pair<ros::Time, bool> Estimator::pushScanSample(const ros::Time& t_recv, const uint64_t device_wall_stamp)
 {
-  const ros::Time t_scan_raw = pushScanSampleRaw(t_recv, device_wall_stamp);
+  const std::pair<ros::Time, bool> t_scan_raw = pushScanSampleRaw(t_recv, device_wall_stamp);
+  if (!t_scan_raw.second)
+  {
+    return t_scan_raw;
+  }
 
-  recent_t_scans_.emplace_back(t_scan_raw);
+  recent_t_scans_.emplace_back(t_scan_raw.first);
   if (recent_t_scans_.size() < MIN_SCAN_SAMPLES)
   {
     return t_scan_raw;
@@ -209,15 +214,15 @@ ros::Time Estimator::pushScanSample(const ros::Time& t_recv, const uint64_t devi
   }
   ScanState s(samples);
   scan_ = s;
-  return s.fit(t_scan_raw);
+  return std::pair<ros::Time, bool>(s.fit(t_scan_raw.first), true);
 }
 
-ros::Time Estimator::pushScanSampleRaw(const ros::Time& t_recv, const uint64_t device_wall_stamp)
+std::pair<ros::Time, bool> Estimator::pushScanSampleRaw(const ros::Time& t_recv, const uint64_t device_wall_stamp)
 {
   const ros::Time t_stamp = clock_.stampToTime(device_wall_stamp);
   if (!clock_.initialized_)
   {
-    return t_stamp;
+    return std::pair<ros::Time, bool>(t_stamp, true);
   }
 
   const ros::Time t_sent = t_recv - min_comm_delay_;
@@ -227,9 +232,11 @@ ros::Time Estimator::pushScanSampleRaw(const ros::Time& t_recv, const uint64_t d
     min_stamp_to_send_ = stamp_to_send;
   }
 
-  const ros::Time t_scan_raw = t_stamp + (stamp_to_send - min_stamp_to_send_);
+  const ros::Duration t_frac = stamp_to_send - min_stamp_to_send_;
+  const ros::Time t_scan_raw = t_stamp + t_frac;
+  const bool valid = t_frac < ros::Duration(0.0015);
 
-  return t_scan_raw;
+  return std::pair<ros::Time, bool>(t_scan_raw, t_frac < ros::Duration(0.0015));
 }
 
 }  // namespace device_state_estimator
