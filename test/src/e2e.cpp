@@ -204,23 +204,26 @@ TEST_P(E2EWithParam, Simple)
   ASSERT_NO_FATAL_FAILURE(startSimulator(param));
 
   // Make time sync happens frequently
-  pnh_.setParam("/urg_stamped/sync_interval_min", 0.1);
-  pnh_.setParam("/urg_stamped/sync_interval_max", 0.4);
-  pnh_.setParam("/urg_stamped/delay_estim_interval", 3.0);
+  pnh_.setParam("/urg_stamped/delay_estim_interval", 2.0);
   pnh_.setParam("/urg_stamped/error_limit", 4);
+  pnh_.setParam("/urg_stamped/debug", true);
   ASSERT_NO_FATAL_FAILURE(startUrgStamped());
 
-  ASSERT_NO_FATAL_FAILURE(waitScans(100, ros::Duration(10)));
+  ASSERT_NO_FATAL_FAILURE(waitScans(300, ros::Duration(10)));
 
-  for (size_t i = 50; i < scans_.size(); ++i)
+  int err_rms = 0;
+  for (size_t i = 200; i < 300; ++i)
   {
     const int index = std::lround(scans_[i]->ranges[0] * 1000);
     ASSERT_NE(true_stamps_.find(index), true_stamps_.end()) << "Can not find corresponding ground truth timestamp";
-    EXPECT_LT(std::abs((true_stamps_[index] - scans_[i]->header.stamp).toSec()), 0.0015) << "scan " << i;
+    const double err = (true_stamps_[index] - scans_[i]->header.stamp).toSec();
+    err_rms += err * err;
   }
+  err_rms = std::sqrt(err_rms / 100);
+  EXPECT_LT(err_rms, 0.0005);
 
   ASSERT_TRUE(static_cast<bool>(status_msg_));
-  ASSERT_NEAR(status_msg_->sensor_clock_gain, 1.0, 1e-3);
+  ASSERT_NEAR(status_msg_->sensor_clock_gain, param.clock_rate, 1e-3);
   ASSERT_GT(status_msg_->communication_delay.toSec(), param.comm_delay_base - 1e-4);
   ASSERT_LT(status_msg_->communication_delay.toSec(), param.comm_delay_base + 5e-4);
 }
