@@ -184,9 +184,9 @@ ros::Time Estimator::pushScanSample(const ros::Time& t_recv, const uint64_t devi
     min_stamp_to_send_ = stamp_to_send;
   }
 
-  const ros::Time t_estimated = t_stamp + (stamp_to_send - min_stamp_to_send_);
+  const ros::Time t_scan_raw = t_stamp + (stamp_to_send - min_stamp_to_send_);
 
-  return t_estimated;
+  return t_scan_raw;
 }
 
 }  // namespace device_state_estimator
