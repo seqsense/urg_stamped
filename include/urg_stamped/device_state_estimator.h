@@ -37,6 +37,8 @@ public:
   ros::Time clock_origin_;
   double clock_gain_;
 
+  bool initialized_;
+
   ros::Time stampToTime(const uint64_t stamp) const;
 };
 
@@ -129,6 +131,7 @@ public:
 
   ClockState state_;
   ros::Duration min_comm_delay_;
+  ros::Duration min_stamp_to_send_;
 
   Estimator();
   void startSync();

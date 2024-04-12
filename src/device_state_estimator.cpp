@@ -102,6 +102,7 @@ void Estimator::finishSync()
       (state_.clock_origin_ - last.clock_origin_).toSec();
   const double gain = (t_diff - origin_diff) / t_diff;
   state_.clock_gain_ = gain;
+  state_.initialized_ = true;
 
   scip2::logger::debug()
       << "origin: " << state_.clock_origin_
@@ -170,6 +171,18 @@ OriginFracPart Estimator::originFracOverflow() const
 
 void Estimator::pushScanSample(const ros::Time& t_recv, const uint64_t device_wall_stamp)
 {
+  const ros::Time t_stamp = state_.stampToTime(device_wall_stamp);
+  if (!state_.initialized_)
+  {
+    return;
+  }
+
+  const ros::Time t_sent = t_recv - min_comm_delay_;
+  const ros::Duration stamp_to_send = t_sent - t_stamp;
+  if (stamp_to_send < min_stamp_to_send_)
+  {
+    min_stamp_to_send_ = stamp_to_send;
+  }
 }
 
 }  // namespace device_state_estimator
