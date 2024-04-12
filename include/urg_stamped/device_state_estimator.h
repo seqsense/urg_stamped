@@ -116,7 +116,7 @@ public:
   static constexpr int MIN_SYNC_SAMPLES = 10;
   static constexpr int MAX_SYNC_SAMPLES = 100;
 
-  ClockState state_;
+  ClockState clock_;
   ros::Duration min_comm_delay_;
   ros::Duration min_stamp_to_send_;
 

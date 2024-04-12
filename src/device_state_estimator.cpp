@@ -35,7 +35,7 @@ ros::Time ClockState::stampToTime(const uint64_t stamp) const
 
 Estimator::Estimator()
 {
-  state_.gain_ = 1.0;
+  clock_.gain_ = 1.0;
 }
 
 void Estimator::startSync()
@@ -82,11 +82,11 @@ void Estimator::finishSync()
     return;
   }
 
-  const ClockState last = state_;
+  const ClockState last = clock_;
 
-  state_.origin_ = overflow_range.compensate(min_delay->t_origin_);
-  state_.stamp_ = min_delay->device_wall_stamp_;
-  state_.t_estim_ = min_delay->t_process_;
+  clock_.origin_ = overflow_range.compensate(min_delay->t_origin_);
+  clock_.stamp_ = min_delay->device_wall_stamp_;
+  clock_.t_estim_ = min_delay->t_process_;
   if (min_comm_delay_ > min_delay->delay_)
   {
     min_comm_delay_ = min_delay->delay_;
@@ -97,15 +97,15 @@ void Estimator::finishSync()
     return;
   }
 
-  const double t_diff = (state_.t_estim_ - last.t_estim_).toSec();
+  const double t_diff = (clock_.t_estim_ - last.t_estim_).toSec();
   const double origin_diff =
-      (state_.origin_ - last.origin_).toSec();
+      (clock_.origin_ - last.origin_).toSec();
   const double gain = (t_diff - origin_diff) / t_diff;
-  state_.gain_ = gain;
-  state_.initialized_ = true;
+  clock_.gain_ = gain;
+  clock_.initialized_ = true;
 
   scip2::logger::debug()
-      << "origin: " << state_.origin_
+      << "origin: " << clock_.origin_
       << ", gain: " << gain
       << ", delay: " << min_delay->delay_
       << ", device timestamp: " << min_delay->device_wall_stamp_
@@ -178,8 +178,8 @@ ros::Time Estimator::pushScanSample(const ros::Time& t_recv, const uint64_t devi
 
 ros::Time Estimator::pushScanSampleRaw(const ros::Time& t_recv, const uint64_t device_wall_stamp)
 {
-  const ros::Time t_stamp = state_.stampToTime(device_wall_stamp);
-  if (!state_.initialized_)
+  const ros::Time t_stamp = clock_.stampToTime(device_wall_stamp);
+  if (!clock_.initialized_)
   {
     return t_stamp;
   }
