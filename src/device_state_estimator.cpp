@@ -169,20 +169,24 @@ OriginFracPart Estimator::originFracOverflow() const
   return OriginFracPart(t_min, t_max);
 }
 
-void Estimator::pushScanSample(const ros::Time& t_recv, const uint64_t device_wall_stamp)
+ros::Time Estimator::pushScanSample(const ros::Time& t_recv, const uint64_t device_wall_stamp)
 {
   const ros::Time t_stamp = state_.stampToTime(device_wall_stamp);
   if (!state_.initialized_)
   {
-    return;
+    return t_stamp;
   }
 
   const ros::Time t_sent = t_recv - min_comm_delay_;
   const ros::Duration stamp_to_send = t_sent - t_stamp;
-  if (stamp_to_send < min_stamp_to_send_)
+  if (min_stamp_to_send_.isZero() || stamp_to_send < min_stamp_to_send_)
   {
     min_stamp_to_send_ = stamp_to_send;
   }
+
+  const ros::Time t_estimated = t_stamp + (stamp_to_send - min_stamp_to_send_);
+
+  return t_estimated;
 }
 
 }  // namespace device_state_estimator

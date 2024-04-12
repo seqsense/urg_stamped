@@ -126,7 +126,7 @@ public:
   bool hasEnoughSyncSamples() const;
   void finishSync();
 
-  void pushScanSample(const ros::Time& t_recv, const uint64_t device_wall_stamp);
+  ros::Time pushScanSample(const ros::Time& t_recv, const uint64_t device_wall_stamp);
 
 private:
   std::vector<SyncSample> sync_samples_;
