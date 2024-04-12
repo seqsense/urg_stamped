@@ -236,7 +236,7 @@ std::pair<ros::Time, bool> Estimator::pushScanSampleRaw(const ros::Time& t_recv,
   const ros::Time t_scan_raw = t_stamp + t_frac;
   const bool valid = t_frac < ros::Duration(0.0015);
 
-  return std::pair<ros::Time, bool>(t_scan_raw, t_frac < ros::Duration(0.0015));
+  return std::pair<ros::Time, bool>(t_scan_raw, valid);
 }
 
 }  // namespace device_state_estimator
