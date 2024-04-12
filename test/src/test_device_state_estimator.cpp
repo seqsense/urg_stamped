@@ -149,6 +149,32 @@ TEST(DeviceStateEstimator, ClockGain)
   }
 }
 
+TEST(DeviceStateEstimator, PushScanSample)
+{
+  Estimator est;
+  const double t0 = 100;
+
+  est.startSync();
+  for (double t = 10; t < 10.2; t += 0.0101)
+  {
+    est.pushSyncSample(ros::Time(t0 + t), ros::Time(t0 + t + 0.00001), t * 1000);
+  }
+  est.finishSync();
+  est.startSync();
+  for (double t = 20; t < 20.2; t += 0.0101)
+  {
+    est.pushSyncSample(ros::Time(t0 + t), ros::Time(t0 + t + 0.00001), t * 1000);
+  }
+  est.finishSync();
+
+  est.pushScanSample(ros::Time(t0 + 30.020), 30000);  // minimal scan stamp to send delay: 20ms
+  est.pushScanSample(ros::Time(t0 + 30.140), 30100);
+  est.pushScanSample(ros::Time(t0 + 30.260), 30200);
+
+  ASSERT_NEAR(t0 + 31.0000, est.pushScanSample(ros::Time(t0 + 31.0200), 31000).toSec(), 0.0001);
+  ASSERT_NEAR(t0 + 32.0005, est.pushScanSample(ros::Time(t0 + 32.0205), 32000).toSec(), 0.0001);
+}
+
 }  // namespace device_state_estimator
 }  // namespace urg_stamped
 
