@@ -171,8 +171,34 @@ std::vector<urg_sim::URGSimulator::Params> params(
             .boot_duration = 0.01,
             .comm_delay_base = 0.00025,
             .comm_delay_sigma = 0.00005,
-            .scan_interval = 0.025,
+            .scan_interval = 0.02501,
             .clock_rate = 1.0,
+            .hex_ii_timestamp = false,
+            .angle_resolution = 1440,
+            .angle_min = 0,
+            .angle_max = 1080,
+            .angle_front = 540,
+        },  // NOLINT(whitespace/braces)
+        {
+            .model = urg_sim::URGSimulator::Model::UTM,
+            .boot_duration = 0.01,
+            .comm_delay_base = 0.0005,
+            .comm_delay_sigma = 0.0001,
+            .scan_interval = 0.02501,
+            .clock_rate = 1.001,
+            .hex_ii_timestamp = false,
+            .angle_resolution = 1440,
+            .angle_min = 0,
+            .angle_max = 1080,
+            .angle_front = 540,
+        },  // NOLINT(whitespace/braces)
+        {
+            .model = urg_sim::URGSimulator::Model::UTM,
+            .boot_duration = 0.01,
+            .comm_delay_base = 0.0005,
+            .comm_delay_sigma = 0.0001,
+            .scan_interval = 0.02501,
+            .clock_rate = 0.999,
             .hex_ii_timestamp = false,
             .angle_resolution = 1440,
             .angle_min = 0,
@@ -184,7 +210,7 @@ std::vector<urg_sim::URGSimulator::Params> params(
             .boot_duration = 0.01,
             .comm_delay_base = 0.00025,
             .comm_delay_sigma = 0.00005,
-            .scan_interval = 0.025,
+            .scan_interval = 0.02501,
             .clock_rate = 1.0,
             .hex_ii_timestamp = true,
             .angle_resolution = 1440,
@@ -209,21 +235,22 @@ TEST_P(E2EWithParam, Simple)
   pnh_.setParam("/urg_stamped/debug", true);
   ASSERT_NO_FATAL_FAILURE(startUrgStamped());
 
-  ASSERT_NO_FATAL_FAILURE(waitScans(300, ros::Duration(10)));
+  ASSERT_NO_FATAL_FAILURE(waitScans(200, ros::Duration(10)));
 
   int err_rms = 0;
-  for (size_t i = 200; i < 300; ++i)
+  for (size_t i = 100; i < 200; ++i)
   {
     const int index = std::lround(scans_[i]->ranges[0] * 1000);
     ASSERT_NE(true_stamps_.find(index), true_stamps_.end()) << "Can not find corresponding ground truth timestamp";
     const double err = (true_stamps_[index] - scans_[i]->header.stamp).toSec();
+    EXPECT_LT(std::abs(err), 0.001) << "scan " << i;
     err_rms += err * err;
   }
   err_rms = std::sqrt(err_rms / 100);
   EXPECT_LT(err_rms, 0.0005);
 
   ASSERT_TRUE(static_cast<bool>(status_msg_));
-  ASSERT_NEAR(status_msg_->sensor_clock_gain, param.clock_rate, 1e-3);
+  ASSERT_NEAR(status_msg_->sensor_clock_gain, param.clock_rate, 1e-4);
   ASSERT_GT(status_msg_->communication_delay.toSec(), param.comm_delay_base - 1e-4);
   ASSERT_LT(status_msg_->communication_delay.toSec(), param.comm_delay_base + 5e-4);
 }
