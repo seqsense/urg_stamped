@@ -16,6 +16,8 @@
 
 #include <gtest/gtest.h>
 
+#include <vector>
+
 #include <ros/time.h>
 
 #include <urg_stamped/device_state_estimator.h>
@@ -29,33 +31,36 @@ TEST(ClockState, StampToTime)
 {
   {
     SCOPED_TRACE("ClockGain 1.5");
-    const ClockState s = {
-        .stamp_ = 1000,
-        .origin_ = ros::Time(100),
-        .gain_ = 1.0 / 1.5,
-    };
+    const ClockState s =
+        {
+            .stamp_ = 1000,
+            .origin_ = ros::Time(100),
+            .gain_ = 1.0 / 1.5,
+        };
     ASSERT_EQ(ros::Time(99.5), s.stampToTime(0));
     ASSERT_EQ(ros::Time(101.0), s.stampToTime(1000));
     ASSERT_EQ(ros::Time(102.5), s.stampToTime(2000));
   }
   {
     SCOPED_TRACE("ClockGain 1.0");
-    const ClockState s = {
-        .stamp_ = 1000,
-        .origin_ = ros::Time(100),
-        .gain_ = 1.0,
-    };
+    const ClockState s =
+        {
+            .stamp_ = 1000,
+            .origin_ = ros::Time(100),
+            .gain_ = 1.0,
+        };
     ASSERT_EQ(ros::Time(100.0), s.stampToTime(0));
     ASSERT_EQ(ros::Time(101.0), s.stampToTime(1000));
     ASSERT_EQ(ros::Time(102.0), s.stampToTime(2000));
   }
   {
     SCOPED_TRACE("ClockGain 0.5");
-    const ClockState s = {
-        .stamp_ = 1000,
-        .origin_ = ros::Time(100),
-        .gain_ = 1.0 / 0.5,
-    };
+    const ClockState s =
+        {
+            .stamp_ = 1000,
+            .origin_ = ros::Time(100),
+            .gain_ = 1.0 / 0.5,
+        };
     ASSERT_EQ(ros::Time(100.5), s.stampToTime(0));
     ASSERT_EQ(ros::Time(101.0), s.stampToTime(1000));
     ASSERT_EQ(ros::Time(101.5), s.stampToTime(2000));
@@ -119,11 +124,12 @@ TEST(DeviceStateEstimator, RawClockOrigin)
 
 TEST(DeviceStateEstimator, ClockGain)
 {
-  const std::vector<double> gains = {
-      0.999,
-      1.000,
-      1.001,
-  };
+  const std::vector<double> gains =
+      {
+          0.999,
+          1.000,
+          1.001,
+      };
 
   for (const double gain : gains)
   {

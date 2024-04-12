@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-#ifndef URG_STAMPED_DEVICE_CLOCK_ESTIMATOR_H
-#define URG_STAMPED_DEVICE_CLOCK_ESTIMATOR_H
+#ifndef URG_STAMPED_DEVICE_STATE_ESTIMATOR_H
+#define URG_STAMPED_DEVICE_STATE_ESTIMATOR_H
 
+#include <algorithm>
 #include <deque>
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include <ros/time.h>
@@ -139,7 +141,7 @@ public:
   {
   }
 
-  ScanState(const std::vector<ScanSample>& samples);
+  explicit ScanState(const std::vector<ScanSample>& samples);
   ros::Time fit(const ros::Time& t) const;
 };
 
@@ -179,4 +181,4 @@ private:
 }  // namespace device_state_estimator
 }  // namespace urg_stamped
 
-#endif  // URG_STAMPED_DEVICE_CLOCK_ESTIMATOR_H
+#endif  // URG_STAMPED_DEVICE_STATE_ESTIMATOR_H
