@@ -106,7 +106,7 @@ void Estimator::finishSync()
   clock_.origin_ = overflow_range.compensate(min_delay->t_origin_);
   clock_.stamp_ = min_delay->device_wall_stamp_;
   clock_.t_estim_ = min_delay->t_process_;
-  if (min_comm_delay_ > min_delay->delay_)
+  if (min_comm_delay_.isZero() || min_comm_delay_ > min_delay->delay_)
   {
     min_comm_delay_ = min_delay->delay_;
   }
