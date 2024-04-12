@@ -236,6 +236,18 @@ std::pair<ros::Time, bool> Estimator::pushScanSampleRaw(const ros::Time& t_recv,
   const ros::Time t_scan_raw = t_stamp + t_frac;
   const bool valid = t_frac < ros::Duration(0.0015);
 
+  if (!valid)
+  {
+    std::cerr
+        << "invalid estimation result "
+        << stamp_to_send
+        << " "
+        << min_stamp_to_send_
+        << " "
+        << t_frac
+        << std::endl;
+  }
+
   return std::pair<ros::Time, bool>(t_scan_raw, valid);
 }
 
