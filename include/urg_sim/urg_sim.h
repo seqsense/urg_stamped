@@ -103,8 +103,7 @@ public:
     , scan_timer_(io_service_)
     , raw_scan_data_cb_(raw_scan_data_cb)
     , rand_engine_(std::random_device()())
-    , comm_delay_distribution_(
-          params.comm_delay_base, params.comm_delay_sigma)
+    , comm_delay_distribution_(0, params.comm_delay_sigma)
     , killed_(false)
     , handlers_(
           {
@@ -229,6 +228,7 @@ private:
   bool validateExtraString(
       const std::string& cmd,
       const size_t expected_size);
+  double randomCommDelay();
 };
 
 }  // namespace urg_sim

@@ -67,9 +67,8 @@ void URGSimulator::onRead(const boost::system::error_code& ec)
     return;
   }
   const auto now = boost::posix_time::microsec_clock::universal_time();
-  const double delay_sec = comm_delay_distribution_(rand_engine_);
   const auto delay = boost::posix_time::microseconds(
-      static_cast<int64_t>(delay_sec * 1e6));
+      static_cast<int64_t>(randomCommDelay() * 1e6));
   const auto when = now + delay;
 
   std::istream stream(&input_buf_);
@@ -516,9 +515,8 @@ void URGSimulator::response(
     const std::string data)
 {
   const auto now = boost::posix_time::microsec_clock::universal_time();
-  const double delay_sec = comm_delay_distribution_(rand_engine_);
   const auto delay = boost::posix_time::microseconds(
-      static_cast<int64_t>(delay_sec * 1e6));
+      static_cast<int64_t>(randomCommDelay() * 1e6));
   const auto when = now + delay;
 
   const std::string text =
@@ -808,6 +806,12 @@ int URGSimulator::getBootCnt()
 {
   std::lock_guard<std::mutex> lock(mu_);
   return boot_cnt_;
+}
+
+double URGSimulator::randomCommDelay()
+{
+  // Communication delay must not be less than comm_delay_base.
+  return std::abs(comm_delay_distribution_(rand_engine_)) + params_.comm_delay_base;
 }
 
 }  // namespace urg_sim
