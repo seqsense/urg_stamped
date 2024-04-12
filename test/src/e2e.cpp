@@ -230,6 +230,9 @@ INSTANTIATE_TEST_CASE_P(
 
 TEST_P(E2EWithParam, Simple)
 {
+  std::cerr
+      << std::endl
+      << "------- " << ::testing::UnitTest::GetInstance()->current_test_info()->name() << std::endl;
   const auto param = GetParam();
   ASSERT_NO_FATAL_FAILURE(startSimulator(param));
 
