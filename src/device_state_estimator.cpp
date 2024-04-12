@@ -192,11 +192,14 @@ ros::Time Estimator::pushScanSample(const ros::Time& t_recv, const uint64_t devi
   const ros::Time t_scan_raw = pushScanSampleRaw(t_recv, device_wall_stamp);
 
   recent_t_scans_.emplace_back(t_scan_raw);
-  if (recent_t_scans_.size() < SCAN_SAMPLES)
+  if (recent_t_scans_.size() < MIN_SCAN_SAMPLES)
   {
     return t_scan_raw;
   }
-  recent_t_scans_.pop_front();
+  if (recent_t_scans_.size() >= MAX_SCAN_SAMPLES)
+  {
+    recent_t_scans_.pop_front();
+  }
 
   std::vector<ScanSample> samples;
   for (size_t i = 1; i < recent_t_scans_.size(); ++i)
