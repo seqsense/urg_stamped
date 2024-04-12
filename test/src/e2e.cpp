@@ -247,7 +247,7 @@ TEST_P(E2EWithParam, Simple)
     err_rms += err * err;
   }
   err_rms = std::sqrt(err_rms / 100);
-  EXPECT_LT(err_rms, 0.0005);
+  EXPECT_LT(err_rms, 0.0002);
 
   ASSERT_TRUE(static_cast<bool>(status_msg_));
   ASSERT_NEAR(status_msg_->sensor_clock_gain, param.clock_rate, 1e-4);
