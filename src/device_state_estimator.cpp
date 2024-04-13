@@ -231,7 +231,7 @@ std::pair<ros::Time, bool> Estimator::pushScanSampleRaw(const ros::Time& t_recv,
   {
     min_stamp_to_send_ = stamp_to_send;
   }
-  if (clock_.gain_ < 1)
+  if (clock_.gain_ > 1)
   {
     min_stamp_to_send_ += ros::Duration(0.000001);
   }
