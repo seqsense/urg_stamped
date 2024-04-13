@@ -155,6 +155,7 @@ public:
 
   ClockState clock_;
   ros::Duration min_comm_delay_;
+  ros::Duration comm_delay_sigma_;
   ros::Duration min_stamp_to_send_;
   ScanState scan_;
   std::deque<ros::Time> recent_t_scans_;
@@ -173,6 +174,7 @@ private:
   std::vector<SyncSample>::const_iterator findMinDelay(const OriginFracPart& overflow_range) const;
   OriginFracPart originFracOverflow() const;
   std::pair<ros::Time, bool> pushScanSampleRaw(const ros::Time& t_recv, const uint64_t device_wall_stamp);
+  ros::Duration delaySigma() const;
 
   FRIEND_TEST(DeviceStateEstimator, FindMinDelay);
   FRIEND_TEST(DeviceStateEstimator, PushScanSampleRaw);

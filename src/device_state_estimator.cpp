@@ -100,6 +100,7 @@ void Estimator::finishSync()
     scip2::logger::warn() << "failed to find minimal delay sample" << std::endl;
     return;
   }
+  comm_delay_sigma_ = delaySigma();
 
   const ClockState last = clock_;
 
@@ -232,7 +233,7 @@ std::pair<ros::Time, bool> Estimator::pushScanSampleRaw(const ros::Time& t_recv,
     min_stamp_to_send_ = stamp_to_send;
   }
 
-  const ros::Duration t_frac = stamp_to_send - min_stamp_to_send_;
+  const ros::Duration t_frac = stamp_to_send - min_stamp_to_send_ - comm_delay_sigma_;
 
   if (t_frac > ros::Duration(0.0015))
   {
@@ -255,6 +256,21 @@ std::pair<ros::Time, bool> Estimator::pushScanSampleRaw(const ros::Time& t_recv,
   }
 
   return std::pair<ros::Time, bool>(t_scan_raw, valid);
+}
+
+ros::Duration Estimator::delaySigma() const
+{
+  if (sync_samples_.size() == 0)
+  {
+    return ros::Duration();
+  }
+  double sum = 0;
+  for (const auto& s : sync_samples_)
+  {
+    const double delay_diff = (s.delay_ - min_comm_delay_).toSec();
+    sum += delay_diff * delay_diff;
+  }
+  return ros::Duration(std::sqrt(sum / sync_samples_.size()));
 }
 
 }  // namespace device_state_estimator
