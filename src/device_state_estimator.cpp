@@ -234,9 +234,9 @@ std::pair<ros::Time, bool> Estimator::pushScanSampleRaw(const ros::Time& t_recv,
 
   const ros::Duration t_frac = stamp_to_send - min_stamp_to_send_;
 
-  if (t_frac > ros::Duration(1.0))
+  if (t_frac > ros::Duration(0.001))
   {
-    min_stamp_to_send_ += ros::Duration(0.0001);
+    min_stamp_to_send_ += t_frac - ros::Duration(0.001);
   }
 
   const ros::Time t_scan_raw = t_stamp + t_frac;
