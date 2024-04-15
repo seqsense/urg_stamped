@@ -237,7 +237,7 @@ TEST_P(E2EWithParam, Simple)
   ASSERT_NO_FATAL_FAILURE(startSimulator(param));
 
   // Make time sync happens frequently
-  pnh_.setParam("/urg_stamped/delay_estim_interval", 5.0);
+  pnh_.setParam("/urg_stamped/delay_estim_interval", 2.0);
   pnh_.setParam("/urg_stamped/error_limit", 4);
   pnh_.setParam("/urg_stamped/debug", true);
   ASSERT_NO_FATAL_FAILURE(startUrgStamped());
