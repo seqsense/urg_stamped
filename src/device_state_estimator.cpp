@@ -229,18 +229,29 @@ std::pair<ros::Time, bool> Estimator::pushScanSampleRaw(const ros::Time& t_recv,
   const ros::Time t_sent = t_recv - min_comm_delay_;
   const ros::Duration stamp_to_send = t_sent - t_stamp;
   ros::Duration new_min_stamp_to_send = min_stamp_to_send_;
-  if (new_min_stamp_to_send.isZero() || stamp_to_send + comm_delay_sigma_ < new_min_stamp_to_send)
+  if (new_min_stamp_to_send.isZero() || stamp_to_send < new_min_stamp_to_send)
   {
-    new_min_stamp_to_send = stamp_to_send + comm_delay_sigma_;
+    new_min_stamp_to_send = stamp_to_send;
   }
-
-  const ros::Duration t_frac = stamp_to_send - new_min_stamp_to_send;
-
-  if (t_frac < ros::Duration(0.001))
+  if (min_stamp_to_send_.isZero())
   {
     min_stamp_to_send_ = new_min_stamp_to_send;
   }
+  if (stamp_to_send - new_min_stamp_to_send < ros::Duration(0.001) && new_min_stamp_to_send < min_stamp_to_send_)
+  {
+    min_stamp_to_send_ =
+        min_stamp_to_send_ * (1 - MIN_STAMP_TO_SEND_ALPHA) +
+        new_min_stamp_to_send * MIN_STAMP_TO_SEND_ALPHA;
+  }
+  if (stamp_to_send - min_stamp_to_send_ > ros::Duration(0.001) + comm_delay_sigma_ * 2 &&
+      stamp_to_send - min_stamp_to_send_ < ros::Duration(0.002))
+  {
+    min_stamp_to_send_ =
+        min_stamp_to_send_ * (1 - MIN_STAMP_TO_SEND_ALPHA) +
+        (stamp_to_send - ros::Duration(0.001)) * MIN_STAMP_TO_SEND_ALPHA;
+  }
 
+  const ros::Duration t_frac = stamp_to_send - min_stamp_to_send_ - comm_delay_sigma_;
   const ros::Time t_scan_raw = t_stamp + t_frac;
   const bool valid = t_frac < ros::Duration(0.0015);
 
