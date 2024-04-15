@@ -285,7 +285,7 @@ TEST_F(E2E, RebootOnError)
   pnh_.setParam("/urg_stamped/error_limit", 0);
   ASSERT_NO_FATAL_FAILURE(startUrgStamped());
 
-  ros::Duration(1).sleep();
+  ros::Duration(2).sleep();
   ASSERT_GE(sim_->getBootCnt(), 2);
 }
 
