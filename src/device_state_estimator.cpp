@@ -234,7 +234,12 @@ std::pair<ros::Time, bool> Estimator::pushScanSampleRaw(const ros::Time& t_recv,
   }
   if (stamp_to_send - new_min_stamp_to_send < ros::Duration(0.001) && new_min_stamp_to_send < min_stamp_to_send_)
   {
-    std::cerr << "reduce min_stamp_to_send_ " << device_wall_stamp << " " << min_stamp_to_send_ << " " << new_min_stamp_to_send << std::endl;
+    std::cerr
+        << "reduce min_stamp_to_send_ "
+        << device_wall_stamp
+        << " " << min_stamp_to_send_
+        << " " << new_min_stamp_to_send
+        << std::endl;
     min_stamp_to_send_ =
         min_stamp_to_send_ * (1 - MIN_STAMP_TO_SEND_ALPHA) +
         new_min_stamp_to_send * MIN_STAMP_TO_SEND_ALPHA;
@@ -242,7 +247,12 @@ std::pair<ros::Time, bool> Estimator::pushScanSampleRaw(const ros::Time& t_recv,
   if (stamp_to_send - min_stamp_to_send_ > ros::Duration(0.001) + comm_delay_sigma_ * 2 &&
       stamp_to_send - min_stamp_to_send_ < ros::Duration(0.002))
   {
-    std::cerr << "increase min_stamp_to_send_ " << device_wall_stamp << " " << min_stamp_to_send_ << " " << new_min_stamp_to_send << std::endl;
+    std::cerr
+        << "increase min_stamp_to_send_ "
+        << device_wall_stamp
+        << " " << min_stamp_to_send_
+        << " " << new_min_stamp_to_send
+        << std::endl;
     min_stamp_to_send_ =
         min_stamp_to_send_ * (1 - MIN_STAMP_TO_SEND_ALPHA) +
         (stamp_to_send - ros::Duration(0.001)) * MIN_STAMP_TO_SEND_ALPHA;
