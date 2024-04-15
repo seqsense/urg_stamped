@@ -173,9 +173,9 @@ TEST(DeviceStateEstimator, PushScanSampleRaw)
   }
   est.finishSync();
 
-  est.pushScanSampleRaw(ros::Time(t0 + 30.0203), 30000);
-  est.pushScanSampleRaw(ros::Time(t0 + 30.1200), 30100);  // minimal scan stamp to send delay: 20ms
-  est.pushScanSampleRaw(ros::Time(t0 + 30.2206), 30200);
+  est.pushScanSampleRaw(ros::Time(t0 + 30.0200), 30000);  // minimal scan stamp to send delay: 20ms
+  est.pushScanSampleRaw(ros::Time(t0 + 30.1206), 30100);
+  est.pushScanSampleRaw(ros::Time(t0 + 30.2203), 30200);
 
   ASSERT_NEAR(t0 + 31.0000, est.pushScanSampleRaw(ros::Time(t0 + 31.0200), 31000).first.toSec(), 0.0001);
   ASSERT_NEAR(t0 + 32.0005, est.pushScanSampleRaw(ros::Time(t0 + 32.0205), 32000).first.toSec(), 0.0001);
