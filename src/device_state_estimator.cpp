@@ -186,10 +186,19 @@ OriginFracPart Estimator::originFracOverflow() const
   {
     return OriginFracPart();
   }
+
+  const ros::Duration max_delay = comm_delay_.min_ + delaySigma();
+  int valid_samples = 0;
+
   auto it_min_origin = sync_samples_.begin();
   auto it_max_origin = sync_samples_.begin();
   for (auto it = sync_samples_.begin() + 1; it != sync_samples_.end(); it++)
   {
+    if (it->delay_ > max_delay)
+    {
+      continue;
+    }
+    valid_samples++;
     if (it->t_origin_ < it_min_origin->t_origin_)
     {
       it_min_origin = it;
@@ -199,6 +208,14 @@ OriginFracPart Estimator::originFracOverflow() const
       it_max_origin = it;
     }
   }
+
+  if (valid_samples < MIN_SYNC_SAMPLES ||
+      it_min_origin->delay_ > max_delay ||
+      it_max_origin->delay_ > max_delay)
+  {
+    return OriginFracPart();
+  }
+
   double t_min = std::fmod(it_min_origin->t_process_.toSec(), 0.001);
   double t_max = std::fmod(it_max_origin->t_process_.toSec(), 0.001);
   if (t_min > t_max + 0.0005)
