@@ -42,6 +42,13 @@ public:
 
   bool initialized_;
 
+  inline ClockState()
+    : stamp_(0)
+    , gain_(1.0)
+    , initialized_(false)
+  {
+  }
+
   ros::Time stampToTime(const uint64_t stamp) const;
 };
 
@@ -66,6 +73,7 @@ public:
   {
   }
 };
+
 class OriginFracPart
 {
 public:
@@ -161,7 +169,6 @@ public:
   ScanState scan_;
   std::deque<ros::Time> recent_t_scans_;
 
-  Estimator();
   void startSync();
   void pushSyncSample(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp);
   bool hasEnoughSyncSamples() const;

@@ -52,11 +52,6 @@ ros::Time ScanState::fit(const ros::Time& t) const
   return origin_ + ros::Duration(interval * n);
 }
 
-Estimator::Estimator()
-{
-  clock_.gain_ = 1.0;
-}
-
 void Estimator::startSync()
 {
   sync_samples_.clear();
