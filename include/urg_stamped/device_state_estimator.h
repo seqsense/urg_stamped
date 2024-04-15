@@ -160,6 +160,7 @@ public:
   static constexpr int MAX_SYNC_SAMPLES = 100;
   static constexpr int MIN_SCAN_SAMPLES = 5;
   static constexpr int MAX_SCAN_SAMPLES = 9;
+  static constexpr double CLOCK_GAIN_ALPHA = 0.1;
   static constexpr double MIN_STAMP_TO_SEND_ALPHA = 0.05;
 
   ClockState clock_;

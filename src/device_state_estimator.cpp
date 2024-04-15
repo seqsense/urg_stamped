@@ -116,8 +116,17 @@ void Estimator::finishSync()
   const double origin_diff =
       (clock_.origin_ - last.origin_).toSec();
   const double gain = (t_diff - origin_diff) / t_diff;
-  clock_.gain_ = gain;
-  clock_.initialized_ = true;
+  if (!clock_.initialized_)
+  {
+    clock_.gain_ = gain;
+    clock_.initialized_ = true;
+  }
+  else
+  {
+    clock_.gain_ =
+        clock_.gain_ * (1 - CLOCK_GAIN_ALPHA) +
+        gain * CLOCK_GAIN_ALPHA;
+  }
 
   scip2::logger::debug()
       << "origin: " << clock_.origin_
