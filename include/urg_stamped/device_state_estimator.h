@@ -191,7 +191,9 @@ private:
   OriginFracPart originFracOverflow() const;
   ros::Duration delaySigma() const;
 
-  FRIEND_TEST(DeviceStateEstimatorUTM, FindMinDelay);
+  FRIEND_TEST(DeviceStateEstimator, FindMinDelay);
+  FRIEND_TEST(DeviceStateEstimator, RawClockOrigin);
+  FRIEND_TEST(DeviceStateEstimator, ClockGain);
 };
 
 class EstimatorUTM : public Estimator

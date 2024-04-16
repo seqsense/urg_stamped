@@ -67,7 +67,7 @@ TEST(ClockState, StampToTime)
   }
 }
 
-TEST(DeviceStateEstimatorUTM, FindMinDelay)
+TEST(DeviceStateEstimator, FindMinDelay)
 {
   EstimatorUTM est;
 
@@ -105,7 +105,7 @@ TEST(DeviceStateEstimatorUTM, FindMinDelay)
   }
 }
 
-TEST(DeviceStateEstimatorUTM, RawClockOrigin)
+TEST(DeviceStateEstimator, RawClockOrigin)
 {
   EstimatorUTM est;
   for (double d = 0; d < 0.003; d += 0.00025)
@@ -118,11 +118,11 @@ TEST(DeviceStateEstimatorUTM, RawClockOrigin)
       est.pushSyncSample(ros::Time(1 + t), ros::Time(1 + t + 0.0001), ts);
     }
     est.finishSync();
-    ASSERT_NEAR(est.clock_.origin_.toSec(), 1.000 - d, 0.0002);
+    ASSERT_NEAR(est.latest_clock_.origin_.toSec(), 1.000 - d, 0.0002);
   }
 }
 
-TEST(DeviceStateEstimatorUTM, ClockGain)
+TEST(DeviceStateEstimator, ClockGain)
 {
   const std::vector<double> gains =
       {
@@ -149,7 +149,7 @@ TEST(DeviceStateEstimatorUTM, ClockGain)
 
       if (t0 > 0)
       {
-        ASSERT_NEAR(est.clock_.gain_, gain, 0.0001);
+        ASSERT_NEAR(est.getClockState().gain_, gain, 0.0001);
       }
     }
   }
