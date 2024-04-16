@@ -41,25 +41,26 @@ protected:
       const boost::posix_time::ptime& time_read)
   {
     std::istream stream(&buf);
-    std::string echo_back;
-    if (!std::getline(stream, echo_back))
+    while (true)
     {
-      logger::error() << "Failed to get echo back" << std::endl;
-      return;
-    }
-    std::string status;
-    if (!std::getline(stream, status))
-    {
-      logger::error() << "Failed to get status" << std::endl;
-      return;
-    }
-    status.pop_back();  // remove checksum
+      std::string echo_back;
+      if (!std::getline(stream, echo_back))
+      {
+        return;
+      }
+      if (echo_back == "")
+      {
+        continue;
+      }
+      std::string status;
+      if (!std::getline(stream, status))
+      {
+        logger::error() << "Failed to get status" << std::endl;
+        return;
+      }
+      status.pop_back();  // remove checksum
 
-    response_processor_(time_read, echo_back, status, stream);
-
-    std::string line;
-    while (std::getline(stream, line))
-    {
+      response_processor_(time_read, echo_back, status, stream);
     }
   }
 
