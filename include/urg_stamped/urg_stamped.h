@@ -117,7 +117,7 @@ protected:
 
   bool cmd_resetting_;
 
-  device_state_estimator::Estimator est_;
+  device_state_estimator::Estimator::Ptr est_;
 
   void cbM(
       const boost::posix_time::ptime& time_read,

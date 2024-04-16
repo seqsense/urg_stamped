@@ -59,10 +59,18 @@ void UrgStampedNode::cbM(
     return;
   }
 
+  if (!est_)
+  {
+    scip2::logger::error()
+        << "Received scan data before timestamp estimator initialization"
+        << std::endl;
+    return;
+  }
+
   const uint64_t walltime_device = walltime_.update(scan.timestamp_);
   const ros::Time time_read_ros = ros::Time::fromBoost(time_read);
 
-  std::pair<ros::Time, bool> t_scan = est_.pushScanSample(time_read_ros, walltime_device);
+  std::pair<ros::Time, bool> t_scan = est_->pushScanSample(time_read_ros, walltime_device);
   sensor_msgs::LaserScan msg(msg_base_);
   msg.header.stamp = t_scan.first;
   if (!t_scan.second)
@@ -141,6 +149,14 @@ void UrgStampedNode::cbTM(
     return;
   }
 
+  if (!est_)
+  {
+    scip2::logger::error()
+        << "Received time sync response before timestamp estimator initialization"
+        << std::endl;
+    return;
+  }
+
   timer_retry_tm_.stop();
   switch (echo_back[2])
   {
@@ -150,7 +166,7 @@ void UrgStampedNode::cbTM(
       delay_estim_state_ = DelayEstimState::ESTIMATING;
 
       tm_start_time_ = ros::Time::now();
-      est_.startSync();
+      est_->startSync();
 
       scip_->sendCommand(
           "TM1",
@@ -161,12 +177,12 @@ void UrgStampedNode::cbTM(
     {
       const uint64_t walltime_device = walltime_.update(time_device.timestamp_);
 
-      est_.pushSyncSample(
+      est_->pushSyncSample(
           ros::Time::fromBoost(time_tm_request),
           ros::Time::fromBoost(time_read),
           walltime_device);
 
-      if (est_.hasEnoughSyncSamples())
+      if (est_->hasEnoughSyncSamples())
       {
         scip_->sendCommand("TM2");
         break;
@@ -180,7 +196,7 @@ void UrgStampedNode::cbTM(
     }
     case '2':
     {
-      est_.finishSync();
+      est_->finishSync();
 
       delay_estim_state_ = DelayEstimState::IDLE;
       scip_->sendCommand(
@@ -273,6 +289,25 @@ void UrgStampedNode::cbVV(
       continue;
     }
     scip2::logger::info() << key << ": " << kv->second << std::endl;
+  }
+  if (!est_)
+  {
+    std::string prod;
+    const auto prod_it = params.find("PROD");
+    if (prod_it == params.end())
+    {
+      scip2::logger::error()
+          << "Could not detect sensor model. Fallback to UTM mode"
+          << std::endl;
+      prod = "UTM";
+    }
+    else
+    {
+      prod = prod_it->second.substr(0, 3);
+    }
+    // TODO(at-wat): select corresponding Estimator
+    est_.reset(new device_state_estimator::EstimatorUTM());
+    scip2::logger::info() << "initialized timestamp estimator for " << prod << std::endl;
   }
 }
 
@@ -562,14 +597,22 @@ void UrgStampedNode::sleepRandom(const double min, const double max)
 
 void UrgStampedNode::publishStatus()
 {
+  if (!est_)
+  {
+    return;
+  }
+  const device_state_estimator::ClockState clock = est_->getClockState();
+  const device_state_estimator::ScanState scan = est_->getScanState();
+  const device_state_estimator::CommDelay comm_delay = est_->getCommDelay();
+
   urg_stamped::Status msg;
   msg.header.stamp = ros::Time::now();
-  msg.sensor_clock_origin = est_.clock_.origin_;
-  msg.sensor_clock_gain = est_.clock_.gain_;
-  msg.communication_delay = est_.min_comm_delay_;
-  msg.communication_delay_sigma = est_.comm_delay_sigma_;
-  msg.scan_time_origin = est_.scan_.origin_;
-  msg.scan_interval = est_.scan_.interval_;
+  msg.sensor_clock_origin = clock.origin_;
+  msg.sensor_clock_gain = clock.gain_;
+  msg.communication_delay = comm_delay.min_;
+  msg.communication_delay_sigma = comm_delay.sigma_;
+  msg.scan_time_origin = scan.origin_;
+  msg.scan_interval = scan.interval_;
   pub_status_.publish(msg);
 }
 

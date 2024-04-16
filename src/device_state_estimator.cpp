@@ -35,15 +35,6 @@ ros::Time ClockState::stampToTime(const uint64_t stamp) const
   return origin_ + ros::Duration(from_origin);
 }
 
-ScanState::ScanState(const std::vector<ScanSample>& samples)
-{
-  std::vector<ScanSample> s(samples);
-  std::sort(s.begin(), s.end());
-  const ScanSample& med = s[s.size() / 2];
-  origin_ = med.t_;
-  interval_ = med.interval_;
-}
-
 ros::Time ScanState::fit(const ros::Time& t) const
 {
   const double from_origin = (t - origin_).toSec();
@@ -52,17 +43,17 @@ ros::Time ScanState::fit(const ros::Time& t) const
   return origin_ + ros::Duration(interval * n);
 }
 
-void Estimator::startSync()
+void EstimatorUTM::startSync()
 {
   sync_samples_.clear();
 }
 
-void Estimator::pushSyncSample(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
+void EstimatorUTM::pushSyncSample(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
 {
   sync_samples_.emplace_back(t_req, t_res, device_wall_stamp);
 }
 
-bool Estimator::hasEnoughSyncSamples() const
+bool EstimatorUTM::hasEnoughSyncSamples() const
 {
   const size_t n = sync_samples_.size();
   if (n < MIN_SYNC_SAMPLES)
@@ -77,7 +68,7 @@ bool Estimator::hasEnoughSyncSamples() const
   return overflow_range.t_max_ > overflow_range.t_min_;
 }
 
-void Estimator::finishSync()
+void EstimatorUTM::finishSync()
 {
   const OriginFracPart overflow_range = originFracOverflow();
   if (!overflow_range)
@@ -95,16 +86,16 @@ void Estimator::finishSync()
     scip2::logger::warn() << "failed to find minimal delay sample" << std::endl;
     return;
   }
-  comm_delay_sigma_ = delaySigma();
+  comm_delay_.sigma_ = delaySigma();
 
   const ClockState last = clock_;
 
   clock_.origin_ = overflow_range.compensate(min_delay->t_origin_);
   clock_.stamp_ = min_delay->device_wall_stamp_;
   clock_.t_estim_ = min_delay->t_process_;
-  if (min_comm_delay_.isZero() || min_comm_delay_ > min_delay->delay_)
+  if (comm_delay_.min_.isZero() || comm_delay_.min_ > min_delay->delay_)
   {
-    min_comm_delay_ = min_delay->delay_;
+    comm_delay_.min_ = min_delay->delay_;
   }
 
   if (last.origin_.isZero())
@@ -138,7 +129,7 @@ void Estimator::finishSync()
       << std::endl;
 }
 
-std::vector<SyncSample>::const_iterator Estimator::findMinDelay(const OriginFracPart& overflow_range) const
+std::vector<SyncSample>::const_iterator EstimatorUTM::findMinDelay(const OriginFracPart& overflow_range) const
 {
   if (sync_samples_.size() == 0)
   {
@@ -159,7 +150,7 @@ std::vector<SyncSample>::const_iterator Estimator::findMinDelay(const OriginFrac
   return it_min_delay;
 }
 
-OriginFracPart Estimator::originFracOverflow() const
+OriginFracPart EstimatorUTM::originFracOverflow() const
 {
   if (sync_samples_.size() == 0)
   {
@@ -195,7 +186,7 @@ OriginFracPart Estimator::originFracOverflow() const
   return OriginFracPart(t_min, t_max);
 }
 
-std::pair<ros::Time, bool> Estimator::pushScanSample(const ros::Time& t_recv, const uint64_t device_wall_stamp)
+std::pair<ros::Time, bool> EstimatorUTM::pushScanSample(const ros::Time& t_recv, const uint64_t device_wall_stamp)
 {
   const std::pair<ros::Time, bool> t_scan_raw = pushScanSampleRaw(t_recv, device_wall_stamp);
   if (!t_scan_raw.second)
@@ -219,13 +210,17 @@ std::pair<ros::Time, bool> Estimator::pushScanSample(const ros::Time& t_recv, co
     const ros::Duration interval = recent_t_scans_[i] - recent_t_scans_[i - 1];
     samples.emplace_back(recent_t_scans_[i], interval);
   }
-  ScanState s(samples);
-  scan_ = s;
 
-  return std::pair<ros::Time, bool>(s.fit(t_scan_raw.first), true);
+  std::vector<ScanSample> s(samples);
+  std::sort(s.begin(), s.end());
+  const ScanSample& med = s[s.size() / 2];
+  scan_.origin_ = med.t_;
+  scan_.interval_ = med.interval_;
+
+  return std::pair<ros::Time, bool>(scan_.fit(t_scan_raw.first), true);
 }
 
-std::pair<ros::Time, bool> Estimator::pushScanSampleRaw(const ros::Time& t_recv, const uint64_t device_wall_stamp)
+std::pair<ros::Time, bool> EstimatorUTM::pushScanSampleRaw(const ros::Time& t_recv, const uint64_t device_wall_stamp)
 {
   const ros::Time t_stamp = clock_.stampToTime(device_wall_stamp);
   if (!clock_.initialized_)
@@ -233,7 +228,7 @@ std::pair<ros::Time, bool> Estimator::pushScanSampleRaw(const ros::Time& t_recv,
     return std::pair<ros::Time, bool>(t_stamp, true);
   }
 
-  const ros::Time t_sent = t_recv - min_comm_delay_;
+  const ros::Time t_sent = t_recv - comm_delay_.min_;
   const ros::Duration stamp_to_send = t_sent - t_stamp;
   ros::Duration new_min_stamp_to_send = min_stamp_to_send_;
   if (new_min_stamp_to_send.isZero() || stamp_to_send < new_min_stamp_to_send)
@@ -250,7 +245,7 @@ std::pair<ros::Time, bool> Estimator::pushScanSampleRaw(const ros::Time& t_recv,
         min_stamp_to_send_ * (1 - MIN_STAMP_TO_SEND_ALPHA) +
         new_min_stamp_to_send * MIN_STAMP_TO_SEND_ALPHA;
   }
-  if (stamp_to_send - min_stamp_to_send_ > ros::Duration(0.001) + comm_delay_sigma_ * 2 &&
+  if (stamp_to_send - min_stamp_to_send_ > ros::Duration(0.001) + comm_delay_.sigma_ * 2 &&
       stamp_to_send - min_stamp_to_send_ < ros::Duration(0.002))
   {
     min_stamp_to_send_ =
@@ -258,14 +253,14 @@ std::pair<ros::Time, bool> Estimator::pushScanSampleRaw(const ros::Time& t_recv,
         (stamp_to_send - ros::Duration(0.001)) * MIN_STAMP_TO_SEND_ALPHA;
   }
 
-  const ros::Duration t_frac = stamp_to_send - min_stamp_to_send_ - comm_delay_sigma_;
+  const ros::Duration t_frac = stamp_to_send - min_stamp_to_send_ - comm_delay_.sigma_;
   const ros::Time t_scan_raw = t_stamp + t_frac;
   const bool valid = t_frac < ros::Duration(0.0015);
 
   return std::pair<ros::Time, bool>(t_scan_raw, valid);
 }
 
-ros::Duration Estimator::delaySigma() const
+ros::Duration EstimatorUTM::delaySigma() const
 {
   if (sync_samples_.size() == 0)
   {
@@ -274,7 +269,7 @@ ros::Duration Estimator::delaySigma() const
   double sum = 0;
   for (const auto& s : sync_samples_)
   {
-    const double delay_diff = (s.delay_ - min_comm_delay_).toSec();
+    const double delay_diff = (s.delay_ - comm_delay_.min_).toSec();
     sum += delay_diff * delay_diff;
   }
   return ros::Duration(std::sqrt(sum / sync_samples_.size()));
