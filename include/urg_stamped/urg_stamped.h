@@ -91,9 +91,6 @@ protected:
   boost::posix_time::ptime time_tm_request;
   ros::Time tm_start_time_;
 
-  boost::posix_time::ptime time_ii_request;
-  std::vector<ros::Duration> on_scan_communication_delays_;
-
   scip2::Walltime<24> walltime_;
 
   std::default_random_engine random_engine_;

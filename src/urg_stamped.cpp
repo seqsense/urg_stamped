@@ -275,11 +275,6 @@ void UrgStampedNode::cbVV(
   }
 }
 
-void UrgStampedNode::cbIISend(const boost::posix_time::ptime& time_send)
-{
-  time_ii_request = time_send;
-}
-
 void UrgStampedNode::cbII(
     const boost::posix_time::ptime& time_read,
     const std::string& echo_back,
@@ -447,9 +442,7 @@ void UrgStampedNode::cbClose()
 
 void UrgStampedNode::sendII()
 {
-  scip_->sendCommand(
-      "II",
-      boost::bind(&UrgStampedNode::cbIISend, this, boost::arg<1>()));
+  scip_->sendCommand("II");
 }
 
 void UrgStampedNode::delayEstimation(const ros::TimerEvent& event)
