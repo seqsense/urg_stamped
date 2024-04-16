@@ -31,24 +31,6 @@ namespace urg_stamped
 namespace device_state_estimator
 {
 
-void EstimatorUST::startSync()
-{
-  sync_samples_.clear();
-}
-
-void EstimatorUST::pushSyncSample(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
-{
-  sync_samples_.emplace_back(t_req, t_res, device_wall_stamp);
-}
-
-bool EstimatorUST::hasEnoughSyncSamples() const
-{
-}
-
-void EstimatorUST::finishSync()
-{
-}
-
 std::pair<ros::Time, bool> EstimatorUST::pushScanSample(const ros::Time& t_recv, const uint64_t device_wall_stamp)
 {
   const ros::Time t_stamp = clock_.stampToTime(device_wall_stamp);

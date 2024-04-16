@@ -144,114 +144,77 @@ class Estimator
 public:
   using Ptr = std::shared_ptr<Estimator>;
 
-  virtual void startSync() = 0;
-  virtual void pushSyncSample(
-      const ros::Time& t_req,
-      const ros::Time& t_res,
-      const uint64_t device_wall_stamp) = 0;
-  virtual bool hasEnoughSyncSamples() const = 0;
-  virtual void finishSync() = 0;
-
-  virtual std::pair<ros::Time, bool> pushScanSample(
-      const ros::Time& t_recv, const uint64_t device_wall_stamp) = 0;
-
-  virtual ClockState getClockState() const = 0;
-  virtual CommDelay getCommDelay() const = 0;
-  virtual ScanState getScanState() const = 0;
-};
-
-class EstimatorUTM : public Estimator
-{
-public:
-  static constexpr int MIN_SYNC_SAMPLES = 10;
-  static constexpr int MAX_SYNC_SAMPLES = 100;
-  static constexpr int MIN_SCAN_SAMPLES = 5;
-  static constexpr int MAX_SCAN_SAMPLES = 9;
-  static constexpr double CLOCK_GAIN_ALPHA = 0.1;
-  static constexpr double MIN_STAMP_TO_SEND_ALPHA = 0.05;
-
-  ClockState clock_;
-  CommDelay comm_delay_;
-  ros::Duration min_stamp_to_send_;
-  ScanState scan_;
-  std::deque<ros::Time> recent_t_scans_;
-
-  void startSync() final;
+  void startSync();
   void pushSyncSample(
       const ros::Time& t_req,
       const ros::Time& t_res,
-      const uint64_t device_wall_stamp) final;
-  bool hasEnoughSyncSamples() const final;
-  void finishSync() final;
+      const uint64_t device_wall_stamp);
+  bool hasEnoughSyncSamples() const;
+  void finishSync();
 
-  std::pair<ros::Time, bool> pushScanSample(
-      const ros::Time& t_recv,
-      const uint64_t device_wall_stamp) final;
-
-  inline ClockState getClockState() const final
+  inline ClockState getClockState() const
   {
     return clock_;
   }
-  inline CommDelay getCommDelay() const final
+  inline CommDelay getCommDelay() const
   {
     return comm_delay_;
   }
-  inline ScanState getScanState() const final
+  inline ScanState getScanState() const
   {
     return scan_;
   }
 
+  virtual std::pair<ros::Time, bool> pushScanSample(
+      const ros::Time& t_recv, const uint64_t device_wall_stamp) = 0;
+
+protected:
+  ClockState clock_;
+  CommDelay comm_delay_;
+  ScanState scan_;
+
 private:
+  static constexpr int MIN_SYNC_SAMPLES = 10;
+  static constexpr int MAX_SYNC_SAMPLES = 100;
+  static constexpr double CLOCK_GAIN_ALPHA = 0.1;
+
   std::vector<SyncSample> sync_samples_;
 
   std::vector<SyncSample>::const_iterator findMinDelay(
       const OriginFracPart& overflow_range) const;
   OriginFracPart originFracOverflow() const;
-  std::pair<ros::Time, bool> pushScanSampleRaw(
-      const ros::Time& t_recv, const uint64_t device_wall_stamp);
   ros::Duration delaySigma() const;
 
   FRIEND_TEST(DeviceStateEstimatorUTM, FindMinDelay);
+};
+
+class EstimatorUTM : public Estimator
+{
+public:
+  ros::Duration min_stamp_to_send_;
+  std::deque<ros::Time> recent_t_scans_;
+
+  std::pair<ros::Time, bool> pushScanSample(
+      const ros::Time& t_recv,
+      const uint64_t device_wall_stamp) final;
+
+private:
+  static constexpr int MIN_SCAN_SAMPLES = 5;
+  static constexpr int MAX_SCAN_SAMPLES = 9;
+  static constexpr double MIN_STAMP_TO_SEND_ALPHA = 0.05;
+
+  std::pair<ros::Time, bool> pushScanSampleRaw(
+      const ros::Time& t_recv, const uint64_t device_wall_stamp);
+
   FRIEND_TEST(DeviceStateEstimatorUTM, PushScanSampleRaw);
 };
 
 class EstimatorUST : public Estimator
 {
 public:
-  ClockState clock_;
-  CommDelay comm_delay_;
-  ScanState scan_;
-
-  void startSync() final;
-  void pushSyncSample(
-      const ros::Time& t_req,
-      const ros::Time& t_res,
-      const uint64_t device_wall_stamp) final;
-  bool hasEnoughSyncSamples() const final;
-  void finishSync() final;
-
   std::pair<ros::Time, bool> pushScanSample(
       const ros::Time& t_recv,
       const uint64_t device_wall_stamp) final;
-
-  inline ClockState getClockState() const final
-  {
-    return clock_;
-  }
-  inline CommDelay getCommDelay() const final
-  {
-    return comm_delay_;
-  }
-  inline ScanState getScanState() const final
-  {
-    return scan_;
-  }
-
-private:
-  static constexpr int MIN_SYNC_SAMPLES = 10;
-  static constexpr int MAX_SYNC_SAMPLES = 500;
-
-  std::vector<SyncSample> sync_samples_;
 };
 
 }  // namespace device_state_estimator
