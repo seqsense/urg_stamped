@@ -188,7 +188,9 @@ void UrgStampedNode::cbTM(
         break;
       }
 
+      // UST doesn't respond immediately when next TM1 command is sent without sleep
       sleepRandom(0, 0.001);
+
       scip_->sendCommand(
           "TM1",
           boost::bind(&UrgStampedNode::cbTMSend, this, boost::arg<1>()));
@@ -305,9 +307,23 @@ void UrgStampedNode::cbVV(
     {
       prod = prod_it->second.substr(0, 3);
     }
-    // TODO(at-wat): select corresponding Estimator
-    est_.reset(new device_state_estimator::EstimatorUTM());
-    scip2::logger::info() << "Initialized timestamp estimator for " << prod << std::endl;
+    if (prod == "UST")
+    {
+      est_.reset(new device_state_estimator::EstimatorUST());
+      scip2::logger::info() << "Initialized timestamp estimator for UST" << std::endl;
+    }
+    else if (prod == "UTM")
+    {
+      est_.reset(new device_state_estimator::EstimatorUTM());
+      scip2::logger::info() << "Initialized timestamp estimator for UTM" << std::endl;
+    }
+    else
+    {
+      est_.reset(new device_state_estimator::EstimatorUTM());
+      scip2::logger::info()
+          << "Unknown sensor model. Initialized timestamp estimator for UTM"
+          << std::endl;
+    }
   }
 }
 

@@ -215,6 +215,45 @@ private:
   FRIEND_TEST(DeviceStateEstimatorUTM, PushScanSampleRaw);
 };
 
+class EstimatorUST : public Estimator
+{
+public:
+  ClockState clock_;
+  CommDelay comm_delay_;
+  ScanState scan_;
+
+  void startSync() final;
+  void pushSyncSample(
+      const ros::Time& t_req,
+      const ros::Time& t_res,
+      const uint64_t device_wall_stamp) final;
+  bool hasEnoughSyncSamples() const final;
+  void finishSync() final;
+
+  std::pair<ros::Time, bool> pushScanSample(
+      const ros::Time& t_recv,
+      const uint64_t device_wall_stamp) final;
+
+  inline ClockState getClockState() const final
+  {
+    return clock_;
+  }
+  inline CommDelay getCommDelay() const final
+  {
+    return comm_delay_;
+  }
+  inline ScanState getScanState() const final
+  {
+    return scan_;
+  }
+
+private:
+  static constexpr int MIN_SYNC_SAMPLES = 10;
+  static constexpr int MAX_SYNC_SAMPLES = 500;
+
+  std::vector<SyncSample> sync_samples_;
+};
+
 }  // namespace device_state_estimator
 }  // namespace urg_stamped
 
