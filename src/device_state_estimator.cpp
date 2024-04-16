@@ -61,17 +61,7 @@ void Estimator::startSync()
 
 void Estimator::pushSyncSample(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
 {
-  if (t_res - t_req > ros::Duration(0.002))
-  {
-    return;
-  }
-  const SyncSample s(t_req, t_res, device_wall_stamp);
-  sync_samples_.push_back(s);
-
-  if (min_comm_delay_.isZero() || min_comm_delay_ > s.delay_)
-  {
-    min_comm_delay_ = s.delay_;
-  }
+  sync_samples_.emplace_back(t_req, t_res, device_wall_stamp);
 }
 
 bool Estimator::hasEnoughSyncSamples() const
@@ -114,6 +104,10 @@ void Estimator::finishSync()
   clock_.origin_ = overflow_range.compensate(min_delay->t_origin_);
   clock_.stamp_ = min_delay->device_wall_stamp_;
   clock_.t_estim_ = min_delay->t_process_;
+  if (min_comm_delay_.isZero() || min_comm_delay_ > min_delay->delay_)
+  {
+    min_comm_delay_ = min_delay->delay_;
+  }
 
   if (last.origin_.isZero())
   {
@@ -195,19 +189,10 @@ OriginFracPart Estimator::originFracOverflow() const
   {
     return OriginFracPart();
   }
-
-  const ros::Duration max_delay = min_comm_delay_ + delaySigma();
-
-  int num_valid_samples = 0;
   auto it_min_origin = sync_samples_.begin();
   auto it_max_origin = sync_samples_.begin();
   for (auto it = sync_samples_.begin() + 1; it != sync_samples_.end(); it++)
   {
-    if (it->delay_ > max_delay)
-    {
-      continue;
-    }
-    num_valid_samples++;
     if (it->t_origin_ < it_min_origin->t_origin_)
     {
       it_min_origin = it;
@@ -217,13 +202,6 @@ OriginFracPart Estimator::originFracOverflow() const
       it_max_origin = it;
     }
   }
-
-  if (it_min_origin->delay_ > max_delay ||
-      it_max_origin->delay_ > max_delay)
-  {
-    return OriginFracPart();
-  }
-
   double t_min = std::fmod(it_min_origin->t_process_.toSec(), 0.001);
   double t_max = std::fmod(it_max_origin->t_process_.toSec(), 0.001);
   if (t_min > t_max + 0.0005)
