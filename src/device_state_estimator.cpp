@@ -122,6 +122,7 @@ void Estimator::finishSync()
 
   if (last.origin_.isZero())
   {
+    clock_ = latest_clock_;
     return;
   }
 
