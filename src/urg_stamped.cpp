@@ -307,7 +307,7 @@ void UrgStampedNode::cbVV(
     }
     // TODO(at-wat): select corresponding Estimator
     est_.reset(new device_state_estimator::EstimatorUTM());
-    scip2::logger::info() << "initialized timestamp estimator for " << prod << std::endl;
+    scip2::logger::info() << "Initialized timestamp estimator for " << prod << std::endl;
   }
 }
 

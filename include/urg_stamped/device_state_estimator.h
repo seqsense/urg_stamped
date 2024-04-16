@@ -108,24 +108,8 @@ public:
     return valid_;
   }
 
-  inline bool isOnOverflow(const ros::Time& t) const
-  {
-    const double r = std::fmod(t.toSec(), 0.001);
-    double t0 = std::min(t_min_, t_max_);
-    double t1 = std::max(t_min_, t_max_);
-    return t0 - TOLERANCE < r && r < t1 + TOLERANCE;
-  }
-
-  inline ros::Time compensate(const ros::Time& t) const
-  {
-    const double frac = (t_min_ + t_max_) / 2;
-    double t_integral = std::floor(t.toSec() * 1000) / 1000;
-    if (std::fmod(t.toSec(), 0.001) < frac)
-    {
-      t_integral -= 0.001;
-    }
-    return ros::Time(t_integral + frac);
-  }
+  bool isOnOverflow(const ros::Time& t) const;
+  ros::Time compensate(const ros::Time& t) const;
 };
 
 class ScanSample

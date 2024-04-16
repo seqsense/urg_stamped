@@ -1,6 +1,7 @@
 catkin_add_gtest(test_device_state_estimator
   src/test_device_state_estimator.cpp
   ../src/device_state_estimator.cpp
+  ../src/device_state_estimator_utm.cpp
   ../src/scip2/logger.cpp
 )
 target_link_libraries(test_device_state_estimator ${catkin_LIBRARIES} ${Boost_LIBRARIES})

@@ -15,14 +15,10 @@
  */
 
 #include <algorithm>
-#include <memory>
-#include <utility>
-#include <vector>
 
 #include <ros/time.h>
 
 #include <urg_stamped/device_state_estimator.h>
-#include <scip2/logger.h>
 
 namespace urg_stamped
 {
@@ -43,236 +39,23 @@ ros::Time ScanState::fit(const ros::Time& t) const
   return origin_ + ros::Duration(interval * n);
 }
 
-void EstimatorUTM::startSync()
+bool OriginFracPart::isOnOverflow(const ros::Time& t) const
 {
-  sync_samples_.clear();
+  const double r = std::fmod(t.toSec(), 0.001);
+  double t0 = std::min(t_min_, t_max_);
+  double t1 = std::max(t_min_, t_max_);
+  return t0 - TOLERANCE < r && r < t1 + TOLERANCE;
 }
 
-void EstimatorUTM::pushSyncSample(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
+ros::Time OriginFracPart::compensate(const ros::Time& t) const
 {
-  sync_samples_.emplace_back(t_req, t_res, device_wall_stamp);
-}
-
-bool EstimatorUTM::hasEnoughSyncSamples() const
-{
-  const size_t n = sync_samples_.size();
-  if (n < MIN_SYNC_SAMPLES)
+  const double frac = (t_min_ + t_max_) / 2;
+  double t_integral = std::floor(t.toSec() * 1000) / 1000;
+  if (std::fmod(t.toSec(), 0.001) < frac)
   {
-    return false;
+    t_integral -= 0.001;
   }
-  if (n >= MAX_SYNC_SAMPLES)
-  {
-    return true;
-  }
-  const OriginFracPart overflow_range = originFracOverflow();
-  return overflow_range.t_max_ > overflow_range.t_min_;
-}
-
-void EstimatorUTM::finishSync()
-{
-  const OriginFracPart overflow_range = originFracOverflow();
-  if (!overflow_range)
-  {
-    scip2::logger::warn()
-        << "failed to find origin fractional part overflow: "
-        << overflow_range.t_min_ << ", " << overflow_range.t_max_
-        << ", samples=" << sync_samples_.size()
-        << std::endl;
-    return;
-  }
-  const auto min_delay = findMinDelay(overflow_range);
-  if (min_delay == sync_samples_.cend())
-  {
-    scip2::logger::warn() << "failed to find minimal delay sample" << std::endl;
-    return;
-  }
-  comm_delay_.sigma_ = delaySigma();
-
-  const ClockState last = clock_;
-
-  clock_.origin_ = overflow_range.compensate(min_delay->t_origin_);
-  clock_.stamp_ = min_delay->device_wall_stamp_;
-  clock_.t_estim_ = min_delay->t_process_;
-  if (comm_delay_.min_.isZero() || comm_delay_.min_ > min_delay->delay_)
-  {
-    comm_delay_.min_ = min_delay->delay_;
-  }
-
-  if (last.origin_.isZero())
-  {
-    return;
-  }
-
-  const double t_diff = (clock_.t_estim_ - last.t_estim_).toSec();
-  const double origin_diff =
-      (clock_.origin_ - last.origin_).toSec();
-  const double gain = (t_diff - origin_diff) / t_diff;
-  const double gain_orig = clock_.gain_;
-
-  if (!clock_.initialized_)
-  {
-    clock_.gain_ = gain;
-    clock_.initialized_ = true;
-  }
-  else
-  {
-    clock_.gain_ =
-        clock_.gain_ * (1 - CLOCK_GAIN_ALPHA) +
-        gain * CLOCK_GAIN_ALPHA;
-  }
-
-  scip2::logger::debug()
-      << "origin: " << clock_.origin_
-      << ", gain: " << gain
-      << ", delay: " << min_delay->delay_
-      << ", device timestamp: " << min_delay->device_wall_stamp_
-      << std::endl;
-}
-
-std::vector<SyncSample>::const_iterator EstimatorUTM::findMinDelay(const OriginFracPart& overflow_range) const
-{
-  if (sync_samples_.size() == 0)
-  {
-    return sync_samples_.cend();
-  }
-  auto it_min_delay = sync_samples_.cbegin();
-  for (auto it = sync_samples_.cbegin() + 1; it != sync_samples_.cend(); it++)
-  {
-    if (overflow_range.isOnOverflow(it->t_process_))
-    {
-      continue;
-    }
-    if (it->delay_ < it_min_delay->delay_)
-    {
-      it_min_delay = it;
-    }
-  }
-  return it_min_delay;
-}
-
-OriginFracPart EstimatorUTM::originFracOverflow() const
-{
-  if (sync_samples_.size() == 0)
-  {
-    return OriginFracPart();
-  }
-  auto it_min_origin = sync_samples_.begin();
-  auto it_max_origin = sync_samples_.begin();
-  for (auto it = sync_samples_.begin() + 1; it != sync_samples_.end(); it++)
-  {
-    if (it->t_origin_ < it_min_origin->t_origin_)
-    {
-      it_min_origin = it;
-    }
-    if (it->t_origin_ > it_max_origin->t_origin_)
-    {
-      it_max_origin = it;
-    }
-  }
-  double t_min = std::fmod(it_min_origin->t_process_.toSec(), 0.001);
-  double t_max = std::fmod(it_max_origin->t_process_.toSec(), 0.001);
-  if (t_min > t_max + 0.0005)
-  {
-    t_max += 0.001;
-  }
-  else if (t_max > t_min + 0.0005)
-  {
-    t_min += 0.001;
-  }
-  if (std::abs(t_max - t_min) > 0.00025)
-  {
-    return OriginFracPart(t_min, t_max, false);
-  }
-  return OriginFracPart(t_min, t_max);
-}
-
-std::pair<ros::Time, bool> EstimatorUTM::pushScanSample(const ros::Time& t_recv, const uint64_t device_wall_stamp)
-{
-  const std::pair<ros::Time, bool> t_scan_raw = pushScanSampleRaw(t_recv, device_wall_stamp);
-  if (!t_scan_raw.second)
-  {
-    return t_scan_raw;
-  }
-
-  recent_t_scans_.emplace_back(t_scan_raw.first);
-  if (recent_t_scans_.size() < MIN_SCAN_SAMPLES)
-  {
-    return t_scan_raw;
-  }
-  if (recent_t_scans_.size() >= MAX_SCAN_SAMPLES)
-  {
-    recent_t_scans_.pop_front();
-  }
-
-  std::vector<ScanSample> samples;
-  for (size_t i = 1; i < recent_t_scans_.size(); ++i)
-  {
-    const ros::Duration interval = recent_t_scans_[i] - recent_t_scans_[i - 1];
-    samples.emplace_back(recent_t_scans_[i], interval);
-  }
-
-  std::vector<ScanSample> s(samples);
-  std::sort(s.begin(), s.end());
-  const ScanSample& med = s[s.size() / 2];
-  scan_.origin_ = med.t_;
-  scan_.interval_ = med.interval_;
-
-  return std::pair<ros::Time, bool>(scan_.fit(t_scan_raw.first), true);
-}
-
-std::pair<ros::Time, bool> EstimatorUTM::pushScanSampleRaw(const ros::Time& t_recv, const uint64_t device_wall_stamp)
-{
-  const ros::Time t_stamp = clock_.stampToTime(device_wall_stamp);
-  if (!clock_.initialized_)
-  {
-    return std::pair<ros::Time, bool>(t_stamp, true);
-  }
-
-  const ros::Time t_sent = t_recv - comm_delay_.min_;
-  const ros::Duration stamp_to_send = t_sent - t_stamp;
-  ros::Duration new_min_stamp_to_send = min_stamp_to_send_;
-  if (new_min_stamp_to_send.isZero() || stamp_to_send < new_min_stamp_to_send)
-  {
-    new_min_stamp_to_send = stamp_to_send;
-  }
-  if (min_stamp_to_send_.isZero())
-  {
-    min_stamp_to_send_ = new_min_stamp_to_send;
-  }
-  if (stamp_to_send - new_min_stamp_to_send < ros::Duration(0.001) && new_min_stamp_to_send < min_stamp_to_send_)
-  {
-    min_stamp_to_send_ =
-        min_stamp_to_send_ * (1 - MIN_STAMP_TO_SEND_ALPHA) +
-        new_min_stamp_to_send * MIN_STAMP_TO_SEND_ALPHA;
-  }
-  if (stamp_to_send - min_stamp_to_send_ > ros::Duration(0.001) + comm_delay_.sigma_ * 2 &&
-      stamp_to_send - min_stamp_to_send_ < ros::Duration(0.002))
-  {
-    min_stamp_to_send_ =
-        min_stamp_to_send_ * (1 - MIN_STAMP_TO_SEND_ALPHA) +
-        (stamp_to_send - ros::Duration(0.001)) * MIN_STAMP_TO_SEND_ALPHA;
-  }
-
-  const ros::Duration t_frac = stamp_to_send - min_stamp_to_send_ - comm_delay_.sigma_;
-  const ros::Time t_scan_raw = t_stamp + t_frac;
-  const bool valid = t_frac < ros::Duration(0.0015);
-
-  return std::pair<ros::Time, bool>(t_scan_raw, valid);
-}
-
-ros::Duration EstimatorUTM::delaySigma() const
-{
-  if (sync_samples_.size() == 0)
-  {
-    return ros::Duration();
-  }
-  double sum = 0;
-  for (const auto& s : sync_samples_)
-  {
-    const double delay_diff = (s.delay_ - comm_delay_.min_).toSec();
-    sum += delay_diff * delay_diff;
-  }
-  return ros::Duration(std::sqrt(sum / sync_samples_.size()));
+  return ros::Time(t_integral + frac);
 }
 
 }  // namespace device_state_estimator
