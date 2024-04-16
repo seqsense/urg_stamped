@@ -15,6 +15,8 @@
  */
 
 #include <algorithm>
+#include <vector>
+
 #include <fstream>
 
 #include <ros/time.h>
@@ -67,7 +69,12 @@ void Estimator::startSync()
 
 void Estimator::pushSyncSample(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
 {
-  sync_samples_.emplace_back(t_req, t_res, device_wall_stamp);
+  const SyncSample s(t_req, t_res, device_wall_stamp);
+  sync_samples_.push_back(s);
+  if (comm_delay_.min_.isZero() || comm_delay_.min_ > s.delay_)
+  {
+    comm_delay_.min_ = s.delay_;
+  }
 }
 
 bool Estimator::hasEnoughSyncSamples() const
@@ -107,48 +114,47 @@ void Estimator::finishSync()
   }
   comm_delay_.sigma_ = delaySigma();
 
-  const ClockState last = clock_;
+  ClockState last = latest_clock_;
 
-  clock_.origin_ = overflow_range.compensate(min_delay->t_origin_);
-  clock_.stamp_ = min_delay->device_wall_stamp_;
-  clock_.t_estim_ = min_delay->t_process_;
-  if (comm_delay_.min_.isZero() || comm_delay_.min_ > min_delay->delay_)
-  {
-    comm_delay_.min_ = min_delay->delay_;
-  }
+  latest_clock_.origin_ = overflow_range.compensate(min_delay->t_origin_);
+  latest_clock_.stamp_ = min_delay->device_wall_stamp_;
+  latest_clock_.t_estim_ = min_delay->t_process_;
 
   if (last.origin_.isZero())
   {
     return;
   }
 
-  const double t_diff = (clock_.t_estim_ - last.t_estim_).toSec();
+  const double t_diff = (latest_clock_.t_estim_ - last.t_estim_).toSec();
   const double origin_diff =
-      (clock_.origin_ - last.origin_).toSec();
+      (latest_clock_.origin_ - last.origin_).toSec();
   const double gain = (t_diff - origin_diff) / t_diff;
 
-  if (!clock_.initialized_)
+  latest_clock_.initialized_ = true;
+  latest_clock_.gain_ = gain;
+  recent_clocks_.push_back(latest_clock_);
+  if (recent_clocks_.size() >= CLOCK_MEDIAN_WINDOW)
   {
-    clock_.gain_ = gain;
-    clock_.initialized_ = true;
-  }
-  else
-  {
-    clock_.gain_ =
-        clock_.gain_ * (1 - CLOCK_GAIN_ALPHA) +
-        gain * CLOCK_GAIN_ALPHA;
+    recent_clocks_.pop_front();
   }
 
+  std::vector<ClockState> clocks(recent_clocks_.size());
+  std::copy(recent_clocks_.begin(), recent_clocks_.end(), clocks.begin());
+  std::sort(clocks.begin(), clocks.end());
+  clock_ = clocks[clocks.size() / 2];
+
   file_gain
+      << std::setprecision(9) << std::fixed
       << min_delay->device_wall_stamp_
       << " " << clock_.origin_
       << " " << gain
+      << " " << clock_.gain_
       << " " << min_delay->delay_
       << std::endl;
 
   scip2::logger::debug()
       << "origin: " << clock_.origin_
-      << ", gain: " << gain
+      << ", gain: " << clock_.gain_
       << ", delay: " << min_delay->delay_
       << ", device timestamp: " << min_delay->device_wall_stamp_
       << std::endl;
