@@ -19,6 +19,8 @@
 #include <utility>
 #include <vector>
 
+#include <fstream>
+
 #include <ros/time.h>
 
 #include <urg_stamped/device_state_estimator.h>
@@ -122,6 +124,27 @@ void Estimator::finishSync()
   const double origin_diff =
       (clock_.origin_ - last.origin_).toSec();
   const double gain = (t_diff - origin_diff) / t_diff;
+  const double gain_orig = clock_.gain_;
+
+  // if (gain < 1.0)
+  {
+    {
+      std::ofstream file("/tmp/clock.dat");
+      for (const auto& s : sync_samples_)
+      {
+        file
+            << s.delay_
+            << " " << s.t_process_
+            << " " << s.device_wall_stamp_
+            << " " << s.t_origin_
+            << " " << s.t_req_
+            << " " << s.t_res_
+            << std::endl;
+      }
+    }
+    abort();
+  }
+
   if (!clock_.initialized_)
   {
     clock_.gain_ = gain;
@@ -133,6 +156,9 @@ void Estimator::finishSync()
         clock_.gain_ * (1 - CLOCK_GAIN_ALPHA) +
         gain * CLOCK_GAIN_ALPHA;
   }
+  std::cerr
+      << std::setprecision(8) << std::fixed
+      << "gain " << clock_.gain_ << " " << gain_orig << " " << gain << std::endl;
 
   scip2::logger::debug()
       << "origin: " << clock_.origin_
@@ -172,6 +198,7 @@ OriginFracPart Estimator::originFracOverflow() const
 
   const ros::Duration max_delay = min_comm_delay_ + delaySigma();
 
+  int num_valid_samples = 0;
   auto it_min_origin = sync_samples_.begin();
   auto it_max_origin = sync_samples_.begin();
   for (auto it = sync_samples_.begin() + 1; it != sync_samples_.end(); it++)
@@ -180,6 +207,7 @@ OriginFracPart Estimator::originFracOverflow() const
     {
       continue;
     }
+    num_valid_samples++;
     if (it->t_origin_ < it_min_origin->t_origin_)
     {
       it_min_origin = it;
@@ -213,6 +241,9 @@ OriginFracPart Estimator::originFracOverflow() const
   return OriginFracPart(t_min, t_max);
 }
 
+static std::ofstream file("/tmp/scan.dat");
+static std::ofstream file_interval("/tmp/scan_interval.dat");
+
 std::pair<ros::Time, bool> Estimator::pushScanSample(const ros::Time& t_recv, const uint64_t device_wall_stamp)
 {
   const std::pair<ros::Time, bool> t_scan_raw = pushScanSampleRaw(t_recv, device_wall_stamp);
@@ -239,6 +270,12 @@ std::pair<ros::Time, bool> Estimator::pushScanSample(const ros::Time& t_recv, co
   }
   ScanState s(samples);
   scan_ = s;
+
+  file_interval
+      << t_recv
+      << " " << device_wall_stamp
+      << " " << s.interval_
+      << std::endl;
   return std::pair<ros::Time, bool>(s.fit(t_scan_raw.first), true);
 }
 
@@ -291,19 +328,17 @@ std::pair<ros::Time, bool> Estimator::pushScanSampleRaw(const ros::Time& t_recv,
   const ros::Time t_scan_raw = t_stamp + t_frac;
   const bool valid = t_frac < ros::Duration(0.0015);
 
-  if (!valid)
+  if (valid)
   {
-    std::cerr
-        << "invalid estimation result "
-        << stamp_to_send
-        << " "
-        << min_stamp_to_send_
-        << " "
-        << t_frac
-        << " "
-        << min_comm_delay_
-        << " "
-        << comm_delay_sigma_
+    file
+        << std::setprecision(8) << std::fixed
+        << t_recv
+        << " " << t_stamp
+        << " " << device_wall_stamp
+        << " " << stamp_to_send
+        << " " << t_scan_raw
+        << " " << min_stamp_to_send_
+        << " " << clock_.gain_
         << std::endl;
   }
 

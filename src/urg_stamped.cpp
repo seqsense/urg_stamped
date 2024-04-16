@@ -172,6 +172,7 @@ void UrgStampedNode::cbTM(
         break;
       }
 
+      sleepRandom(0, 0.001);
       scip_->sendCommand(
           "TM1",
           boost::bind(&UrgStampedNode::cbTMSend, this, boost::arg<1>()));
