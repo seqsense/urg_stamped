@@ -93,7 +93,6 @@ void EstimatorUTM::finishSync()
   const double origin_diff =
       (clock_.origin_ - last.origin_).toSec();
   const double gain = (t_diff - origin_diff) / t_diff;
-  const double gain_orig = clock_.gain_;
 
   if (!clock_.initialized_)
   {
