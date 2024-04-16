@@ -156,7 +156,7 @@ public:
 class Estimator
 {
 public:
-  static constexpr int MIN_SYNC_SAMPLES = 25;
+  static constexpr int MIN_SYNC_SAMPLES = 10;
   static constexpr int MAX_SYNC_SAMPLES = 100;
   static constexpr int MIN_SCAN_SAMPLES = 5;
   static constexpr int MAX_SCAN_SAMPLES = 9;
