@@ -38,6 +38,10 @@ std::pair<ros::Time, bool> EstimatorUTM::pushScanSample(const ros::Time& t_recv,
   {
     return t_scan_raw;
   }
+  if (!clock_.initialized_)
+  {
+    return t_scan_raw;
+  }
 
   recent_t_scans_.emplace_back(t_scan_raw.first);
   if (recent_t_scans_.size() < MIN_SCAN_SAMPLES)

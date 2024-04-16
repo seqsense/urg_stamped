@@ -130,7 +130,6 @@ void Estimator::finishSync()
       (latest_clock_.origin_ - last.origin_).toSec();
   const double gain = (t_diff - origin_diff) / t_diff;
 
-  latest_clock_.initialized_ = true;
   latest_clock_.gain_ = gain;
   recent_clocks_.push_back(latest_clock_);
   if (recent_clocks_.size() >= CLOCK_MEDIAN_WINDOW)
@@ -142,6 +141,7 @@ void Estimator::finishSync()
   std::copy(recent_clocks_.begin(), recent_clocks_.end(), clocks.begin());
   std::sort(clocks.begin(), clocks.end());
   clock_ = clocks[clocks.size() / 2];
+  clock_.initialized_ = true;
 
   file_gain
       << std::setprecision(9) << std::fixed
