@@ -64,7 +64,6 @@ protected:
   ros::NodeHandle pnh_;
   ros::Publisher pub_scan_;
   ros::Publisher pub_status_;
-  ros::Timer timer_sync_;
   ros::Timer timer_delay_estim_;
   ros::Timer timer_retry_tm_;
 

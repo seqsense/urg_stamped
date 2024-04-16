@@ -500,7 +500,6 @@ void UrgStampedNode::sendII()
 void UrgStampedNode::delayEstimation(const ros::TimerEvent& event)
 {
   tm_try_count_ = 0;
-  timer_sync_.stop();  // Stop timer for sync using II command.
   scip2::logger::debug() << "Starting communication delay estimation" << std::endl;
   delay_estim_state_ = DelayEstimState::STOPPING_SCAN;
   timer_retry_tm_.stop();
@@ -750,7 +749,6 @@ void UrgStampedNode::spin()
   boost::thread thread(
       boost::bind(&scip2::Connection::spin, device_.get()));
   ros::spin();
-  timer_sync_.stop();
   delay_estim_state_ = DelayEstimState::EXITING;
   scip_->sendCommand("QT");
   device_->stop();
