@@ -120,23 +120,19 @@ void Estimator::finishSync()
   const double gain = (t_diff - origin_diff) / t_diff;
   const double gain_orig = clock_.gain_;
 
-  // if (gain < 1.0)
   {
+    std::ofstream file("/tmp/clock.dat");
+    for (const auto& s : sync_samples_)
     {
-      std::ofstream file("/tmp/clock.dat");
-      for (const auto& s : sync_samples_)
-      {
-        file
-            << s.delay_
-            << " " << s.t_process_
-            << " " << s.device_wall_stamp_
-            << " " << s.t_origin_
-            << " " << s.t_req_
-            << " " << s.t_res_
-            << std::endl;
-      }
+      file
+          << s.delay_
+          << " " << s.t_process_
+          << " " << s.device_wall_stamp_
+          << " " << s.t_origin_
+          << " " << s.t_req_
+          << " " << s.t_res_
+          << std::endl;
     }
-    abort();
   }
 
   if (!clock_.initialized_)
