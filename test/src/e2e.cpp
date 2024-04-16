@@ -118,7 +118,6 @@ protected:
 
   void waitScans(const size_t num, const ros::Duration& timeout)
   {
-    std::cerr << "waiting scans" << std::endl;
     const ros::Time deadline = ros::Time::now() + timeout;
     ros::Rate wait(10);
     while (scans_.size() <= num)
@@ -128,12 +127,10 @@ protected:
       ASSERT_TRUE(ros::ok());
       ASSERT_LT(ros::Time::now(), deadline) << "Timeout: received " << scans_.size() << "/" << num;
     }
-    std::cerr << "waited scans" << std::endl;
   }
 
   void startSimulator(const urg_sim::URGSimulator::Params& params)
   {
-    std::cerr << "Starting simulator" << std::endl;
     sim_ = new urg_sim::URGSimulator(
         boost::asio::ip::tcp::endpoint(
             boost::asio::ip::tcp::v4(),
@@ -150,7 +147,6 @@ protected:
     nh_.setParam("/urg_stamped/ip_port", sim_->getLocalEndpoint().port());
 
     // Shutdown urg_stamped to initialize internal state and reload parameters
-    std::cerr << "Shutting down urg_stamped" << std::endl;
     if (!shutdownUrgStamped())
     {
       ros::Duration(1).sleep();  // Retry
@@ -230,9 +226,6 @@ INSTANTIATE_TEST_CASE_P(
 
 TEST_P(E2EWithParam, Simple)
 {
-  std::cerr
-      << std::endl
-      << "------- " << ::testing::UnitTest::GetInstance()->current_test_info()->name() << std::endl;
   const auto param = GetParam();
   ASSERT_NO_FATAL_FAILURE(startSimulator(param));
 
