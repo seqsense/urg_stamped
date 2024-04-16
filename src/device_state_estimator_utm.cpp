@@ -53,16 +53,15 @@ std::pair<ros::Time, bool> EstimatorUTM::pushScanSample(const ros::Time& t_recv,
     recent_t_scans_.pop_front();
   }
 
-  std::vector<ScanSample> samples;
+  std::vector<ScanSampleUTM> samples;
   for (size_t i = 1; i < recent_t_scans_.size(); ++i)
   {
     const ros::Duration interval = recent_t_scans_[i] - recent_t_scans_[i - 1];
     samples.emplace_back(recent_t_scans_[i], interval);
   }
 
-  std::vector<ScanSample> s(samples);
-  std::sort(s.begin(), s.end());
-  const ScanSample& med = s[s.size() / 2];
+  std::sort(samples.begin(), samples.end());
+  const ScanSampleUTM& med = samples[samples.size() / 2];
   scan_.origin_ = med.t_;
   scan_.interval_ = med.interval_;
 

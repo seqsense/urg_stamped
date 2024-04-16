@@ -116,19 +116,19 @@ public:
   ros::Time compensate(const ros::Time& t) const;
 };
 
-class ScanSample
+class ScanSampleUTM
 {
 public:
   ros::Time t_;
   ros::Duration interval_;
 
-  inline ScanSample(const ros::Time& t, const ros::Duration& interval)
+  inline ScanSampleUTM(const ros::Time& t, const ros::Duration& interval)
     : t_(t)
     , interval_(interval)
   {
   }
 
-  inline bool operator<(const ScanSample& b) const
+  inline bool operator<(const ScanSampleUTM& b) const
   {
     return this->interval_ < b.interval_;
   }
