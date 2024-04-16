@@ -516,7 +516,16 @@ void URGSimulator::response(
     const std::string status,
     const std::string data)
 {
-  const auto now = boost::posix_time::microsec_clock::universal_time();
+  auto now = boost::posix_time::microsec_clock::universal_time();
+
+  if (params_.model == Model::UST)
+  {
+    // UST-30 series doesn't send responses immediately but at the next 1ms tick
+    const uint64_t next_tick = params_.clock_rate * (now - timestamp_epoch_).total_microseconds() / 1000.0 + 1;
+    const auto next_tick_system_microseconds = static_cast<uint64_t>(next_tick * 1000.0 / params_.clock_rate);
+    now = timestamp_epoch_ + boost::posix_time::microseconds(next_tick_system_microseconds);
+  }
+
   const auto delay = boost::posix_time::microseconds(
       static_cast<int64_t>(randomCommDelay() * 1e6));
   const auto when = now + delay;
