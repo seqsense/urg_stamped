@@ -115,6 +115,8 @@ std::pair<ros::Time, bool> EstimatorUST::pushScanSample(const ros::Time& t_recv,
   }
 
   const ros::Time t_estimated = scan_.fit(t_stamp);
+  const ros::Duration t_comp = t_estimated - t_stamp;
+  const bool valid = ros::Duration(-0.001) < t_comp && t_comp < ros::Duration(0.001);
 
   file_scan
       << device_wall_stamp
@@ -125,7 +127,7 @@ std::pair<ros::Time, bool> EstimatorUST::pushScanSample(const ros::Time& t_recv,
       << " " << primary_interval_
       << " " << t_estimated
       << std::endl;
-  return std::pair<ros::Time, bool>(t_estimated, true);
+  return std::pair<ros::Time, bool>(t_estimated, valid);
 }
 
 }  // namespace device_state_estimator

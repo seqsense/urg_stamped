@@ -33,7 +33,8 @@ namespace device_state_estimator
 
 std::pair<ros::Time, bool> EstimatorUTM::pushScanSample(const ros::Time& t_recv, const uint64_t device_wall_stamp)
 {
-  const std::pair<ros::Time, bool> t_scan_raw = pushScanSampleRaw(t_recv, device_wall_stamp);
+  const ros::Time t_stamp = clock_.stampToTime(device_wall_stamp);
+  const std::pair<ros::Time, bool> t_scan_raw = pushScanSampleRaw(t_recv, t_stamp);
   if (!t_scan_raw.second)
   {
     return t_scan_raw;
@@ -72,12 +73,15 @@ std::pair<ros::Time, bool> EstimatorUTM::pushScanSample(const ros::Time& t_recv,
       << " latest stamp: " << device_wall_stamp
       << std::endl;
 
-  return std::pair<ros::Time, bool>(scan_.fit(t_scan_raw.first), true);
+  const ros::Time t_estimated = scan_.fit(t_scan_raw.first);
+  const ros::Duration t_comp = t_estimated - t_stamp;
+  const bool valid = ros::Duration(-0.001) < t_comp && t_comp < ros::Duration(0.001);
+
+  return std::pair<ros::Time, bool>(t_estimated, true);
 }
 
-std::pair<ros::Time, bool> EstimatorUTM::pushScanSampleRaw(const ros::Time& t_recv, const uint64_t device_wall_stamp)
+std::pair<ros::Time, bool> EstimatorUTM::pushScanSampleRaw(const ros::Time& t_recv, const ros::Time& t_stamp)
 {
-  const ros::Time t_stamp = clock_.stampToTime(device_wall_stamp);
   if (!clock_.initialized_)
   {
     return std::pair<ros::Time, bool>(t_stamp, true);
