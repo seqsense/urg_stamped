@@ -226,7 +226,7 @@ private:
   static constexpr size_t STAMP_DIFF_DIST = 4;
   static constexpr double MIN_STAMP_TO_SEND_ALPHA = 0.05;
 
-  std::pair<ros::Time, bool> pushScanSampleRaw(
+  ros::Time pushScanSampleRaw(
       const ros::Time& t_recv, const ros::Time& t_stamp);
 
   FRIEND_TEST(DeviceStateEstimatorUTM, PushScanSampleRaw);

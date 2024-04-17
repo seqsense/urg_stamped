@@ -34,20 +34,16 @@ namespace device_state_estimator
 std::pair<ros::Time, bool> EstimatorUTM::pushScanSample(const ros::Time& t_recv, const uint64_t device_wall_stamp)
 {
   const ros::Time t_stamp = clock_.stampToTime(device_wall_stamp);
-  const std::pair<ros::Time, bool> t_scan_raw = pushScanSampleRaw(t_recv, t_stamp);
-  if (!t_scan_raw.second)
-  {
-    return t_scan_raw;
-  }
+  const ros::Time t_scan_raw = pushScanSampleRaw(t_recv, t_stamp);
   if (!clock_.initialized_)
   {
-    return t_scan_raw;
+    return std::pair<ros::Time, bool>(t_scan_raw, true);
   }
 
-  recent_t_scans_.emplace_back(t_scan_raw.first);
+  recent_t_scans_.emplace_back(t_scan_raw);
   if (recent_t_scans_.size() < MIN_SCAN_SAMPLES)
   {
-    return t_scan_raw;
+    return std::pair<ros::Time, bool>(t_scan_raw, true);
   }
   if (recent_t_scans_.size() >= MAX_SCAN_SAMPLES)
   {
@@ -73,18 +69,18 @@ std::pair<ros::Time, bool> EstimatorUTM::pushScanSample(const ros::Time& t_recv,
       << " latest stamp: " << device_wall_stamp
       << std::endl;
 
-  const ros::Time t_estimated = scan_.fit(t_scan_raw.first);
+  const ros::Time t_estimated = scan_.fit(t_scan_raw);
   const ros::Duration t_comp = t_estimated - t_stamp;
   const bool valid = ros::Duration(-0.001) < t_comp && t_comp < ros::Duration(0.001);
 
   return std::pair<ros::Time, bool>(t_estimated, true);
 }
 
-std::pair<ros::Time, bool> EstimatorUTM::pushScanSampleRaw(const ros::Time& t_recv, const ros::Time& t_stamp)
+ros::Time EstimatorUTM::pushScanSampleRaw(const ros::Time& t_recv, const ros::Time& t_stamp)
 {
   if (!clock_.initialized_)
   {
-    return std::pair<ros::Time, bool>(t_stamp, true);
+    return t_stamp;
   }
 
   const ros::Time t_sent = t_recv - comm_delay_.min_;
@@ -113,10 +109,7 @@ std::pair<ros::Time, bool> EstimatorUTM::pushScanSampleRaw(const ros::Time& t_re
   }
 
   const ros::Duration t_frac = stamp_to_send - min_stamp_to_send_ - comm_delay_.sigma_;
-  const ros::Time t_scan_raw = t_stamp + t_frac;
-  const bool valid = t_frac < ros::Duration(0.0015);
-
-  return std::pair<ros::Time, bool>(t_scan_raw, valid);
+  return t_stamp + t_frac;
 }
 
 }  // namespace device_state_estimator
