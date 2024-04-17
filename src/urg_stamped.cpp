@@ -198,7 +198,18 @@ void UrgStampedNode::cbTM(
     }
     case '2':
     {
-      est_->finishSync();
+      if (!est_->finishSync() && !est_->getClockState().initialized_)
+      {
+        // Immediately retry if initial clock sync is failed
+        scip2::logger::debug()
+            << std::setprecision(6) << std::fixed
+            << "Retrying initial clock state estimation (took "
+            << (ros::Time::now() - tm_start_time_).toSec()
+            << ")"
+            << std::endl;
+        delayEstimation();
+        break;
+      }
 
       delay_estim_state_ = DelayEstimState::IDLE;
       scip_->sendCommand(

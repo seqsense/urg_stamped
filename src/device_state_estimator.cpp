@@ -94,7 +94,7 @@ bool Estimator::hasEnoughSyncSamples() const
 
 static std::ofstream file_gain("/ws/src/urg_stamped/gain.dat");
 
-void Estimator::finishSync()
+bool Estimator::finishSync()
 {
   const OriginFracPart overflow_range = originFracOverflow();
   if (!overflow_range)
@@ -104,13 +104,13 @@ void Estimator::finishSync()
         << overflow_range.t_min_ << ", " << overflow_range.t_max_
         << ", samples=" << sync_samples_.size()
         << std::endl;
-    return;
+    return false;
   }
   const auto min_delay = findMinDelay(overflow_range);
   if (min_delay == sync_samples_.cend())
   {
     scip2::logger::warn() << "failed to find minimal delay sample" << std::endl;
-    return;
+    return false;
   }
   comm_delay_.sigma_ = delaySigma();
 
@@ -123,7 +123,7 @@ void Estimator::finishSync()
   if (last.origin_.isZero())
   {
     clock_ = latest_clock_;
-    return;
+    return true;
   }
 
   const double t_diff = (latest_clock_.t_estim_ - last.t_estim_).toSec();
@@ -159,6 +159,8 @@ void Estimator::finishSync()
       << ", delay: " << min_delay->delay_
       << ", device timestamp: " << min_delay->device_wall_stamp_
       << std::endl;
+
+  return true;
 }
 
 std::vector<SyncSample>::const_iterator Estimator::findMinDelay(const OriginFracPart& overflow_range) const

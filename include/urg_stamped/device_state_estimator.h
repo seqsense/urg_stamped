@@ -168,7 +168,7 @@ public:
       const ros::Time& t_res,
       const uint64_t device_wall_stamp);
   bool hasEnoughSyncSamples() const;
-  void finishSync();
+  bool finishSync();
 
   inline ClockState getClockState() const
   {
