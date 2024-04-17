@@ -100,7 +100,15 @@ std::pair<ros::Time, bool> EstimatorUST::pushScanSample(const ros::Time& t_recv,
           << "scan origin: " << scan_.origin_
           << " interval: " << scan_.interval_
           << " latest stamp: " << device_wall_stamp
+          << " num_scans: " << num_scans
+          << " " << t_stamp
           << std::endl;
+    }
+    else
+    {
+      std::cerr
+          << "scan interval increment not detected "
+          << scans_.size() << " " << t_stamp << std::endl;
     }
   }
 
