@@ -66,6 +66,11 @@ std::pair<ros::Time, bool> EstimatorUTM::pushScanSample(const ros::Time& t_recv,
   const ScanSampleUTM& med = samples[samples.size() / 2];
   scan_.origin_ = med.t_;
   scan_.interval_ = med.interval_;
+  std::cerr
+      << "scan origin: " << scan_.origin_
+      << " interval: " << scan_.interval_
+      << " latest stamp: " << device_wall_stamp
+      << std::endl;
 
   return std::pair<ros::Time, bool>(scan_.fit(t_scan_raw.first), true);
 }
