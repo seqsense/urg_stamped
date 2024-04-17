@@ -248,7 +248,7 @@ private:
   static constexpr int MAX_INTERVAL_SAMPLES = 256;
   std::deque<uint64_t> stamps_;
   std::deque<ScanSampleUST> scans_;
-  uint64_t primary_interval_;
+  int64_t primary_interval_;
 };
 
 }  // namespace device_state_estimator
