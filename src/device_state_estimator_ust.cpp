@@ -80,7 +80,6 @@ std::pair<ros::Time, bool> EstimatorUST::pushScanSample(const ros::Time& t_recv,
       }
     }
     auto it_prev = it;
-    int num_scans = 0;
     for (it++; it != scans_.end(); it++)
     {
       if (it->interval_ != primary_interval_)
@@ -89,11 +88,11 @@ std::pair<ros::Time, bool> EstimatorUST::pushScanSample(const ros::Time& t_recv,
         break;
       }
       it_prev = it;
-      num_scans++;
     }
     if (it_change0 != scans_.end() && it_change1 != scans_.end())
     {
       const int64_t stamp_diff = it_change0->stamp_ - it_change1->stamp_;
+      const int num_scans = std::lround(static_cast<double>(stamp_diff) / primary_interval_);
       scan_.origin_ = clock_.stampToTime(it_change0->stamp_);
       scan_.interval_ = ros::Duration(stamp_diff * 0.001 / (clock_.gain_ * num_scans));
 
@@ -103,10 +102,6 @@ std::pair<ros::Time, bool> EstimatorUST::pushScanSample(const ros::Time& t_recv,
           << " latest stamp: " << device_wall_stamp
           << std::endl;
     }
-  }
-  else
-  {
-    scans_.clear();
   }
 
   if (scan_.origin_.isZero())
