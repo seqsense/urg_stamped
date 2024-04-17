@@ -56,7 +56,9 @@ std::pair<ros::Time, bool> EstimatorUTM::pushScanSample(const ros::Time& t_recv,
   std::vector<ScanSampleUTM> samples;
   for (size_t i = 1; i < recent_t_scans_.size(); ++i)
   {
-    const ros::Duration interval = recent_t_scans_[i] - recent_t_scans_[i - 1];
+    const int dist = i < STAMP_DIFF_DIST ? i : STAMP_DIFF_DIST;
+    const ros::Duration interval =
+        (recent_t_scans_[i] - recent_t_scans_[i - dist]) * (1.0 / dist);
     samples.emplace_back(recent_t_scans_[i], interval);
   }
 

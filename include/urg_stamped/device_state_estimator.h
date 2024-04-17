@@ -221,8 +221,9 @@ public:
       const uint64_t device_wall_stamp) final;
 
 private:
-  static constexpr int MIN_SCAN_SAMPLES = 5;
-  static constexpr int MAX_SCAN_SAMPLES = 9;
+  static constexpr size_t MIN_SCAN_SAMPLES = 5;
+  static constexpr size_t MAX_SCAN_SAMPLES = 31;
+  static constexpr size_t STAMP_DIFF_DIST = 4;
   static constexpr double MIN_STAMP_TO_SEND_ALPHA = 0.05;
 
   std::pair<ros::Time, bool> pushScanSampleRaw(
@@ -244,8 +245,8 @@ public:
       const uint64_t device_wall_stamp) final;
 
 private:
-  static constexpr int STAMP_SAMPLES = 8;
-  static constexpr int MAX_INTERVAL_SAMPLES = 256;
+  static constexpr size_t STAMP_SAMPLES = 8;
+  static constexpr size_t MAX_INTERVAL_SAMPLES = 256;
   std::deque<uint64_t> stamps_;
   std::deque<ScanSampleUST> scans_;
   int64_t primary_interval_;
