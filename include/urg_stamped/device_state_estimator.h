@@ -193,7 +193,7 @@ protected:
 
 private:
   static constexpr int MIN_SYNC_SAMPLES = 10;
-  static constexpr int MAX_SYNC_SAMPLES = 100;
+  static constexpr int MAX_SYNC_SAMPLES = 50;
   static constexpr int CLOCK_MEDIAN_WINDOW = 7;
 
   std::vector<SyncSample> sync_samples_;
