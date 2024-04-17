@@ -95,7 +95,7 @@ std::pair<ros::Time, bool> EstimatorUST::pushScanSample(const ros::Time& t_recv,
     {
       const int64_t stamp_diff = it_change0->stamp_ - it_change1->stamp_;
       scan_.origin_ = clock_.stampToTime(it_change0->stamp_);
-      scan_.interval_ = ros::Duration(stamp_diff * 0.001 * clock_.gain_ / num_scans);
+      scan_.interval_ = ros::Duration(stamp_diff * 0.001 / (clock_.gain_ * num_scans));
     }
   }
   else
