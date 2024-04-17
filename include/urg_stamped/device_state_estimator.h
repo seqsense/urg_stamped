@@ -220,9 +220,21 @@ private:
 class EstimatorUST : public Estimator
 {
 public:
+  inline EstimatorUST()
+    : primary_interval_(0)
+  {
+  }
+
   std::pair<ros::Time, bool> pushScanSample(
       const ros::Time& t_recv,
       const uint64_t device_wall_stamp) final;
+
+private:
+  static constexpr int STAMP_SAMPLES = 8;
+  static constexpr int INTERVAL_SAMPLES = 256;
+  std::deque<uint64_t> stamps_;
+  std::deque<int64_t> intervals_;
+  uint64_t primary_interval_;
 };
 
 }  // namespace device_state_estimator
