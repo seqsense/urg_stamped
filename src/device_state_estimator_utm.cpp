@@ -73,7 +73,7 @@ std::pair<ros::Time, bool> EstimatorUTM::pushScanSample(const ros::Time& t_recv,
   const ros::Duration t_comp = t_estimated - t_stamp;
   const bool valid = ros::Duration(-0.001) < t_comp && t_comp < ros::Duration(0.001);
 
-  return std::pair<ros::Time, bool>(t_estimated, true);
+  return std::pair<ros::Time, bool>(t_estimated, valid);
 }
 
 ros::Time EstimatorUTM::pushScanSampleRaw(const ros::Time& t_recv, const ros::Time& t_stamp)
