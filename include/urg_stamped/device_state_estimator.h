@@ -134,6 +134,20 @@ public:
   }
 };
 
+class ScanSampleUST
+{
+public:
+  uint64_t stamp_;
+  int64_t interval_;
+
+  inline ScanSampleUST(uint64_t stamp, int64_t interval)
+    : stamp_(stamp)
+    , interval_(interval)
+
+  {
+  }
+};
+
 class ScanState
 {
 public:
@@ -231,9 +245,9 @@ public:
 
 private:
   static constexpr int STAMP_SAMPLES = 8;
-  static constexpr int INTERVAL_SAMPLES = 256;
+  static constexpr int MAX_INTERVAL_SAMPLES = 256;
   std::deque<uint64_t> stamps_;
-  std::deque<int64_t> intervals_;
+  std::deque<ScanSampleUST> scans_;
   uint64_t primary_interval_;
 };
 

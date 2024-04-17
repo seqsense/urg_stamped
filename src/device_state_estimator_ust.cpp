@@ -36,6 +36,10 @@ static std::ofstream file_scan("/ws/src/urg_stamped/scan.dat");
 std::pair<ros::Time, bool> EstimatorUST::pushScanSample(const ros::Time& t_recv, const uint64_t device_wall_stamp)
 {
   const ros::Time t_stamp = clock_.stampToTime(device_wall_stamp);
+  if (!clock_.initialized_)
+  {
+    return std::pair<ros::Time, bool>(t_stamp, true);
+  }
 
   stamps_.push_back(device_wall_stamp);
   if (stamps_.size() < STAMP_SAMPLES)
@@ -58,23 +62,64 @@ std::pair<ros::Time, bool> EstimatorUST::pushScanSample(const ros::Time& t_recv,
   const int64_t interval_diff = interval - primary_interval_;
   if (-1 <= interval_diff && interval_diff <= 1)
   {
-    intervals_.push_back(interval);
-    if (intervals_.size() >= INTERVAL_SAMPLES)
+    scans_.emplace_front(device_wall_stamp, interval);
+    if (scans_.size() >= MAX_INTERVAL_SAMPLES)
     {
-      intervals_.pop_front();
+      scans_.pop_back();
     }
 
-    file_scan
-        << device_wall_stamp
-        << " " << stamps_[stamps_.size() - 2]
-        << " " << t_recv
-        << " " << t_stamp
-        << " " << interval
-        << " " << primary_interval_
-        << std::endl;
+    auto it = scans_.begin();
+    auto it_change0 = scans_.end();
+    auto it_change1 = scans_.end();
+    for (; it != scans_.end(); it++)
+    {
+      if (it->interval_ != primary_interval_)
+      {
+        it_change0 = it;
+        break;
+      }
+    }
+    auto it_prev = it;
+    int num_scans = 0;
+    for (it++; it != scans_.end(); it++)
+    {
+      if (it->interval_ != primary_interval_)
+      {
+        it_change1 = it_prev;
+        break;
+      }
+      it_prev = it;
+      num_scans++;
+    }
+    if (it_change0 != scans_.end() && it_change1 != scans_.end())
+    {
+      const int64_t stamp_diff = it_change0->stamp_ - it_change1->stamp_;
+      scan_.origin_ = clock_.stampToTime(it_change0->stamp_);
+      scan_.interval_ = ros::Duration(stamp_diff * 0.001 * clock_.gain_ / num_scans);
+    }
+  }
+  else
+  {
+    scans_.clear();
   }
 
-  return std::pair<ros::Time, bool>(t_stamp, true);
+  if (scan_.origin_.isZero())
+  {
+    return std::pair<ros::Time, bool>(t_stamp, true);
+  }
+
+  const ros::Time t_estimated = scan_.fit(t_stamp);
+
+  file_scan
+      << device_wall_stamp
+      << " " << stamps_[stamps_.size() - 2]
+      << " " << t_recv
+      << " " << t_stamp
+      << " " << interval
+      << " " << primary_interval_
+      << " " << t_estimated
+      << std::endl;
+  return std::pair<ros::Time, bool>(t_estimated, true);
 }
 
 }  // namespace device_state_estimator
