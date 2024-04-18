@@ -692,9 +692,6 @@ void URGSimulator::sendScan()
     }
   }
 
-  const boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
-  const auto now = boost::posix_time::microsec_clock::universal_time();
-
   std::stringstream ss;
 
   const std::string time = encode::encode(
