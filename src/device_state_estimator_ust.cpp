@@ -68,6 +68,7 @@ std::pair<ros::Time, bool> EstimatorUST::pushScanSample(const ros::Time& t_recv,
       scans_.pop_back();
     }
 
+    // Find cycle of timestamp increment
     auto it = scans_.begin();
     auto it_change0 = scans_.end();
     auto it_change1 = scans_.end();
@@ -80,15 +81,22 @@ std::pair<ros::Time, bool> EstimatorUST::pushScanSample(const ros::Time& t_recv,
       }
     }
     auto it_prev = it;
+    size_t num_samples = 0;
     for (it++; it != scans_.end(); it++)
     {
+      num_samples++;
       if (it->interval_ != primary_interval_)
       {
         it_change1 = it_prev;
-        break;
+        if (num_samples >= MIN_INTERVAL_SAMPLES)
+        {
+          break;
+        }
       }
       it_prev = it;
     }
+
+    // Calculate scan interval
     if (it_change0 != scans_.end() && it_change1 != scans_.end())
     {
       const int64_t stamp_diff = it_change0->stamp_ - it_change1->stamp_;

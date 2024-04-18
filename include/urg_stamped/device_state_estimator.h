@@ -247,6 +247,7 @@ public:
 private:
   static constexpr size_t STAMP_SAMPLES = 8;
   static constexpr size_t MAX_INTERVAL_SAMPLES = 256;
+  static constexpr size_t MIN_INTERVAL_SAMPLES = 10;
   std::deque<uint64_t> stamps_;
   std::deque<ScanSampleUST> scans_;
   int64_t primary_interval_;
