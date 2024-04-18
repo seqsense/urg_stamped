@@ -682,7 +682,7 @@ void URGSimulator::scan()
   nextScan();
 }
 
-static std::ofstream file("/tmp/gt.dat");
+static std::ofstream file("/ws/src/urg_stamped/gt.dat");
 
 void URGSimulator::sendScan()
 {
