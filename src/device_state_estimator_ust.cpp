@@ -19,8 +19,6 @@
 #include <utility>
 #include <vector>
 
-#include <fstream>
-
 #include <ros/time.h>
 
 #include <urg_stamped/device_state_estimator.h>
@@ -30,8 +28,6 @@ namespace urg_stamped
 {
 namespace device_state_estimator
 {
-
-static std::ofstream file_scan("/ws/src/urg_stamped/scan.dat");
 
 std::pair<ros::Time, bool> EstimatorUST::pushScanSample(const ros::Time& t_recv, const uint64_t device_wall_stamp)
 {
@@ -103,20 +99,6 @@ std::pair<ros::Time, bool> EstimatorUST::pushScanSample(const ros::Time& t_recv,
       const int num_scans = std::lround(static_cast<double>(stamp_diff) / primary_interval_);
       scan_.origin_ = clock_.stampToTime(it_change0->stamp_);
       scan_.interval_ = ros::Duration(stamp_diff * 0.001 / (clock_.gain_ * num_scans));
-
-      std::cerr
-          << "scan origin: " << scan_.origin_
-          << " interval: " << scan_.interval_
-          << " latest stamp: " << device_wall_stamp
-          << " num_scans: " << num_scans
-          << " " << t_stamp
-          << std::endl;
-    }
-    else
-    {
-      std::cerr
-          << "scan interval increment not detected "
-          << scans_.size() << " " << t_stamp << std::endl;
     }
   }
 
@@ -129,15 +111,6 @@ std::pair<ros::Time, bool> EstimatorUST::pushScanSample(const ros::Time& t_recv,
   const ros::Duration t_comp = t_estimated - t_stamp;
   const bool valid = ros::Duration(-0.001) < t_comp && t_comp < ros::Duration(0.001);
 
-  file_scan
-      << device_wall_stamp
-      << " " << stamps_[stamps_.size() - 2]
-      << " " << t_recv
-      << " " << t_stamp
-      << " " << interval
-      << " " << primary_interval_
-      << " " << t_estimated
-      << std::endl;
   return std::pair<ros::Time, bool>(t_estimated, valid);
 }
 

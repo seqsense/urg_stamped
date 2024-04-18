@@ -17,8 +17,6 @@
 #include <algorithm>
 #include <vector>
 
-#include <fstream>
-
 #include <ros/time.h>
 
 #include <urg_stamped/device_state_estimator.h>
@@ -92,8 +90,6 @@ bool Estimator::hasEnoughSyncSamples() const
   return overflow_range.t_max_ > overflow_range.t_min_;
 }
 
-static std::ofstream file_gain("/ws/src/urg_stamped/gain.dat");
-
 bool Estimator::finishSync()
 {
   const OriginFracPart overflow_range = originFracOverflow();
@@ -143,15 +139,6 @@ bool Estimator::finishSync()
   std::sort(clocks.begin(), clocks.end());
   clock_ = clocks[clocks.size() / 2];
   clock_.initialized_ = true;
-
-  file_gain
-      << std::setprecision(9) << std::fixed
-      << min_delay->device_wall_stamp_
-      << " " << clock_.origin_
-      << " " << gain
-      << " " << clock_.gain_
-      << " " << min_delay->delay_
-      << std::endl;
 
   scip2::logger::debug()
       << "origin: " << clock_.origin_

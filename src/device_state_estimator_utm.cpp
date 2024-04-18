@@ -19,8 +19,6 @@
 #include <utility>
 #include <vector>
 
-#include <fstream>
-
 #include <ros/time.h>
 
 #include <urg_stamped/device_state_estimator.h>
@@ -63,11 +61,6 @@ std::pair<ros::Time, bool> EstimatorUTM::pushScanSample(const ros::Time& t_recv,
   const ScanSampleUTM& med = samples[samples.size() / 2];
   scan_.origin_ = med.t_;
   scan_.interval_ = med.interval_;
-  std::cerr
-      << "scan origin: " << scan_.origin_
-      << " interval: " << scan_.interval_
-      << " latest stamp: " << device_wall_stamp
-      << std::endl;
 
   const ros::Time t_estimated = scan_.fit(t_scan_raw);
   const ros::Duration t_comp = t_estimated - t_stamp;

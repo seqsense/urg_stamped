@@ -22,8 +22,6 @@
 #include <utility>
 #include <vector>
 
-#include <fstream>
-
 #include <boost/asio/error.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/placeholders.hpp>
@@ -682,8 +680,6 @@ void URGSimulator::scan()
   nextScan();
 }
 
-static std::ofstream file("/ws/src/urg_stamped/gt.dat");
-
 void URGSimulator::sendScan()
 {
   std::vector<uint32_t> data;
@@ -700,14 +696,6 @@ void URGSimulator::sendScan()
   const auto now = boost::posix_time::microsec_clock::universal_time();
   const auto t = last_raw_scan_->full_time - epoch;
   const auto t_now = now - epoch;
-  file
-      << last_raw_scan_->timestamp
-      << " "
-      << std::setiosflags(std::ios::fixed) << std::setprecision(6)
-      << (t.total_microseconds() / 1000000.0)
-      << " "
-      << (t_now.total_microseconds() / 1000000.0)
-      << std::endl;
 
   std::stringstream ss;
 
