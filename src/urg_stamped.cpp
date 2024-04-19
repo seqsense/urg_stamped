@@ -326,12 +326,12 @@ void UrgStampedNode::cbVV(
     }
     else if (prod == "UTM")
     {
-      est_.reset(new device_state_estimator::EstimatorUTM(ideal_scan_interval_));
+      est_.reset(new device_state_estimator::EstimatorUST(ideal_scan_interval_));
       scip2::logger::info() << "Initialized timestamp estimator for UTM" << std::endl;
     }
     else
     {
-      est_.reset(new device_state_estimator::EstimatorUTM(ideal_scan_interval_));
+      est_.reset(new device_state_estimator::EstimatorUST(ideal_scan_interval_));
       scip2::logger::info()
           << "Unknown sensor model. Initialized timestamp estimator for UTM"
           << std::endl;
