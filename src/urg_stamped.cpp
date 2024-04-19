@@ -662,7 +662,7 @@ UrgStampedNode::UrgStampedNode()
   pnh_.param("ip_port", port, 10940);
   pnh_.param("frame_id", msg_base_.header.frame_id, std::string("laser"));
   pnh_.param("publish_intensity", publish_intensity_, true);
-  pnh_.param("delay_estim_interval", delay_estim_interval, 10.0);
+  pnh_.param("delay_estim_interval", delay_estim_interval, 30.0);
   pnh_.param("error_limit", error_count_max_, 4);
 
   double tm_interval, tm_timeout;
