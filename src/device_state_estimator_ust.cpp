@@ -55,6 +55,10 @@ std::pair<ros::Time, bool> EstimatorUST::pushScanSample(const ros::Time& t_recv,
   std::sort(intervals.begin(), intervals.end());
   primary_interval_ = intervals[intervals.size() / 2];
 
+  scip2::logger::debug()
+      << "primary_interval: " << primary_interval_ << " interval: " << interval
+      << std::endl;
+
   const int64_t interval_diff = interval - primary_interval_;
   if (-1 <= interval_diff && interval_diff <= 1)
   {
@@ -105,6 +109,15 @@ std::pair<ros::Time, bool> EstimatorUST::pushScanSample(const ros::Time& t_recv,
         scan_.origin_ = clock_.stampToTime(it_change0->stamp_);
         scan_.interval_ = ros::Duration(stamp_diff * 0.001 / (clock_.gain_ * num_scans));
       }
+    }
+    else
+    {
+      scip2::logger::debug()
+          << "failed to calculate scan state"
+          << scans_.size()
+          << " it_change0: " << (it_change0 != scans_.end())
+          << " it_change1: " << (it_change1 != scans_.end())
+          << std::endl;
     }
   }
 
