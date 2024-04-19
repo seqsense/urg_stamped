@@ -119,6 +119,14 @@ bool Estimator::finishSync()
   if (last.origin_.isZero())
   {
     clock_ = latest_clock_;
+
+    scip2::logger::debug()
+        << "initial origin: " << clock_.origin_
+        << ", delay: " << min_delay->delay_
+        << ", delay sigma: " << comm_delay_.sigma_
+        << ", device timestamp: " << min_delay->device_wall_stamp_
+        << std::endl;
+
     return true;
   }
 
@@ -144,6 +152,7 @@ bool Estimator::finishSync()
       << "origin: " << clock_.origin_
       << ", gain: " << clock_.gain_
       << ", delay: " << min_delay->delay_
+      << ", delay sigma: " << comm_delay_.sigma_
       << ", device timestamp: " << min_delay->device_wall_stamp_
       << std::endl;
 
