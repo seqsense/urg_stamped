@@ -235,7 +235,8 @@ private:
   static constexpr size_t SCAN_SAMPLES = 64;
   static constexpr size_t STAMP_DIFF_DIST = 4;
   static constexpr double MIN_STAMP_TO_SEND_ALPHA = 0.01;
-  static constexpr double SCAN_INTERVAL_ALPHA = 0.2;
+  static constexpr double SCAN_INTERVAL_ALPHA = 0.05;
+  static constexpr double SCAN_ORIGIN_ALPHA = 0.2;
 
   ros::Time pushScanSampleRaw(
       const ros::Time& t_recv, const ros::Time& t_stamp);
