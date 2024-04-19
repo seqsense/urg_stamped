@@ -43,24 +43,26 @@ protected:
     std::istream stream(&buf);
     const auto pos = stream.tellg();
 
-    std::string echo_back;
-    if (!std::getline(stream, echo_back))
+    if (stream.eof())
     {
       return;
     }
+    std::string echo_back;
+    std::getline(stream, echo_back);
     if (echo_back == "")
     {
       logger::debug() << "Empty response echo back" << std::endl;
       return;
     }
 
-    std::string status;
-    if (!std::getline(stream, status))
+    if (stream.eof())
     {
-      // Re-read from beginning on the next callback
+      // Re-read from the beginning on the next callback
       stream.seekg(pos);
       return;
     }
+    std::string status;
+    std::getline(stream, status);
     if (status == "")
     {
       logger::debug() << "Empty response status" << std::endl;
