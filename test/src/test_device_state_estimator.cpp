@@ -69,7 +69,7 @@ TEST(ClockState, StampToTime)
 
 TEST(DeviceStateEstimator, FindMinDelay)
 {
-  EstimatorUTM est;
+  EstimatorUTM est(ros::Duration(0.025));
 
   est.startSync();
   est.pushSyncSample(ros::Time(100.0001), ros::Time(100.00015), 100);
@@ -107,7 +107,7 @@ TEST(DeviceStateEstimator, FindMinDelay)
 
 TEST(DeviceStateEstimator, RawClockOrigin)
 {
-  EstimatorUTM est;
+  EstimatorUTM est(ros::Duration(0.025));
   for (double d = 0; d < 0.003; d += 0.00025)
   {
     SCOPED_TRACE("Offset " + std::to_string(d));
@@ -133,7 +133,7 @@ TEST(DeviceStateEstimator, ClockGain)
 
   for (const double gain : gains)
   {
-    EstimatorUTM est;
+    EstimatorUTM est(ros::Duration(0.025));
     SCOPED_TRACE("Gain " + std::to_string(gain));
 
     for (double t0 = 0; t0 < 50; t0 += 10)
@@ -157,7 +157,7 @@ TEST(DeviceStateEstimator, ClockGain)
 
 TEST(DeviceStateEstimatorUTM, PushScanSampleRaw)
 {
-  EstimatorUTM est;
+  EstimatorUTM est(ros::Duration(0.1));
   const double t0 = 100;
 
   est.startSync();

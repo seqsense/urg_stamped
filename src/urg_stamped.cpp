@@ -259,7 +259,8 @@ void UrgStampedNode::cbPP(
   }
   step_min_ = std::stoi(amin->second);
   step_max_ = std::stoi(amax->second);
-  msg_base_.scan_time = 60.0 / std::stoi(scan->second);
+  ideal_scan_interval_ = ros::Duration(60.0 / std::stoi(scan->second));
+  msg_base_.scan_time = ideal_scan_interval_.toSec();
   msg_base_.angle_increment = 2.0 * M_PI / std::stoi(ares->second);
   msg_base_.time_increment = msg_base_.scan_time / std::stoi(ares->second);
   msg_base_.range_min = std::stoi(dmin->second) * 1e-3;
@@ -320,17 +321,17 @@ void UrgStampedNode::cbVV(
     }
     if (prod == "UST")
     {
-      est_.reset(new device_state_estimator::EstimatorUST());
+      est_.reset(new device_state_estimator::EstimatorUST(ideal_scan_interval_));
       scip2::logger::info() << "Initialized timestamp estimator for UST" << std::endl;
     }
     else if (prod == "UTM")
     {
-      est_.reset(new device_state_estimator::EstimatorUTM());
+      est_.reset(new device_state_estimator::EstimatorUTM(ideal_scan_interval_));
       scip2::logger::info() << "Initialized timestamp estimator for UTM" << std::endl;
     }
     else
     {
-      est_.reset(new device_state_estimator::EstimatorUTM());
+      est_.reset(new device_state_estimator::EstimatorUTM(ideal_scan_interval_));
       scip2::logger::info()
           << "Unknown sensor model. Initialized timestamp estimator for UTM"
           << std::endl;
@@ -477,8 +478,8 @@ void UrgStampedNode::cbRS(
     ros::shutdown();
     return;
   }
-  scip_->sendCommand("VV");
   scip_->sendCommand("PP");
+  scip_->sendCommand("VV");
   delay_estim_state_ = DelayEstimState::IDLE;
   tm_try_count_ = 0;
 }

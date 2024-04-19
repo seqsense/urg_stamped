@@ -70,6 +70,7 @@ protected:
   sensor_msgs::LaserScan msg_base_;
   uint32_t step_min_;
   uint32_t step_max_;
+  ros::Duration ideal_scan_interval_;
 
   scip2::Connection::Ptr device_;
   scip2::Protocol::Ptr scip_;

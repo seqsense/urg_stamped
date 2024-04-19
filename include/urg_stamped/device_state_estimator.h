@@ -162,6 +162,11 @@ class Estimator
 public:
   using Ptr = std::shared_ptr<Estimator>;
 
+  inline explicit Estimator(const ros::Duration& ideal_scan_interval)
+    : ideal_scan_interval_(ideal_scan_interval)
+  {
+  }
+
   void startSync();
   void pushSyncSample(
       const ros::Time& t_req,
@@ -190,6 +195,7 @@ protected:
   ClockState clock_;
   CommDelay comm_delay_;
   ScanState scan_;
+  ros::Duration ideal_scan_interval_;
 
 private:
   static constexpr int MIN_SYNC_SAMPLES = 10;
@@ -213,6 +219,11 @@ private:
 class EstimatorUTM : public Estimator
 {
 public:
+  inline explicit EstimatorUTM(const ros::Duration& ideal_scan_interval)
+    : Estimator(ideal_scan_interval)
+  {
+  }
+
   ros::Duration min_stamp_to_send_;
   std::deque<ros::Time> recent_t_scans_;
 
@@ -235,8 +246,9 @@ private:
 class EstimatorUST : public Estimator
 {
 public:
-  inline EstimatorUST()
-    : primary_interval_(0)
+  inline explicit EstimatorUST(const ros::Duration& ideal_scan_interval)
+    : Estimator(ideal_scan_interval)
+    , primary_interval_(0)
   {
   }
 
