@@ -75,11 +75,11 @@ void UrgStampedNode::cbM(
   msg.header.stamp = t_scan.first;
   if (!t_scan.second)
   {
-    scip2::logger::info()
-        << std::setprecision(6) << std::fixed
-        << "dropped a scan with large time estimation error (estimated: "
-        << msg.header.stamp.toSec() << ", stamp: " << walltime_device << ")"
-        << std::endl;
+    ROS_INFO_STREAM_THROTTLE(
+        1.0,
+        std::setprecision(6) << std::fixed
+                             << "dropped a scan with large time estimation error (estimated: "
+                             << msg.header.stamp.toSec() << ", stamp: " << walltime_device << ")");
     return;
   }
 
