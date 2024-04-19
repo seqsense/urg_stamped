@@ -109,6 +109,7 @@ protected:
   ResponseErrorCount error_count_;
   bool tm_success_;
   int error_count_max_;
+  int scan_drop_count_;
 
   ros::Duration tm_command_interval_;
   std::string last_measurement_state_;

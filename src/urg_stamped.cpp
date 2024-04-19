@@ -75,11 +75,7 @@ void UrgStampedNode::cbM(
   msg.header.stamp = t_scan.first;
   if (!t_scan.second)
   {
-    ROS_INFO_STREAM_THROTTLE(
-        1.0,
-        std::setprecision(6) << std::fixed
-                             << "dropped a scan with large time estimation error (estimated: "
-                             << msg.header.stamp.toSec() << ", stamp: " << walltime_device << ")");
+    scan_drop_count_++;
     return;
   }
 
@@ -511,6 +507,15 @@ void UrgStampedNode::sendII()
 
 void UrgStampedNode::delayEstimation(const ros::TimerEvent& event)
 {
+  if (scan_drop_count_ > 0)
+  {
+    scip2::logger::info()
+        << "Dropped "
+        << scan_drop_count_
+        << " scans with large time estimation error" << std::endl;
+    scan_drop_count_ = 0;
+  }
+
   tm_try_count_ = 0;
   scip2::logger::debug() << "Starting communication delay estimation" << std::endl;
   delay_estim_state_ = DelayEstimState::STOPPING_SCAN;
