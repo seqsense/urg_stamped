@@ -65,7 +65,10 @@ public:
     if (status != "00")
     {
       if (cb_)
+      {
         cb_(time_read, echo_back, status, timestamp);
+      }
+      readUntilEnd(stream);
       return;
     }
     if (echo_back[2] == '1')
@@ -74,6 +77,7 @@ public:
       if (!std::getline(stream, stamp))
       {
         logger::error() << "Failed to get timestamp" << std::endl;
+        readUntilEnd(stream);
         return;
       }
       const uint8_t checksum = stamp.back();
@@ -81,6 +85,7 @@ public:
       if (stamp.size() < 4)
       {
         logger::error() << "Wrong timestamp format" << std::endl;
+        readUntilEnd(stream);
         return;
       }
 
@@ -90,11 +95,15 @@ public:
       if ((dec.getChecksum() & 0x3F) + 0x30 != checksum)
       {
         logger::error() << "Checksum mismatch" << std::endl;
+        readUntilEnd(stream);
         return;
       }
     }
     if (cb_)
+    {
       cb_(time_read, echo_back, status, timestamp);
+    }
+    readUntilEnd(stream);
   }
   void registerCallback(Callback cb)
   {

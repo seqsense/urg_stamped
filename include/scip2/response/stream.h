@@ -115,7 +115,10 @@ public:
     if (!readTimestamp(time_read, echo_back, status, stream, scan))
     {
       if (cb_)
+      {
         cb_(time_read, echo_back, status, scan);
+      }
+      readUntilEnd(stream);
       return;
     }
     scan.ranges_.reserve(512);
@@ -149,7 +152,9 @@ public:
       }
     }
     if (cb_)
+    {
       cb_(time_read, echo_back, status, scan);
+    }
   }
 };
 
@@ -206,7 +211,9 @@ public:
       }
     }
     if (cb_)
+    {
       cb_(time_read, echo_back, status, scan);
+    }
   }
 };
 

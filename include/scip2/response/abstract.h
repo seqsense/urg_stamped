@@ -36,6 +36,14 @@ public:
       std::istream&) = 0;
 };
 
+inline void readUntilEnd(std::istream& stream)
+{
+  std::string line;
+  while (std::getline(stream, line) && line.size() > 0)
+  {
+  }
+}
+
 }  // namespace scip2
 
 #endif  // SCIP2_RESPONSE_ABSTRACT_H

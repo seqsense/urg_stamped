@@ -48,7 +48,10 @@ public:
       std::istream& stream)
   {
     if (cb_)
+    {
       cb_(time_read, echo_back, status);
+    }
+    readUntilEnd(stream);
   }
   void registerCallback(Callback cb)
   {
@@ -79,7 +82,10 @@ public:
       std::istream& stream)
   {
     if (cb_)
+    {
       cb_(time_read, echo_back, status);
+    }
+    readUntilEnd(stream);
   }
   void registerCallback(Callback cb)
   {

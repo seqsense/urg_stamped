@@ -41,32 +41,33 @@ protected:
       const boost::posix_time::ptime& time_read)
   {
     std::istream stream(&buf);
-    while (true)
-    {
-      std::string echo_back;
-      if (!std::getline(stream, echo_back))
-      {
-        return;
-      }
-      if (echo_back == "")
-      {
-        continue;
-      }
-      std::string status;
-      if (!std::getline(stream, status))
-      {
-        logger::error() << "Failed to get status" << std::endl;
-        return;
-      }
-      if (status == "")
-      {
-        logger::debug() << "Ignoring response without status" << std::endl;
-        continue;
-      }
-      status.pop_back();  // remove checksum
+    const auto pos = stream.tellg();
 
-      response_processor_(time_read, echo_back, status, stream);
+    std::string echo_back;
+    if (!std::getline(stream, echo_back))
+    {
+      return;
     }
+    if (echo_back == "")
+    {
+      logger::debug() << "Empty response echo back" << std::endl;
+      return;
+    }
+
+    std::string status;
+    if (!std::getline(stream, status))
+    {
+      stream.seekg(pos);
+      return;
+    }
+    if (status == "")
+    {
+      logger::debug() << "Empty response status" << std::endl;
+      return;
+    }
+    status.pop_back();  // remove checksum
+
+    response_processor_(time_read, echo_back, status, stream);
   }
 
 public:
