@@ -53,7 +53,8 @@ std::pair<ros::Time, bool> EstimatorUTM::pushScanSample(const ros::Time& t_recv,
   {
     const int dist = i < STAMP_DIFF_DIST ? i : STAMP_DIFF_DIST;
     const ros::Duration t_diff = recent_t_scans_[i] - recent_t_scans_[i - dist];
-    const int num_ideal_scans = std::lround(t_diff.toSec() / ideal_scan_interval_.toSec());
+    const int num_ideal_scans =
+        std::max(1, static_cast<int>(std::lround(t_diff.toSec() / ideal_scan_interval_.toSec())));
     const ros::Duration interval = t_diff * (1.0 / num_ideal_scans);
     samples.emplace_back(recent_t_scans_[i], interval);
   }
