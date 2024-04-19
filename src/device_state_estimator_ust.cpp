@@ -76,30 +76,35 @@ std::pair<ros::Time, bool> EstimatorUST::pushScanSample(const ros::Time& t_recv,
         break;
       }
     }
-    auto it_prev = it;
-    size_t num_samples = 0;
-    for (it++; it != scans_.end(); it++)
+    if (it_change0 != scans_.end())
     {
-      num_samples++;
-      if (it->interval_ != primary_interval_)
+      auto it_prev = it;
+      size_t num_samples = 0;
+      for (it++; it != scans_.end(); it++)
       {
-        it_change1 = it_prev;
-        if (num_samples >= MIN_INTERVAL_SAMPLES)
+        num_samples++;
+        if (it->interval_ != primary_interval_)
         {
-          break;
+          it_change1 = it_prev;
+          if (num_samples >= MIN_INTERVAL_SAMPLES)
+          {
+            break;
+          }
         }
+        it_prev = it;
       }
-      it_prev = it;
     }
-
-    // Calculate scan interval
-    if (it_change0 != scans_.end() && it_change1 != scans_.end())
+    if (it_change1 != scans_.end())
     {
-      const int64_t stamp_diff = it_change0->stamp_ - it_change1->stamp_;
-      const double ideal_scan_interval_cnt = ideal_scan_interval_.toSec() * clock_.gain_ * 1000;
-      const int num_scans = std::lround(static_cast<double>(stamp_diff) / ideal_scan_interval_cnt);
-      scan_.origin_ = clock_.stampToTime(it_change0->stamp_);
-      scan_.interval_ = ros::Duration(stamp_diff * 0.001 / (clock_.gain_ * num_scans));
+      // Calculate scan interval
+      if (it_change0 != scans_.end() && it_change1 != scans_.end())
+      {
+        const int64_t stamp_diff = it_change0->stamp_ - it_change1->stamp_;
+        const double ideal_scan_interval_cnt = ideal_scan_interval_.toSec() * clock_.gain_ * 1000;
+        const int num_scans = std::lround(static_cast<double>(stamp_diff) / ideal_scan_interval_cnt);
+        scan_.origin_ = clock_.stampToTime(it_change0->stamp_);
+        scan_.interval_ = ros::Duration(stamp_diff * 0.001 / (clock_.gain_ * num_scans));
+      }
     }
   }
 
