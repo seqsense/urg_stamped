@@ -39,11 +39,8 @@ public:
   void startWatchdog(const boost::posix_time::time_duration&) final
   {
   }
-  void feed(const std::string& data, const boost::posix_time::ptime& time_read)
+  void feed(boost::asio::streambuf& buf, const boost::posix_time::ptime& time_read)
   {
-    boost::asio::streambuf buf;
-    std::ostream os(&buf);
-    os << data;
     receive(buf, time_read);
   }
 };
@@ -84,7 +81,29 @@ TEST(SCIP2, MultipleResponses)
   00P
 
   */
-  dev->feed("QT\n00P\n\nFOO\nBAR\nQT\n\nQT\n\nQT\n00P\n\n", now);
+  boost::asio::streambuf buf;
+  std::ostream os(&buf);
+  os << "QT\n00P\n\nF";
+  dev->feed(buf, now);
+  ASSERT_EQ(1, num_receive);
+
+  os << "OO\nBAR\nQT\n\n";
+  dev->feed(buf, now);
+  ASSERT_EQ(1, num_receive);
+
+  os << "QT\n\nQT\n";
+  dev->feed(buf, now);
+  ASSERT_EQ(1, num_receive);
+
+  os << "00P\n\n";
+  dev->feed(buf, now);
+  ASSERT_EQ(2, num_receive);
+
+  os << "\n\n";
+  dev->feed(buf, now);
+  ASSERT_EQ(2, num_receive);
+
+  dev->feed(buf, now);
   ASSERT_EQ(2, num_receive);
 }
 
