@@ -232,7 +232,7 @@ public:
       const uint64_t device_wall_stamp) final;
 
 private:
-  static constexpr size_t SCAN_SAMPLES = 32;
+  static constexpr size_t SCAN_SAMPLES = 64;
   static constexpr size_t STAMP_DIFF_DIST = 4;
   static constexpr double MIN_STAMP_TO_SEND_ALPHA = 0.01;
   static constexpr double SCAN_INTERVAL_ALPHA = 0.2;

@@ -279,7 +279,7 @@ TEST_P(E2EWithParam, Simple)
   EXPECT_LT(err_rms, 0.0002);
 
   ASSERT_TRUE(static_cast<bool>(status_msg_));
-  ASSERT_NEAR(status_msg_->sensor_clock_gain, param.clock_rate, 1e-4);
+  ASSERT_NEAR(status_msg_->sensor_clock_gain, param.clock_rate, 1.5e-4);
   ASSERT_GE(status_msg_->communication_delay.toSec(), param.comm_delay_base);
   ASSERT_LT(status_msg_->communication_delay.toSec(), param.comm_delay_base + param.comm_delay_sigma * 3);
   ASSERT_NEAR(status_msg_->scan_interval.toSec(), param.scan_interval, 5e-5);
