@@ -102,16 +102,31 @@ std::pair<ros::Time, bool> EstimatorUST::pushScanSample(const ros::Time& t_recv,
         const int64_t stamp_diff = it_change0->stamp_ - it_change1->stamp_;
         const double ideal_scan_interval_cnt = ideal_scan_interval_.toSec() * clock_.gain_ * 1000;
         const int num_scans = std::lround(static_cast<double>(stamp_diff) / ideal_scan_interval_cnt);
-        scan_.origin_ = clock_.stampToTime(it_change0->stamp_);
-        scan_.interval_ = ros::Duration(stamp_diff * 0.001 / (clock_.gain_ * num_scans));
+        const ros::Time new_origin = clock_.stampToTime(it_change0->stamp_);
+        if (new_origin != scan_.origin_)
+        {
+          scan_.origin_ = clock_.stampToTime(it_change0->stamp_);
+          scan_.interval_ = ros::Duration(stamp_diff * 0.001 / (clock_.gain_ * num_scans));
+          scip2::logger::info()
+              << "scan_origin: " << scan_.origin_ << " interval: " << scan_.interval_ << std::endl;
+        }
       }
     }
     else
     {
       if (scan_.origin_ + ros::Duration(30) < t_recv)
       {
-        scan_.origin_ = t_stamp;
+        if (it_change0 != scans_.end())
+        {
+          scan_.origin_ = clock_.stampToTime(it_change0->stamp_);
+        }
+        else
+        {
+          scan_.origin_ = t_stamp;
+        }
         scan_.interval_ = ideal_scan_interval_ * (1.0 / clock_.gain_);
+        scip2::logger::info()
+            << "no-increment scan_origin: " << scan_.origin_ << " interval: " << scan_.interval_ << std::endl;
       }
     }
   }
