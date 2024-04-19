@@ -13,6 +13,12 @@ target_link_libraries(test_timestamp_moving_average ${catkin_LIBRARIES} ${Boost_
 catkin_add_gtest(test_timestamp_outlier_remover src/test_timestamp_outlier_remover.cpp)
 target_link_libraries(test_timestamp_outlier_remover ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
+catkin_add_gtest(test_scip2
+  src/test_scip2.cpp
+  ../src/scip2/logger.cpp
+)
+target_link_libraries(test_scip2 ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+
 catkin_add_gtest(test_walltime src/test_walltime.cpp ../src/scip2/logger.cpp)
 target_link_libraries(test_walltime ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 

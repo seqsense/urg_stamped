@@ -67,6 +67,10 @@ public:
     if (response == responses_.end())
     {
       logger::debug() << "Unknown response " << command_code << std::endl;
+      std::string line;
+      while (std::getline(stream, line) && line.size() > 0)
+      {
+      }
       return;
     }
     (*(response->second))(time_read, echo_back, status, stream);
