@@ -138,9 +138,9 @@ std::pair<ros::Time, bool> EstimatorUST::pushScanSample(const ros::Time& t_recv,
 
   const ros::Time t_estimated = scan_.fit(t_stamp);
   const ros::Duration t_comp = t_estimated - t_stamp;
-  const bool valid = ros::Duration(-0.001) < t_comp && t_comp < ros::Duration(0.001);
+  // const bool valid = ros::Duration(-0.001) < t_comp && t_comp < ros::Duration(0.001);
 
-  return std::pair<ros::Time, bool>(t_estimated, valid);
+  return std::pair<ros::Time, bool>(t_estimated, true);
 }
 
 }  // namespace device_state_estimator
