@@ -57,6 +57,7 @@ protected:
     std::string status;
     if (!std::getline(stream, status))
     {
+      // Re-read from beginning on the next callback
       stream.seekg(pos);
       return;
     }
