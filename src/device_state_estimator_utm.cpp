@@ -58,8 +58,28 @@ std::pair<ros::Time, bool> EstimatorUTM::pushScanSample(const ros::Time& t_recv,
 
   std::sort(samples.begin(), samples.end());
   const ScanSampleUTM& med = samples[samples.size() / 2];
-  scan_.origin_ = med.t_;
-  scan_.interval_ = med.interval_;
+
+  if (scan_.origin_.isZero())
+  {
+    scan_.interval_ = med.interval_;
+    scan_.origin_ = med.t_;
+  }
+  else
+  {
+    const ros::Duration origin_diff = med.t_ - scan_.origin_;
+    const int origin_diff_n =
+        std::round(origin_diff.toSec() / scan_.interval_.toSec());
+    const ros::Time origin_predicted =
+        scan_.origin_ + scan_.interval_ * origin_diff_n;
+
+    const ros::Duration origin_err = med.t_ - origin_predicted;
+
+    scan_.interval_ =
+        scan_.interval_ * (1 - SCAN_INTERVAL_ALPHA) +
+        med.interval_ * SCAN_INTERVAL_ALPHA;
+    scan_.origin_ =
+        origin_predicted + origin_err * SCAN_INTERVAL_ALPHA;
+  }
 
   const ros::Time t_estimated = scan_.fit(t_scan_raw);
   const ros::Duration t_comp = t_estimated - t_stamp;
