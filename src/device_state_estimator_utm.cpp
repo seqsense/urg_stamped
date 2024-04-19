@@ -39,14 +39,11 @@ std::pair<ros::Time, bool> EstimatorUTM::pushScanSample(const ros::Time& t_recv,
   }
 
   recent_t_scans_.emplace_back(t_scan_raw);
-  if (recent_t_scans_.size() < MIN_SCAN_SAMPLES)
+  if (recent_t_scans_.size() < SCAN_SAMPLES)
   {
     return std::pair<ros::Time, bool>(t_scan_raw, true);
   }
-  if (recent_t_scans_.size() >= MAX_SCAN_SAMPLES)
-  {
-    recent_t_scans_.pop_front();
-  }
+  recent_t_scans_.pop_front();
 
   std::vector<ScanSampleUTM> samples;
   for (size_t i = 1; i < recent_t_scans_.size(); ++i)
