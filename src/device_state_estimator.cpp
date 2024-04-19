@@ -95,8 +95,8 @@ bool Estimator::finishSync()
   const OriginFracPart overflow_range = originFracOverflow();
   if (!overflow_range)
   {
-    scip2::logger::warn()
-        << "failed to find origin fractional part overflow: "
+    scip2::logger::info()
+        << "Failed to find origin fractional part overflow: "
         << overflow_range.t_min_ << ", " << overflow_range.t_max_
         << ", samples=" << sync_samples_.size()
         << std::endl;
@@ -105,7 +105,7 @@ bool Estimator::finishSync()
   const auto min_delay = findMinDelay(overflow_range);
   if (min_delay == sync_samples_.cend())
   {
-    scip2::logger::warn() << "failed to find minimal delay sample" << std::endl;
+    scip2::logger::info() << "Failed to find minimal delay sample" << std::endl;
     return false;
   }
   comm_delay_.sigma_ = delaySigma();
