@@ -655,6 +655,7 @@ UrgStampedNode::UrgStampedNode()
   , delay_estim_state_(DelayEstimState::IDLE)
   , last_sync_time_(0)
   , tm_success_(false)
+  , scan_drop_count_(0)
   , cmd_resetting_(false)
 {
   std::random_device rd;
