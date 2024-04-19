@@ -58,6 +58,11 @@ protected:
         logger::error() << "Failed to get status" << std::endl;
         return;
       }
+      if (status == "")
+      {
+        logger::debug() << "Ignoring response without status" << std::endl;
+        continue;
+      }
       status.pop_back();  // remove checksum
 
       response_processor_(time_read, echo_back, status, stream);

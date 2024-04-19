@@ -64,22 +64,27 @@ TEST(SCIP2, MultipleResponses)
   {
     num_receive++;
     EXPECT_EQ(now, time_read);
+    EXPECT_EQ("00", status);
   };
   p.registerCallback<scip2::ResponseQT>(cb);
 
   /*
   Input data:
 
-  QT  // First QT command
+  QT  // First QT response
+  00P
 
-  FOO // Unknown command
+  FOO // Unknown response
   BAR
   QT  // This line must be ignored as a part of unknown command
 
-  QT  // Second QT command
+  QT  // This must be ignored as it doesn't have correct status line
+
+  QT  // Second QT response
+  00P
 
   */
-  dev->feed("QT\n\nFOO\nBAR\nQT\n\nQT\n\n", now);
+  dev->feed("QT\n00P\n\nFOO\nBAR\nQT\n\nQT\n\nQT\n00P\n\n", now);
   ASSERT_EQ(2, num_receive);
 }
 
