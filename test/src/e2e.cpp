@@ -256,15 +256,15 @@ TEST_P(E2EWithParam, Simple)
   ASSERT_NO_FATAL_FAILURE(startSimulator(param));
 
   // Make time sync happens frequently
-  pnh_.setParam("/urg_stamped/delay_estim_interval", 2.0);
+  pnh_.setParam("/urg_stamped/delay_estim_interval", 2.5);
   pnh_.setParam("/urg_stamped/error_limit", 4);
   pnh_.setParam("/urg_stamped/debug", true);
   ASSERT_NO_FATAL_FAILURE(startUrgStamped());
 
-  ASSERT_NO_FATAL_FAILURE(waitScans(250, ros::Duration(10)));
+  ASSERT_NO_FATAL_FAILURE(waitScans(300, ros::Duration(10)));
 
   int err_rms = 0;
-  for (size_t i = 200; i < 250; ++i)
+  for (size_t i = 250; i < 300; ++i)
   {
     const int index = std::lround(scans_[i]->ranges[0] * 1000);
     ASSERT_NE(true_stamps_.find(index), true_stamps_.end()) << "Can not find corresponding ground truth timestamp";
