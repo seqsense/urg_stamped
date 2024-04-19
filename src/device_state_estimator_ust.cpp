@@ -107,7 +107,7 @@ std::pair<ros::Time, bool> EstimatorUST::pushScanSample(const ros::Time& t_recv,
         {
           scan_.origin_ = clock_.stampToTime(it_change0->stamp_);
           scan_.interval_ = ros::Duration(stamp_diff * 0.001 / (clock_.gain_ * num_scans));
-          scip2::logger::info()
+          scip2::logger::debug()
               << "scan_origin: " << scan_.origin_ << " interval: " << scan_.interval_ << std::endl;
         }
       }
@@ -116,16 +116,9 @@ std::pair<ros::Time, bool> EstimatorUST::pushScanSample(const ros::Time& t_recv,
     {
       if (scan_.origin_.isValid() && scan_.origin_ + ros::Duration(30) < t_recv)
       {
-        if (it_change0 != scans_.end())
-        {
-          scan_.origin_ = clock_.stampToTime(it_change0->stamp_);
-        }
-        else
-        {
-          scan_.origin_ = t_stamp;
-        }
+        scan_.origin_ = t_stamp;
         scan_.interval_ = ideal_scan_interval_ * (1.0 / clock_.gain_);
-        scip2::logger::info()
+        scip2::logger::debug()
             << "no-increment scan_origin: " << scan_.origin_ << " interval: " << scan_.interval_ << std::endl;
       }
     }
