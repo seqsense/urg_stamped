@@ -114,7 +114,7 @@ std::pair<ros::Time, bool> EstimatorUST::pushScanSample(const ros::Time& t_recv,
     }
     else
     {
-      if (scan_.origin_ + ros::Duration(30) < t_recv)
+      if (scan_.origin_.isValid() && scan_.origin_ + ros::Duration(30) < t_recv)
       {
         if (it_change0 != scans_.end())
         {
