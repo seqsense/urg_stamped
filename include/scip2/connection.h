@@ -157,6 +157,7 @@ protected:
       close();
       return;
     }
+    socket_.set_option(boost::asio::ip::tcp::no_delay(true));
     timeout_.cancel();
     connect();
     asyncRead();
