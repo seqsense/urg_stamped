@@ -23,6 +23,7 @@
 #include <utility>
 #include <vector>
 
+#include <string>
 #include <fstream>
 
 #include <ros/time.h>
@@ -172,7 +173,8 @@ public:
   }
 
   inline explicit Estimator(const ros::Duration& ideal_scan_interval)
-    : ideal_scan_interval_(ideal_scan_interval)
+    : debug_out_("/dev/null")
+    , ideal_scan_interval_(ideal_scan_interval)
   {
   }
 
