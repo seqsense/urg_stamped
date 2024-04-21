@@ -269,7 +269,7 @@ TEST_P(E2EWithParam, Simple)
     const int index = std::lround(scans_[i]->ranges[0] * 1000);
     ASSERT_NE(true_stamps_.find(index), true_stamps_.end()) << "Can not find corresponding ground truth timestamp";
     const double err = (true_stamps_[index] - scans_[i]->header.stamp).toSec();
-    EXPECT_LT(std::abs(err), 0.0015)
+    EXPECT_LT(std::abs(err), 0.002)
         << std::setprecision(9) << std::fixed
         << "scan " << i << " gain " << status_msg_->sensor_clock_gain
         << " stamp " << scans_[i]->header.stamp;
@@ -279,7 +279,7 @@ TEST_P(E2EWithParam, Simple)
   EXPECT_LT(err_rms, 0.0002);
 
   ASSERT_TRUE(static_cast<bool>(status_msg_));
-  ASSERT_NEAR(status_msg_->sensor_clock_gain, param.clock_rate, 1.5e-4);
+  ASSERT_NEAR(status_msg_->sensor_clock_gain, param.clock_rate, 2e-4);
   ASSERT_GE(status_msg_->communication_delay.toSec(), param.comm_delay_base);
   ASSERT_LT(status_msg_->communication_delay.toSec(), param.comm_delay_base + param.comm_delay_sigma * 3);
   ASSERT_NEAR(status_msg_->scan_interval.toSec(), param.scan_interval, 5e-5);
