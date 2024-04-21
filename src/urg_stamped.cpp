@@ -332,6 +332,8 @@ void UrgStampedNode::cbVV(
           << "Unknown sensor model. Initialized timestamp estimator for UST"
           << std::endl;
     }
+
+    est_->initDebugOut("/" + msg_base_.header.frame_id + "_scan.dat");
   }
 }
 

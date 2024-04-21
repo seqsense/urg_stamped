@@ -23,6 +23,8 @@
 #include <utility>
 #include <vector>
 
+#include <fstream>
+
 #include <ros/time.h>
 
 #include "gtest/gtest_prod.h"
@@ -161,6 +163,13 @@ class Estimator
 {
 public:
   using Ptr = std::shared_ptr<Estimator>;
+
+  std::ofstream debug_out_;
+
+  inline void initDebugOut(const std::string& name)
+  {
+    debug_out_.open(name);
+  }
 
   inline explicit Estimator(const ros::Duration& ideal_scan_interval)
     : ideal_scan_interval_(ideal_scan_interval)

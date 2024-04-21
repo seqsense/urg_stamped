@@ -121,6 +121,13 @@ ros::Time EstimatorUTM::pushScanSampleRaw(const ros::Time& t_recv, const ros::Ti
   }
 
   const ros::Duration t_frac = stamp_to_send - min_stamp_to_send_ - comm_delay_.sigma_;
+
+  debug_out_
+      << t_recv
+      << " " << min_stamp_to_send_
+      << " " << stamp_to_send
+      << " " << comm_delay_.sigma_
+      << std::endl;
   return t_stamp + t_frac;
 }
 
