@@ -96,28 +96,27 @@ ros::Time EstimatorUTM::pushScanSampleRaw(const ros::Time& t_recv, const ros::Ti
   }
 
   const ros::Time t_sent = t_recv - comm_delay_.min_;
-  const ros::Duration stamp_to_send = t_sent - t_stamp;
-  ros::Duration new_min_stamp_to_send = min_stamp_to_send_;
-  if (new_min_stamp_to_send.isZero() || stamp_to_send < new_min_stamp_to_send)
+  const ros::Duration stamp_to_send_raw = t_sent - t_stamp;
+
+  stamp_to_sends_.push_back(stamp_to_send_raw);
+  if (stamp_to_sends_.size() > STAMP_TO_SEND_SAMPLES)
   {
-    new_min_stamp_to_send = stamp_to_send;
+    stamp_to_sends_.pop_front();
   }
-  if (min_stamp_to_send_.isZero())
+
+  std::vector<ros::Duration> stamp_to_sends(stamp_to_sends_.size());
+  std::copy(stamp_to_sends_.begin(), stamp_to_sends_.end(), stamp_to_sends.begin());
+  std::sort(stamp_to_sends.begin(), stamp_to_sends.end());
+
+  const ros::Duration stamp_to_send = stamp_to_sends[stamp_to_sends.size() / 2];
+
+  if (min_stamp_to_send_.isZero() || stamp_to_send < min_stamp_to_send_)
   {
-    min_stamp_to_send_ = new_min_stamp_to_send;
+    min_stamp_to_send_ = stamp_to_send;
   }
-  if (stamp_to_send - new_min_stamp_to_send < ros::Duration(0.001) && new_min_stamp_to_send < min_stamp_to_send_)
+  else if (stamp_to_send > min_stamp_to_send_ + ros::Duration(0.001))
   {
-    min_stamp_to_send_ =
-        min_stamp_to_send_ * (1 - MIN_STAMP_TO_SEND_ALPHA) +
-        new_min_stamp_to_send * MIN_STAMP_TO_SEND_ALPHA;
-  }
-  if (stamp_to_send - min_stamp_to_send_ > ros::Duration(0.001) + comm_delay_.sigma_ * 2 &&
-      stamp_to_send - min_stamp_to_send_ < ros::Duration(0.002))
-  {
-    min_stamp_to_send_ =
-        min_stamp_to_send_ * (1 - MIN_STAMP_TO_SEND_ALPHA) +
-        (stamp_to_send - ros::Duration(0.001)) * MIN_STAMP_TO_SEND_ALPHA;
+    min_stamp_to_send_ = stamp_to_send - ros::Duration(0.001);
   }
 
   const ros::Duration t_frac = stamp_to_send - min_stamp_to_send_ - comm_delay_.sigma_;
@@ -125,6 +124,7 @@ ros::Time EstimatorUTM::pushScanSampleRaw(const ros::Time& t_recv, const ros::Ti
   debug_out_
       << t_recv
       << " " << min_stamp_to_send_
+      << " " << stamp_to_send_raw
       << " " << stamp_to_send
       << " " << comm_delay_.sigma_
       << std::endl;

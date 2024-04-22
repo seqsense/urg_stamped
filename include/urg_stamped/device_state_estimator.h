@@ -234,19 +234,20 @@ public:
   {
   }
 
-  ros::Duration min_stamp_to_send_;
-  std::deque<ros::Time> recent_t_scans_;
-
   std::pair<ros::Time, bool> pushScanSample(
       const ros::Time& t_recv,
       const uint64_t device_wall_stamp) final;
 
 private:
   static constexpr size_t SCAN_SAMPLES = 64;
+  static constexpr size_t STAMP_TO_SEND_SAMPLES = 8;
   static constexpr size_t STAMP_DIFF_DIST = 4;
-  static constexpr double MIN_STAMP_TO_SEND_ALPHA = 0.01;
   static constexpr double SCAN_INTERVAL_ALPHA = 0.05;
   static constexpr double SCAN_ORIGIN_ALPHA = 0.2;
+
+  ros::Duration min_stamp_to_send_;
+  std::deque<ros::Time> recent_t_scans_;
+  std::deque<ros::Duration> stamp_to_sends_;
 
   ros::Time pushScanSampleRaw(
       const ros::Time& t_recv, const ros::Time& t_stamp);
