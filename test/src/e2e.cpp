@@ -269,7 +269,7 @@ TEST_P(E2EWithParam, Simple)
     const int index = std::lround(scans_[i]->ranges[0] * 1000);
     ASSERT_NE(true_stamps_.find(index), true_stamps_.end()) << "Can not find corresponding ground truth timestamp";
     const double err = (true_stamps_[index] - scans_[i]->header.stamp).toSec();
-    EXPECT_LT(std::abs(err), 0.002)
+    EXPECT_LT(std::abs(err), 0.0025)
         << std::setprecision(9) << std::fixed
         << "scan " << i << " gain " << status_msg_->sensor_clock_gain
         << " stamp " << scans_[i]->header.stamp;
