@@ -104,16 +104,14 @@ ros::Time EstimatorUTM::pushScanSampleRaw(const ros::Time& t_recv, const ros::Ti
     stamp_to_sends_.pop_front();
   }
 
-  std::vector<DurationWithOffset> stamp_to_sends;
+  ros::Duration stamp_to_send = stamp_to_send_raw;
   for (const auto& s : stamp_to_sends_)
   {
-    // Handle cyclic value
-    stamp_to_sends.emplace_back(s, ros::Duration());
-    stamp_to_sends.emplace_back(s, ros::Duration(0.001));
+    if (s < stamp_to_send)
+    {
+      stamp_to_send = s;
+    }
   }
-  std::sort(stamp_to_sends.begin(), stamp_to_sends.end());
-
-  const ros::Duration stamp_to_send = stamp_to_sends[stamp_to_sends.size() / 2].value_;
 
   if (min_stamp_to_send_.isZero() || stamp_to_send < min_stamp_to_send_)
   {
