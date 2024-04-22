@@ -333,7 +333,7 @@ void UrgStampedNode::cbVV(
           << std::endl;
     }
 
-    est_->initDebugOut("/" + msg_base_.header.frame_id + "_scan.dat");
+    est_->initDebugOut("/tmp/" + msg_base_.header.frame_id + "_scan.dat");
   }
 }
 
