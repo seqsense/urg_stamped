@@ -258,7 +258,7 @@ public:
 
 private:
   static constexpr size_t SCAN_SAMPLES = 64;
-  static constexpr size_t STAMP_TO_SEND_SAMPLES = 9;
+  static constexpr size_t STAMP_TO_SEND_SAMPLES = 32;
   static constexpr size_t STAMP_DIFF_DIST = 4;
   static constexpr double SCAN_INTERVAL_ALPHA = 0.05;
   static constexpr double SCAN_ORIGIN_ALPHA = 0.2;
