@@ -226,6 +226,24 @@ private:
   FRIEND_TEST(DeviceStateEstimator, ClockGain);
 };
 
+class DurationWithOffset
+{
+public:
+  ros::Duration value_;
+  ros::Duration offset_;
+
+  inline DurationWithOffset(const ros::Duration& value, const ros::Duration& offset)
+    : value_(value)
+    , offset_(offset)
+  {
+  }
+
+  inline bool operator<(const DurationWithOffset& b) const
+  {
+    return this->value_ + this->offset_ < b.value_ + b.offset_;
+  }
+};
+
 class EstimatorUTM : public Estimator
 {
 public:
@@ -240,7 +258,7 @@ public:
 
 private:
   static constexpr size_t SCAN_SAMPLES = 64;
-  static constexpr size_t STAMP_TO_SEND_SAMPLES = 8;
+  static constexpr size_t STAMP_TO_SEND_SAMPLES = 9;
   static constexpr size_t STAMP_DIFF_DIST = 4;
   static constexpr double SCAN_INTERVAL_ALPHA = 0.05;
   static constexpr double SCAN_ORIGIN_ALPHA = 0.2;

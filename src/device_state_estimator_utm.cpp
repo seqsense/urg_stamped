@@ -104,11 +104,16 @@ ros::Time EstimatorUTM::pushScanSampleRaw(const ros::Time& t_recv, const ros::Ti
     stamp_to_sends_.pop_front();
   }
 
-  std::vector<ros::Duration> stamp_to_sends(stamp_to_sends_.size());
-  std::copy(stamp_to_sends_.begin(), stamp_to_sends_.end(), stamp_to_sends.begin());
+  std::vector<DurationWithOffset> stamp_to_sends;
+  for (const auto& s : stamp_to_sends_)
+  {
+    // Handle cyclic value
+    stamp_to_sends.emplace_back(s, ros::Duration());
+    stamp_to_sends.emplace_back(s, ros::Duration(0.001));
+  }
   std::sort(stamp_to_sends.begin(), stamp_to_sends.end());
 
-  const ros::Duration stamp_to_send = stamp_to_sends[stamp_to_sends.size() / 2];
+  const ros::Duration stamp_to_send = stamp_to_sends[stamp_to_sends.size() / 2].value_;
 
   if (min_stamp_to_send_.isZero() || stamp_to_send < min_stamp_to_send_)
   {
@@ -119,7 +124,7 @@ ros::Time EstimatorUTM::pushScanSampleRaw(const ros::Time& t_recv, const ros::Ti
     min_stamp_to_send_ = stamp_to_send - ros::Duration(0.001);
   }
 
-  const ros::Duration t_frac = stamp_to_send - min_stamp_to_send_ - comm_delay_.sigma_;
+  const ros::Duration t_frac = stamp_to_send_raw - min_stamp_to_send_ - comm_delay_.sigma_;
 
   debug_out_
       << t_recv
