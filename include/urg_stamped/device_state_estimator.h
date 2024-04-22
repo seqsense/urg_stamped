@@ -267,7 +267,7 @@ private:
   std::deque<ros::Time> recent_t_scans_;
   std::deque<ros::Duration> stamp_to_sends_;
 
-  ros::Time pushScanSampleRaw(
+  ros::Time estimateScanTime(
       const ros::Time& t_recv, const ros::Time& t_stamp);
 
   FRIEND_TEST(DeviceStateEstimatorUTM, PushScanSampleRaw);
