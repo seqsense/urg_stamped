@@ -81,7 +81,7 @@ std::pair<ros::Time, bool> EstimatorUTM::pushScanSample(const ros::Time& t_recv,
     scan_.origin_ = origin_predicted + origin_err * SCAN_ORIGIN_ALPHA;
   }
 
-  const ros::Time t_estimated = scan_.fit(t_scan_raw);
+  const ros::Time t_estimated = scan_.fit(t_stamp);
   const ros::Duration t_comp = t_estimated - t_stamp;
   const bool valid = ros::Duration(-0.001) < t_comp && t_comp < ros::Duration(0.001);
 
