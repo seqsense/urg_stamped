@@ -112,7 +112,7 @@ TEST(DeviceStateEstimator, RawClockOrigin)
   {
     SCOPED_TRACE("Offset " + std::to_string(d));
     est.startSync();
-    for (double t = 0; t < 0.1; t += 0.0101)
+    for (double t = 0; t < 0.11; t += 0.0101)
     {
       const uint64_t ts = (t + d) * 1000;
       est.pushSyncSample(ros::Time(1 + t), ros::Time(1 + t + 0.0001), ts);
@@ -140,7 +140,7 @@ TEST(DeviceStateEstimator, ClockGain)
     {
       SCOPED_TRACE("T " + std::to_string(t0));
       est.startSync();
-      for (double t = t0; t < t0 + 0.1; t += 0.0101)
+      for (double t = t0; t < t0 + 0.11; t += 0.0101)
       {
         const uint64_t ts = t * gain * 1000;
         est.pushSyncSample(ros::Time(1 + t), ros::Time(1 + t + 0.0001), ts);
