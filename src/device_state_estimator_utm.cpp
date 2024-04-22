@@ -32,53 +32,44 @@ namespace device_state_estimator
 std::pair<ros::Time, bool> EstimatorUTM::pushScanSample(const ros::Time& t_recv, const uint64_t device_wall_stamp)
 {
   const ros::Time t_stamp = clock_.stampToTime(device_wall_stamp);
-  const ros::Time t_scan_raw = estimateScanTime(t_recv, t_stamp);
+  const auto t_scan = estimateScanTime(t_recv, t_stamp);
   if (!clock_.initialized_)
   {
-    return std::pair<ros::Time, bool>(t_scan_raw, true);
+    return std::pair<ros::Time, bool>(t_scan.first, true);
   }
 
-  recent_t_scans_.emplace_back(t_scan_raw);
-  if (recent_t_scans_.size() < SCAN_SAMPLES)
+  if (t_scan.second)
   {
-    return std::pair<ros::Time, bool>(t_scan_raw, true);
-  }
-  recent_t_scans_.pop_front();
+    recent_t_scans_.emplace_back(t_scan.first);
+    if (recent_t_scans_.size() < SCAN_SAMPLES)
+    {
+      return std::pair<ros::Time, bool>(t_scan.first, true);
+    }
+    recent_t_scans_.pop_front();
 
-  std::vector<ScanSampleUTM> samples;
-  for (size_t i = 1; i < recent_t_scans_.size(); ++i)
-  {
-    const int dist = i < STAMP_DIFF_DIST ? i : STAMP_DIFF_DIST;
-    const ros::Duration t_diff = recent_t_scans_[i] - recent_t_scans_[i - dist];
-    const int num_ideal_scans =
-        std::max(1, static_cast<int>(std::lround(t_diff.toSec() / ideal_scan_interval_.toSec())));
-    const ros::Duration interval = t_diff * (1.0 / num_ideal_scans);
-    samples.emplace_back(recent_t_scans_[i], interval);
-  }
+    std::vector<ScanSampleUTM> samples;
+    for (size_t i = 1; i < recent_t_scans_.size(); ++i)
+    {
+      for (size_t j = 0; j < i; ++j)
+      {
+        const ros::Duration t_diff = recent_t_scans_[i] - recent_t_scans_[j];
+        const int num_ideal_scans =
+            std::max(1, static_cast<int>(std::lround(t_diff.toSec() / ideal_scan_interval_.toSec())));
+        const ros::Duration interval = t_diff * (1.0 / num_ideal_scans);
+        samples.emplace_back(recent_t_scans_[i], interval);
+      }
+    }
 
-  std::sort(samples.begin(), samples.end());
-  const ScanSampleUTM& med = samples[samples.size() / 2];
+    std::sort(samples.begin(), samples.end());
+    const ScanSampleUTM& med = samples[samples.size() / 2];
 
-  if (scan_.origin_.isZero())
-  {
     scan_.interval_ = med.interval_;
     scan_.origin_ = med.t_;
   }
-  else
+
+  if (scan_.origin_.isZero())
   {
-    scan_.interval_ =
-        scan_.interval_ * (1 - SCAN_INTERVAL_ALPHA) +
-        med.interval_ * SCAN_INTERVAL_ALPHA;
-
-    const ros::Duration origin_diff = med.t_ - scan_.origin_;
-    const int origin_diff_n =
-        std::round(origin_diff.toSec() / scan_.interval_.toSec());
-    const ros::Time origin_predicted =
-        scan_.origin_ + scan_.interval_ * origin_diff_n;
-
-    const ros::Duration origin_err = med.t_ - origin_predicted;
-
-    scan_.origin_ = origin_predicted + origin_err * SCAN_ORIGIN_ALPHA;
+    return std::pair<ros::Time, bool>(t_stamp, true);
   }
 
   const ros::Time t_estimated = scan_.fit(t_stamp);
@@ -88,11 +79,11 @@ std::pair<ros::Time, bool> EstimatorUTM::pushScanSample(const ros::Time& t_recv,
   return std::pair<ros::Time, bool>(t_estimated, valid);
 }
 
-ros::Time EstimatorUTM::estimateScanTime(const ros::Time& t_recv, const ros::Time& t_stamp)
+std::pair<ros::Time, bool> EstimatorUTM::estimateScanTime(const ros::Time& t_recv, const ros::Time& t_stamp)
 {
   if (!clock_.initialized_)
   {
-    return t_stamp;
+    return std::pair<ros::Time, bool>(t_stamp, false);
   }
 
   const ros::Time t_sent = t_recv - comm_delay_.min_;
@@ -131,7 +122,10 @@ ros::Time EstimatorUTM::estimateScanTime(const ros::Time& t_recv, const ros::Tim
       << " " << stamp_to_send
       << " " << comm_delay_.sigma_
       << std::endl;
-  return t_stamp + t_frac;
+
+  return std::pair<ros::Time, bool>(
+      t_stamp + t_frac,
+      ros::Duration(0) < t_frac && t_frac < ros::Duration(0.001));
 }
 
 }  // namespace device_state_estimator

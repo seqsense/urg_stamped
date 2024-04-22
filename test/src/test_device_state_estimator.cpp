@@ -182,11 +182,11 @@ TEST(DeviceStateEstimatorUTM, PushScanSampleRaw)
 
   ASSERT_NEAR(
       t0 + 31.0000,
-      est.estimateScanTime(ros::Time(t0 + 31.0200), est.clock_.stampToTime(31000)).toSec(),
+      est.estimateScanTime(ros::Time(t0 + 31.0200), est.clock_.stampToTime(31000)).first.toSec(),
       0.0001);
   ASSERT_NEAR(
       t0 + 32.0005,
-      est.estimateScanTime(ros::Time(t0 + 32.0205), est.clock_.stampToTime(32000)).toSec(),
+      est.estimateScanTime(ros::Time(t0 + 32.0205), est.clock_.stampToTime(32000)).first.toSec(),
       0.0001);
 }
 
