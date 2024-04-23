@@ -42,28 +42,43 @@ public:
   ros::Duration sigma_;
 };
 
-class ClockState
+class ClockSample
 {
 public:
   ros::Time t_estim_;
   uint64_t stamp_;
   ros::Time origin_;
+};
+
+class ClockState
+{
+public:
+  ros::Time origin_;
   double gain_;
+  uint64_t stamp_;
   bool initialized_;
 
   inline ClockState()
-    : stamp_(0)
-    , gain_(1.0)
+    : gain_(1.0)
+    , stamp_(0)
     , initialized_(false)
   {
   }
 
-  ros::Time stampToTime(const uint64_t stamp) const;
+  inline ClockState(const ros::Time& origin, const double gain, const uint64_t stamp)
+    : origin_(origin)
+    , gain_(gain)
+    , stamp_(stamp)
+    , initialized_(true)
+  {
+  }
 
   inline bool operator<(const ClockState& b) const
   {
     return this->gain_ < b.gain_;
   }
+
+  ros::Time stampToTime(const uint64_t stamp) const;
 };
 
 class SyncSample
@@ -203,11 +218,10 @@ protected:
 private:
   static constexpr int MIN_SYNC_SAMPLES = 10;
   static constexpr int MAX_SYNC_SAMPLES = 50;
-  static constexpr int CLOCK_MEDIAN_WINDOW = 7;
+  static constexpr int CLOCK_SAMPLES = 7;
 
   std::vector<SyncSample> sync_samples_;
-  std::deque<ClockState> recent_clocks_;
-  ClockState latest_clock_;
+  std::deque<ClockSample> recent_clocks_;
 
   std::vector<SyncSample>::const_iterator findMinDelay(
       const OriginFracPart& overflow_range) const;

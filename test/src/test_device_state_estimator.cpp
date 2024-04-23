@@ -118,7 +118,7 @@ TEST(DeviceStateEstimator, RawClockOrigin)
       est.pushSyncSample(ros::Time(1 + t), ros::Time(1 + t + 0.0001), ts);
     }
     est.finishSync();
-    ASSERT_NEAR(est.latest_clock_.origin_.toSec(), 1.000 - d, 0.0002);
+    ASSERT_NEAR(est.recent_clocks_.back().origin_.toSec(), 1.000 - d, 0.0002);
   }
 }
 

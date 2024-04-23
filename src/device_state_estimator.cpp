@@ -110,18 +110,22 @@ bool Estimator::finishSync()
   }
   comm_delay_.sigma_ = delaySigma();
 
-  ClockState last = latest_clock_;
-
-  latest_clock_.origin_ = overflow_range.compensate(min_delay->t_origin_);
-  latest_clock_.stamp_ = min_delay->device_wall_stamp_;
-  latest_clock_.t_estim_ = min_delay->t_process_;
-
-  if (last.origin_.isZero())
+  const ClockSample clock =
+      {
+          .t_estim_ = min_delay->t_process_,
+          .stamp_ = min_delay->device_wall_stamp_,
+          .origin_ = overflow_range.compensate(min_delay->t_origin_),
+      };
+  recent_clocks_.push_back(clock);
+  if (recent_clocks_.size() >= CLOCK_SAMPLES)
   {
-    clock_ = latest_clock_;
+    recent_clocks_.pop_front();
+  }
 
+  if (recent_clocks_.size() <= 1)
+  {
     scip2::logger::debug()
-        << "initial origin: " << clock_.origin_
+        << "initial origin: " << clock.origin_
         << ", delay: " << min_delay->delay_
         << ", delay sigma: " << comm_delay_.sigma_
         << ", device timestamp: " << min_delay->device_wall_stamp_
@@ -130,23 +134,23 @@ bool Estimator::finishSync()
     return true;
   }
 
-  const double t_diff = (latest_clock_.t_estim_ - last.t_estim_).toSec();
-  const double origin_diff =
-      (latest_clock_.origin_ - last.origin_).toSec();
-  const double gain = (t_diff - origin_diff) / t_diff;
-
-  latest_clock_.gain_ = gain;
-  recent_clocks_.push_back(latest_clock_);
-  if (recent_clocks_.size() >= CLOCK_MEDIAN_WINDOW)
+  std::vector<ClockState> clocks;
+  for (size_t i = 1; i < recent_clocks_.size(); ++i)
   {
-    recent_clocks_.pop_front();
+    for (size_t j = 0; j < i; ++j)
+    {
+      const double t_diff =
+          (recent_clocks_[i].t_estim_ - recent_clocks_[j].t_estim_).toSec();
+      const double origin_diff =
+          (recent_clocks_[i].origin_ - recent_clocks_[j].origin_).toSec();
+      clocks.emplace_back(
+          recent_clocks_[i].origin_,
+          (t_diff - origin_diff) / t_diff,
+          recent_clocks_[i].stamp_);
+    }
   }
-
-  std::vector<ClockState> clocks(recent_clocks_.size());
-  std::copy(recent_clocks_.begin(), recent_clocks_.end(), clocks.begin());
   std::sort(clocks.begin(), clocks.end());
   clock_ = clocks[clocks.size() / 2];
-  clock_.initialized_ = true;
 
   scip2::logger::debug()
       << "origin: " << clock_.origin_
