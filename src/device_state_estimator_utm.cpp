@@ -115,14 +115,6 @@ std::pair<ros::Time, bool> EstimatorUTM::estimateScanTime(const ros::Time& t_rec
 
   const ros::Duration t_frac = stamp_to_send_raw - min_stamp_to_send_ - comm_delay_.sigma_;
 
-  debug_out_
-      << t_recv
-      << " " << min_stamp_to_send_
-      << " " << stamp_to_send_raw
-      << " " << stamp_to_send
-      << " " << comm_delay_.sigma_
-      << std::endl;
-
   return std::pair<ros::Time, bool>(
       t_stamp + t_frac,
       ros::Duration(0) < t_frac && t_frac < ros::Duration(0.001));
