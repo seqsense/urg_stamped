@@ -28,11 +28,6 @@
 #include <scip2/response.h>
 #include <scip2/logger.h>
 
-namespace
-{
-
-}  // namespace
-
 namespace scip2
 {
 class Protocol
