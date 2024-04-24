@@ -43,7 +43,11 @@ protected:
     std::istream stream(&buf);
 
     std::string echo_back;
-    std::getline(stream, echo_back);
+    if (!std::getline(stream, echo_back))
+    {
+      logger::error() << "Failed to get echo back" << std::endl;
+      return;
+    }
     if (echo_back == "")
     {
       logger::debug() << "Empty response echo back " << std::endl;
@@ -51,7 +55,11 @@ protected:
     }
 
     std::string status;
-    std::getline(stream, status);
+    if (!std::getline(stream, status))
+    {
+      logger::error() << "Failed to get status" << std::endl;
+      return;
+    }
     if (status == "")
     {
       logger::debug() << "Empty response status" << std::endl;
