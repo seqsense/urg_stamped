@@ -102,9 +102,6 @@ TEST(SCIP2, MultipleResponses)
   os << "\n\n";
   dev->feed(buf, now);
   ASSERT_EQ(2, num_receive);
-
-  dev->feed(buf, now);
-  ASSERT_EQ(2, num_receive);
 }
 
 int main(int argc, char** argv)

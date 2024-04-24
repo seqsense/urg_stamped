@@ -28,6 +28,11 @@
 #include <scip2/response.h>
 #include <scip2/logger.h>
 
+namespace
+{
+
+}  // namespace
+
 namespace scip2
 {
 class Protocol
@@ -41,26 +46,15 @@ protected:
       const boost::posix_time::ptime& time_read)
   {
     std::istream stream(&buf);
-    const auto pos = stream.tellg();
 
-    if (stream.eof())
-    {
-      return;
-    }
     std::string echo_back;
     std::getline(stream, echo_back);
     if (echo_back == "")
     {
-      logger::debug() << "Empty response echo back" << std::endl;
+      logger::debug() << "Empty response echo back " << std::endl;
       return;
     }
 
-    if (stream.eof())
-    {
-      // Re-read from the beginning on the next callback
-      stream.seekg(pos);
-      return;
-    }
     std::string status;
     std::getline(stream, status);
     if (status == "")
