@@ -32,12 +32,12 @@ namespace device_state_estimator
 std::pair<ros::Time, bool> EstimatorUTM::pushScanSample(const ros::Time& t_recv, const uint64_t device_wall_stamp)
 {
   const ros::Time t_stamp = clock_.stampToTime(device_wall_stamp);
-  const auto t_scan = estimateScanTime(t_recv, t_stamp);
   if (!clock_.initialized_)
   {
-    return std::pair<ros::Time, bool>(t_scan.first, true);
+    return std::pair<ros::Time, bool>(t_stamp, true);
   }
 
+  const auto t_scan = estimateScanTime(t_recv, t_stamp);
   if (t_scan.second)
   {
     recent_t_scans_.emplace_back(t_scan.first);
