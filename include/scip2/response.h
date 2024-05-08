@@ -67,6 +67,7 @@ public:
     if (response == responses_.end())
     {
       logger::debug() << "Unknown response " << command_code << std::endl;
+      readUntilEnd(stream);
       return;
     }
     (*(response->second))(time_read, echo_back, status, stream);

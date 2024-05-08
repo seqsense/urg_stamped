@@ -22,6 +22,7 @@
 
 #include <boost/asio.hpp>
 #include <boost/bind/bind.hpp>
+#include <boost/function.hpp>
 
 #include <scip2/logger.h>
 
