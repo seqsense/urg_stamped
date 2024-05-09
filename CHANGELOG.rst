@@ -10,6 +10,18 @@ Changelog for package urg_stamped
 * Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
 * Contributors: Atsushi Watanabe
 
+0.1.1 (2024-05-09)
+------------------
+* Fix build dependency to message (`#155 <https://github.com/seqsense/urg_stamped/issues/155>`_)
+* Fix handling of multiple responses in one read (`#152 <https://github.com/seqsense/urg_stamped/issues/152>`_)
+* Fix urg_sim CPU usage (`#150 <https://github.com/seqsense/urg_stamped/issues/150>`_)
+* Improve simulated communication delay (`#149 <https://github.com/seqsense/urg_stamped/issues/149>`_)
+* Use clock_rate in urg_sim (`#148 <https://github.com/seqsense/urg_stamped/issues/148>`_)
+* Fix E2E test assertion and true timestamp index (`#147 <https://github.com/seqsense/urg_stamped/issues/147>`_)
+* Add URG simulator for CI (`#146 <https://github.com/seqsense/urg_stamped/issues/146>`_)
+* Update codecov/codecov-action to v4 (`#145 <https://github.com/seqsense/urg_stamped/issues/145>`_)
+* Contributors: Atsushi Watanabe
+
 0.1.0 (2024-02-14)
 ------------------
 * Add option to disable on-scan time sync (`#141 <https://github.com/seqsense/urg_stamped/issues/141>`_)
