@@ -34,7 +34,7 @@ add_executable(urg_stamped
   src/ros_logger.cpp
 )
 target_link_libraries(urg_stamped ${catkin_LIBRARIES} ${Boost_LIBRARIES})
-add_dependencies(urg_stamped ${catkin_EXPORTED_TARGETS})
+add_dependencies(urg_stamped ${urg_stamped_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 add_executable(urg_sim
   src/urg_sim/encode.cpp
