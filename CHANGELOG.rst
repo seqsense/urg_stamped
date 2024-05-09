@@ -10,8 +10,8 @@ Changelog for package urg_stamped
 * Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
 * Contributors: Atsushi Watanabe
 
-Forthcoming
------------
+0.1.1 (2024-05-09)
+------------------
 * Fix handling of multiple responses in one read (`#152 <https://github.com/seqsense/urg_stamped/issues/152>`_)
 * Fix urg_sim CPU usage (`#150 <https://github.com/seqsense/urg_stamped/issues/150>`_)
 * Improve simulated communication delay (`#149 <https://github.com/seqsense/urg_stamped/issues/149>`_)
