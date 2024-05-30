@@ -17,6 +17,7 @@
 #ifndef SCIP2_DECODE_H
 #define SCIP2_DECODE_H
 
+#include <cstdint>
 #include <string>
 
 namespace scip2

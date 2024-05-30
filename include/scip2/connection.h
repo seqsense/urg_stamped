@@ -17,6 +17,7 @@
 #ifndef SCIP2_CONNECTION_H
 #define SCIP2_CONNECTION_H
 
+#include <cstdint>
 #include <memory>
 #include <string>
 

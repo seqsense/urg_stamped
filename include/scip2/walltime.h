@@ -17,6 +17,8 @@
 #ifndef SCIP2_WALLTIME_H
 #define SCIP2_WALLTIME_H
 
+#include <cstdint>
+
 #include <scip2/logger.h>
 
 namespace scip2

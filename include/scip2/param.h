@@ -17,6 +17,7 @@
 #ifndef SCIP2_PARAM_H
 #define SCIP2_PARAM_H
 
+#include <cstdint>
 #include <string>
 #include <algorithm>
 

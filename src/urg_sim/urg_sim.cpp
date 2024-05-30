@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <cstdint>
 #include <iostream>
 #include <mutex>
 #include <sstream>

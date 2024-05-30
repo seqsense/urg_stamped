@@ -19,6 +19,7 @@
 
 #include <ros/ros.h>
 
+#include <cstdint>
 #include <cmath>
 
 namespace urg_stamped
