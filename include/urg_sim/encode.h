@@ -17,6 +17,7 @@
 #ifndef URG_SIM_ENCODE_H
 #define URG_SIM_ENCODE_H
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
