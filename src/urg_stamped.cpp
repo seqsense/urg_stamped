@@ -25,6 +25,7 @@
 #include <boost/thread.hpp>
 
 #include <algorithm>
+#include <cstdint>
 #include <list>
 #include <map>
 #include <random>

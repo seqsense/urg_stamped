@@ -15,6 +15,7 @@
  */
 
 #include <algorithm>
+#include <cstdint>
 #include <vector>
 
 #include <ros/time.h>

@@ -18,6 +18,7 @@
 #define URG_SIM_URG_SIM_H
 
 #include <atomic>
+#include <cstdint>
 #include <functional>
 #include <list>
 #include <map>

@@ -19,6 +19,7 @@
 
 #include <boost/asio.hpp>
 
+#include <cstdint>
 #include <map>
 #include <string>
 #include <vector>

@@ -18,6 +18,7 @@
 #define URG_STAMPED_DEVICE_STATE_ESTIMATOR_H
 
 #include <algorithm>
+#include <cstdint>
 #include <deque>
 #include <memory>
 #include <utility>
