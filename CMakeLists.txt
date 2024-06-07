@@ -24,7 +24,7 @@ catkin_package(CATKIN_DEPENDS
 
 find_package(Boost 1.53 REQUIRED system chrono thread)
 
-add_compile_options(-std=c++11)
+add_compile_options(-std=c++14)
 include_directories(${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} include)
 
 add_executable(urg_stamped
