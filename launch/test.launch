@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="debug" default="false" />
+
+  <node name="urg_stamped" pkg="urg_stamped" type="urg_stamped" output="screen">
+    <param name="ip_address" value="192.168.11.103" />
+    <param name="debug" value="$(arg debug)" />
+  </node>
+</launch>

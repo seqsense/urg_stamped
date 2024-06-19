@@ -4,3 +4,7 @@ time sensor_clock_origin
 float64 sensor_clock_gain
 
 duration communication_delay
+duration communication_delay_sigma
+
+time scan_time_origin
+duration scan_interval

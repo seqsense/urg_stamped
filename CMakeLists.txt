@@ -28,10 +28,13 @@ add_compile_options(-std=c++14)
 include_directories(${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} include)
 
 add_executable(urg_stamped
+  src/device_state_estimator.cpp
+  src/device_state_estimator_utm.cpp
+  src/device_state_estimator_ust.cpp
+  src/ros_logger.cpp
+  src/scip2/logger.cpp
   src/urg_stamped.cpp
   src/urg_stamped_node.cpp
-  src/scip2/logger.cpp
-  src/ros_logger.cpp
 )
 target_link_libraries(urg_stamped ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 add_dependencies(urg_stamped ${urg_stamped_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

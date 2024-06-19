@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="debug" default="false" />
+  <arg name="model" default="UTM" />
+
+  <node name="urg_sim" pkg="urg_stamped" type="urg_sim" args="$(arg model)" />
+  <node name="urg_stamped" pkg="urg_stamped" type="urg_stamped" output="screen">
+    <param name="ip_address" value="127.0.0.1" />
+    <param name="debug" value="$(arg debug)" />
+  </node>
+</launch>
