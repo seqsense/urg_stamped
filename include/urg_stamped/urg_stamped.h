@@ -111,6 +111,8 @@ protected:
   bool tm_success_;
   int error_count_max_;
   int scan_drop_count_;
+  int scan_drop_continuous_;
+  int fallback_on_continuous_scan_drop_;
 
   ros::Duration tm_command_interval_;
   std::string last_measurement_state_;

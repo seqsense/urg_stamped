@@ -77,7 +77,20 @@ void UrgStampedNode::cbM(
   if (!t_scan.second)
   {
     scan_drop_count_++;
-    return;
+    scan_drop_continuous_++;
+    if (scan_drop_continuous_ > fallback_on_continuous_scan_drop_)
+    {
+      // Fallback to naive sensor timestamp
+      msg.header.stamp = est_->getClockState().stampToTime(walltime_device);
+    }
+    else
+    {
+      return;
+    }
+  }
+  else
+  {
+    scan_drop_continuous_ = 0;
   }
 
   if (msg.header.stamp > time_read_ros)
@@ -657,6 +670,7 @@ UrgStampedNode::UrgStampedNode()
   , last_sync_time_(0)
   , tm_success_(false)
   , scan_drop_count_(0)
+  , scan_drop_continuous_(0)
   , cmd_resetting_(false)
 {
   std::random_device rd;
@@ -672,6 +686,7 @@ UrgStampedNode::UrgStampedNode()
   pnh_.param("publish_intensity", publish_intensity_, true);
   pnh_.param("delay_estim_interval", delay_estim_interval, 30.0);
   pnh_.param("error_limit", error_count_max_, 4);
+  pnh_.param("fallback_on_continuous_scan_drop", fallback_on_continuous_scan_drop_, 5);
 
   double tm_interval, tm_timeout;
   pnh_.param("tm_interval", tm_interval, 0.06);
