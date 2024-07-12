@@ -168,7 +168,7 @@ protected:
 
   void sendII();
   void timeSync(const ros::TimerEvent& event = ros::TimerEvent());
-  void delayEstimation(const ros::TimerEvent& event = ros::TimerEvent());
+  void estimateSensorClock(const ros::TimerEvent& event = ros::TimerEvent());
   void retryTM(const ros::TimerEvent& event = ros::TimerEvent());
   void publishStatus();
 

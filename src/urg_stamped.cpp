@@ -217,7 +217,7 @@ void UrgStampedNode::cbTM(
             << (ros::Time::now() - tm_start_time_).toSec()
             << ")"
             << std::endl;
-        delayEstimation();
+        estimateSensorClock();
         break;
       }
 
@@ -280,7 +280,7 @@ void UrgStampedNode::cbPP(
   msg_base_.angle_max =
       (std::stoi(amax->second) - std::stoi(afrt->second)) * msg_base_.angle_increment;
 
-  delayEstimation();
+  estimateSensorClock();
 }
 
 void UrgStampedNode::cbVV(
@@ -519,7 +519,7 @@ void UrgStampedNode::sendII()
   scip_->sendCommand("II");
 }
 
-void UrgStampedNode::delayEstimation(const ros::TimerEvent& event)
+void UrgStampedNode::estimateSensorClock(const ros::TimerEvent& event)
 {
   if (scan_drop_count_ > 0)
   {
@@ -678,13 +678,13 @@ UrgStampedNode::UrgStampedNode()
 
   std::string ip;
   int port;
-  double delay_estim_interval;
+  double clock_estim_interval;
 
   pnh_.param("ip_address", ip, std::string("192.168.0.10"));
   pnh_.param("ip_port", port, 10940);
   pnh_.param("frame_id", msg_base_.header.frame_id, std::string("laser"));
   pnh_.param("publish_intensity", publish_intensity_, true);
-  pnh_.param("delay_estim_interval", delay_estim_interval, 30.0);
+  pnh_.param("clock_estim_interval", clock_estim_interval, 30.0);
   pnh_.param("error_limit", error_count_max_, 4);
   pnh_.param("fallback_on_continuous_scan_drop", fallback_on_continuous_scan_drop_, 5);
 
@@ -771,10 +771,10 @@ UrgStampedNode::UrgStampedNode()
                   boost::arg<2>(),
                   boost::arg<3>()));
 
-  if (delay_estim_interval > 0.0)
+  if (clock_estim_interval > 0.0)
   {
     timer_delay_estim_ = nh_.createTimer(
-        ros::Duration(delay_estim_interval), &UrgStampedNode::delayEstimation, this);
+        ros::Duration(clock_estim_interval), &UrgStampedNode::estimateSensorClock, this);
   }
 }
 
