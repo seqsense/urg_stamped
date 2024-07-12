@@ -12,14 +12,14 @@ Also, the resolution of the timestamp was not enough for a high-speed motion of 
 So, urg_stamped estimates sub-millisecond by the following algorithm:
 
 - Determine sensor internal clock state (clock offset and gain) using TM command
-  1. Observe sub-millisecond clock offset by finding increment of millisecond resolution sensor timestamp
-  2. Observe clock gain from multiple observations of the clock offset
+  - 1. Observe sub-millisecond clock offset by finding increment of millisecond resolution sensor timestamp
+  - 2. Observe clock gain from multiple observations of the clock offset
 - Determine scan origin time and interval
   - UTM: (UTM sends scan data right after the scan is finished)
-    1. Observe scan timing based on scan data arrival time
+    - 1. Observe scan timing based on scan data arrival time
   - UST: (UST sends scan data on the next 1ms frame after the scan is finished)
-    1. Find sensor scan timestamp jitter
-    2. Observe scan origin time and scan interval using scan timestamp jitter
+    - 1. Find sensor scan timestamp jitter
+    - 2. Observe scan origin time and scan interval using scan timestamp jitter
 - Calculate sub-millisecond scan timestamp based on the observed scan origin time and scan interval
 
 ## Usages
