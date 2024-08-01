@@ -3,7 +3,7 @@ urg\_stamped
 
 Precisely and accurately stamped URG driver for ROS
 
-## Backgrounds and Algorithm
+## Background and Algorithm
 
 2D-LIDAR URG series provides 1ms resolution timestamp and exclusive clock synchronization mode.
 It was hard to compensate clock drift during measurement using them.

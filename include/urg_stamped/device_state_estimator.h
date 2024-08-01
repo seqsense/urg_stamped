@@ -162,7 +162,6 @@ public:
   inline ScanSampleUST(uint64_t stamp, int64_t interval)
     : stamp_(stamp)
     , interval_(interval)
-
   {
   }
 };

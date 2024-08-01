@@ -30,7 +30,7 @@ namespace device_state_estimator
 
 ros::Time ClockState::stampToTime(const uint64_t stamp) const
 {
-  const double from_origin = (stamp_ + (int64_t)(stamp - stamp_) / gain_) / 1000.0;
+  const double from_origin = (stamp_ + static_cast<int64_t>(stamp - stamp_) / gain_) / 1000.0;
   return origin_ + ros::Duration(from_origin);
 }
 
@@ -45,8 +45,8 @@ ros::Time ScanState::fit(const ros::Time& t) const
 bool OriginFracPart::isOnOverflow(const ros::Time& t) const
 {
   const double r = std::fmod(t.toSec(), 0.001);
-  double t0 = std::min(t_min_, t_max_);
-  double t1 = std::max(t_min_, t_max_);
+  const double t0 = std::min(t_min_, t_max_);
+  const double t1 = std::max(t_min_, t_max_);
   return t0 - TOLERANCE < r && r < t1 + TOLERANCE;
 }
 
