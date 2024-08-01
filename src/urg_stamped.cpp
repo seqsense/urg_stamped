@@ -199,7 +199,7 @@ void UrgStampedNode::cbTM(
       }
 
       // UST doesn't respond immediately when next TM1 command is sent without sleep
-      sleepRandom(0, 0.001);
+      sleepRandom(0, DEVICE_TIMESTAMP_RESOLUTION);
 
       scip_->sendCommand(
           "TM1",

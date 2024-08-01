@@ -75,7 +75,9 @@ std::pair<ros::Time, bool> EstimatorUTM::pushScanSample(const ros::Time& t_recv,
 
   const ros::Time t_estimated = scan_.fit(t_stamp);
   const ros::Duration t_comp = t_estimated - t_stamp;
-  const bool valid = ros::Duration(-0.001) < t_comp && t_comp < ros::Duration(0.001);
+  const bool valid =
+      ros::Duration(-DEVICE_TIMESTAMP_RESOLUTION) < t_comp &&
+      t_comp < ros::Duration(DEVICE_TIMESTAMP_RESOLUTION);
 
   return std::pair<ros::Time, bool>(t_estimated, valid);
 }
@@ -109,16 +111,16 @@ std::pair<ros::Time, bool> EstimatorUTM::estimateScanTime(const ros::Time& t_rec
   {
     min_stamp_to_send_ = stamp_to_send;
   }
-  else if (stamp_to_send > min_stamp_to_send_ + ros::Duration(0.001))
+  else if (stamp_to_send > min_stamp_to_send_ + ros::Duration(DEVICE_TIMESTAMP_RESOLUTION))
   {
-    min_stamp_to_send_ = stamp_to_send - ros::Duration(0.001);
+    min_stamp_to_send_ = stamp_to_send - ros::Duration(DEVICE_TIMESTAMP_RESOLUTION);
   }
 
   const ros::Duration t_frac = stamp_to_send_raw - min_stamp_to_send_ - comm_delay_.sigma_;
 
   return std::pair<ros::Time, bool>(
       t_stamp + t_frac,
-      ros::Duration(0) < t_frac && t_frac < ros::Duration(0.001));
+      ros::Duration(0) < t_frac && t_frac < ros::Duration(DEVICE_TIMESTAMP_RESOLUTION));
 }
 
 }  // namespace device_state_estimator

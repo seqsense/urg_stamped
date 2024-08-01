@@ -30,7 +30,7 @@ namespace device_state_estimator
 
 ros::Time ClockState::stampToTime(const uint64_t stamp) const
 {
-  const double from_origin = (stamp_ + static_cast<int64_t>(stamp - stamp_) / gain_) / 1000.0;
+  const double from_origin = (stamp_ + static_cast<int64_t>(stamp - stamp_) / gain_) * DEVICE_TIMESTAMP_RESOLUTION;
   return origin_ + ros::Duration(from_origin);
 }
 
@@ -44,7 +44,7 @@ ros::Time ScanState::fit(const ros::Time& t) const
 
 bool OriginFracPart::isOnOverflow(const ros::Time& t) const
 {
-  const double r = std::fmod(t.toSec(), 0.001);
+  const double r = std::fmod(t.toSec(), DEVICE_TIMESTAMP_RESOLUTION);
   const double t0 = std::min(t_min_, t_max_);
   const double t1 = std::max(t_min_, t_max_);
   return t0 - TOLERANCE < r && r < t1 + TOLERANCE;
@@ -53,10 +53,10 @@ bool OriginFracPart::isOnOverflow(const ros::Time& t) const
 ros::Time OriginFracPart::compensate(const ros::Time& t) const
 {
   const double frac = (t_min_ + t_max_) / 2;
-  double t_integral = std::floor(t.toSec() * 1000) / 1000;
-  if (std::fmod(t.toSec(), 0.001) < frac)
+  double t_integral = std::floor(t.toSec() / DEVICE_TIMESTAMP_RESOLUTION) * DEVICE_TIMESTAMP_RESOLUTION;
+  if (std::fmod(t.toSec(), DEVICE_TIMESTAMP_RESOLUTION) < frac)
   {
-    t_integral -= 0.001;
+    t_integral -= DEVICE_TIMESTAMP_RESOLUTION;
   }
   return ros::Time(t_integral + frac);
 }
@@ -221,17 +221,17 @@ OriginFracPart Estimator::originFracOverflow() const
     return OriginFracPart();
   }
 
-  double t_min = std::fmod(it_min_origin->t_process_.toSec(), 0.001);
-  double t_max = std::fmod(it_max_origin->t_process_.toSec(), 0.001);
-  if (t_min > t_max + 0.0005)
+  double t_min = std::fmod(it_min_origin->t_process_.toSec(), DEVICE_TIMESTAMP_RESOLUTION);
+  double t_max = std::fmod(it_max_origin->t_process_.toSec(), DEVICE_TIMESTAMP_RESOLUTION);
+  if (t_min > t_max + DEVICE_TIMESTAMP_RESOLUTION / 2)
   {
-    t_max += 0.001;
+    t_max += DEVICE_TIMESTAMP_RESOLUTION;
   }
-  else if (t_max > t_min + 0.0005)
+  else if (t_max > t_min + DEVICE_TIMESTAMP_RESOLUTION / 2)
   {
-    t_min += 0.001;
+    t_min += DEVICE_TIMESTAMP_RESOLUTION;
   }
-  if (std::abs(t_max - t_min) > 0.00025)
+  if (std::abs(t_max - t_min) > DEVICE_TIMESTAMP_RESOLUTION / 4)
   {
     return OriginFracPart(t_min, t_max, false);
   }

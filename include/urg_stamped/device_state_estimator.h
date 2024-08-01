@@ -36,6 +36,8 @@ namespace urg_stamped
 namespace device_state_estimator
 {
 
+static constexpr double DEVICE_TIMESTAMP_RESOLUTION = 0.001;
+
 class CommDelay
 {
 public:
@@ -99,7 +101,7 @@ public:
     , device_wall_stamp_(device_wall_stamp)
     , delay_((t_res - t_req) * 0.5)
     , t_process_(t_res_ - delay_)
-    , t_origin_(t_process_ - ros::Duration(device_wall_stamp_ * 0.001))
+    , t_origin_(t_process_ - ros::Duration(device_wall_stamp_ * DEVICE_TIMESTAMP_RESOLUTION))
   {
   }
 };
