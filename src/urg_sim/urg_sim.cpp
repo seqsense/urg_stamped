@@ -68,9 +68,8 @@ void URGSimulator::onRead(const boost::system::error_code& ec)
     return;
   }
   const auto now = boost::posix_time::microsec_clock::universal_time();
-  const double delay_sec = comm_delay_distribution_(rand_engine_);
   const auto delay = boost::posix_time::microseconds(
-      static_cast<int64_t>(delay_sec * 1e6));
+      static_cast<int64_t>(randomCommDelay() * 1e6));
   const auto when = now + delay;
 
   std::istream stream(&input_buf_);
@@ -324,6 +323,9 @@ void URGSimulator::handleQT(const std::string cmd)
     case SensorState::ERROR_DETECTED:
       response(cmd, status_error_abnormal);
       return;
+    case SensorState::BOOTING:
+      response(cmd, status_ok);
+      return;
     case SensorState::SINGLE_SCAN:
     case SensorState::MULTI_SCAN:
     case SensorState::IDLE:
@@ -351,7 +353,10 @@ void URGSimulator::handleRS(const std::string cmd)
     return;
   }
   timestamp_epoch_ = boost::posix_time::microsec_clock::universal_time();
-  sensor_state_ = SensorState::IDLE;
+  if (sensor_state_ != SensorState::BOOTING)
+  {
+    sensor_state_ = SensorState::IDLE;
+  }
 
   response(cmd, status_ok);
 }
@@ -511,9 +516,8 @@ void URGSimulator::response(
     const std::string data)
 {
   const auto now = boost::posix_time::microsec_clock::universal_time();
-  const double delay_sec = comm_delay_distribution_(rand_engine_);
   const auto delay = boost::posix_time::microseconds(
-      static_cast<int64_t>(delay_sec * 1e6));
+      static_cast<int64_t>(randomCommDelay() * 1e6));
   const auto when = now + delay;
 
   const std::string text =
@@ -688,6 +692,7 @@ void URGSimulator::sendScan()
       data.push_back(last_raw_scan_->intensities[i]);
     }
   }
+
   std::stringstream ss;
 
   const std::string time = encode::encode(
@@ -715,6 +720,21 @@ void URGSimulator::sendScan()
         << measurement_scans_ - measurement_sent_ - 1;
   }
   ss_echo << measurement_extra_string_;
+
+  if (params_.model == Model::UST)
+  {
+    // UST-30 series doesn't send responses immediately but at the next 1ms tick
+    const auto now = boost::posix_time::microsec_clock::universal_time();
+    const uint64_t next_tick =
+        params_.clock_rate * (now - timestamp_epoch_).total_microseconds() / 1000.0 + 1;
+    const auto next_tick_system_microseconds =
+        static_cast<uint64_t>(next_tick * 1000.0 / params_.clock_rate);
+    boost::asio::deadline_timer ust_wait(io_service_);
+    ust_wait.expires_at(
+        timestamp_epoch_ + boost::posix_time::microseconds(next_tick_system_microseconds));
+    ust_wait.wait();
+  }
+
   response(ss_echo.str(), "99", ss.str());
 }
 
@@ -803,6 +823,12 @@ int URGSimulator::getBootCnt()
 {
   std::lock_guard<std::mutex> lock(mu_);
   return boot_cnt_;
+}
+
+double URGSimulator::randomCommDelay()
+{
+  // Communication delay must not be less than comm_delay_base.
+  return std::abs(comm_delay_distribution_(rand_engine_)) + params_.comm_delay_base;
 }
 
 }  // namespace urg_sim

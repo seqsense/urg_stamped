@@ -169,10 +169,36 @@ std::vector<urg_sim::URGSimulator::Params> params(
         {
             .model = urg_sim::URGSimulator::Model::UTM,
             .boot_duration = 0.01,
-            .comm_delay_base = 0.00025,
-            .comm_delay_sigma = 0.00005,
-            .scan_interval = 0.025,
+            .comm_delay_base = 0.0002,
+            .comm_delay_sigma = 0.0004,
+            .scan_interval = 0.02505,
             .clock_rate = 1.0,
+            .hex_ii_timestamp = false,
+            .angle_resolution = 1440,
+            .angle_min = 0,
+            .angle_max = 1080,
+            .angle_front = 540,
+        },  // NOLINT(whitespace/braces)
+        {
+            .model = urg_sim::URGSimulator::Model::UTM,
+            .boot_duration = 0.01,
+            .comm_delay_base = 0.0002,
+            .comm_delay_sigma = 0.0004,
+            .scan_interval = 0.02505,
+            .clock_rate = 1.001,
+            .hex_ii_timestamp = false,
+            .angle_resolution = 1440,
+            .angle_min = 0,
+            .angle_max = 1080,
+            .angle_front = 540,
+        },  // NOLINT(whitespace/braces)
+        {
+            .model = urg_sim::URGSimulator::Model::UTM,
+            .boot_duration = 0.01,
+            .comm_delay_base = 0.0002,
+            .comm_delay_sigma = 0.0004,
+            .scan_interval = 0.02505,
+            .clock_rate = 0.999,
             .hex_ii_timestamp = false,
             .angle_resolution = 1440,
             .angle_min = 0,
@@ -182,10 +208,36 @@ std::vector<urg_sim::URGSimulator::Params> params(
         {
             .model = urg_sim::URGSimulator::Model::UST,
             .boot_duration = 0.01,
-            .comm_delay_base = 0.00025,
-            .comm_delay_sigma = 0.00005,
-            .scan_interval = 0.025,
+            .comm_delay_base = 0.0005,
+            .comm_delay_sigma = 0.0005,
+            .scan_interval = 0.02505,
             .clock_rate = 1.0,
+            .hex_ii_timestamp = true,
+            .angle_resolution = 1440,
+            .angle_min = 0,
+            .angle_max = 1080,
+            .angle_front = 540,
+        },  // NOLINT(whitespace/braces)
+        {
+            .model = urg_sim::URGSimulator::Model::UST,
+            .boot_duration = 0.01,
+            .comm_delay_base = 0.0005,
+            .comm_delay_sigma = 0.0005,
+            .scan_interval = 0.02505,
+            .clock_rate = 1.001,
+            .hex_ii_timestamp = true,
+            .angle_resolution = 1440,
+            .angle_min = 0,
+            .angle_max = 1080,
+            .angle_front = 540,
+        },  // NOLINT(whitespace/braces)
+        {
+            .model = urg_sim::URGSimulator::Model::UST,
+            .boot_duration = 0.01,
+            .comm_delay_base = 0.0005,
+            .comm_delay_sigma = 0.0005,
+            .scan_interval = 0.02505,
+            .clock_rate = 0.999,
             .hex_ii_timestamp = true,
             .angle_resolution = 1440,
             .angle_min = 0,
@@ -204,25 +256,33 @@ TEST_P(E2EWithParam, Simple)
   ASSERT_NO_FATAL_FAILURE(startSimulator(param));
 
   // Make time sync happens frequently
-  pnh_.setParam("/urg_stamped/sync_interval_min", 0.1);
-  pnh_.setParam("/urg_stamped/sync_interval_max", 0.4);
-  pnh_.setParam("/urg_stamped/delay_estim_interval", 3.0);
+  pnh_.setParam("/urg_stamped/clock_estim_interval", 2.5);
   pnh_.setParam("/urg_stamped/error_limit", 4);
+  pnh_.setParam("/urg_stamped/debug", true);
   ASSERT_NO_FATAL_FAILURE(startUrgStamped());
 
-  ASSERT_NO_FATAL_FAILURE(waitScans(100, ros::Duration(10)));
+  ASSERT_NO_FATAL_FAILURE(waitScans(300, ros::Duration(10)));
 
-  for (size_t i = 50; i < scans_.size(); ++i)
+  int err_rms = 0;
+  for (size_t i = 250; i < 300; ++i)
   {
     const int index = std::lround(scans_[i]->ranges[0] * 1000);
     ASSERT_NE(true_stamps_.find(index), true_stamps_.end()) << "Can not find corresponding ground truth timestamp";
-    EXPECT_LT(std::abs((true_stamps_[index] - scans_[i]->header.stamp).toSec()), 0.0015) << "scan " << i;
+    const double err = (true_stamps_[index] - scans_[i]->header.stamp).toSec();
+    EXPECT_LT(std::abs(err), 0.001)
+        << std::setprecision(9) << std::fixed
+        << "scan " << i << " gain " << status_msg_->sensor_clock_gain
+        << " stamp " << scans_[i]->header.stamp;
+    err_rms += err * err;
   }
+  err_rms = std::sqrt(err_rms / 50);
+  EXPECT_LT(err_rms, 0.0002);
 
   ASSERT_TRUE(static_cast<bool>(status_msg_));
-  ASSERT_NEAR(status_msg_->sensor_clock_gain, 1.0, 1e-3);
-  ASSERT_GT(status_msg_->communication_delay.toSec(), param.comm_delay_base * 2 - 1e-4);
-  ASSERT_LT(status_msg_->communication_delay.toSec(), param.comm_delay_base * 2 + 5e-4);
+  ASSERT_NEAR(status_msg_->sensor_clock_gain, param.clock_rate, 2.5e-4);
+  ASSERT_GE(status_msg_->communication_delay.toSec(), param.comm_delay_base);
+  ASSERT_LT(status_msg_->communication_delay.toSec(), param.comm_delay_base + param.comm_delay_sigma * 3);
+  ASSERT_NEAR(status_msg_->scan_interval.toSec(), param.scan_interval, 5e-5);
 }
 
 TEST_F(E2E, RebootOnError)
@@ -248,7 +308,7 @@ TEST_F(E2E, RebootOnError)
   pnh_.setParam("/urg_stamped/error_limit", 0);
   ASSERT_NO_FATAL_FAILURE(startUrgStamped());
 
-  ros::Duration(1).sleep();
+  ros::Duration(2).sleep();
   ASSERT_GE(sim_->getBootCnt(), 2);
 }
 
