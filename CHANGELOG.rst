@@ -10,8 +10,9 @@ Changelog for package urg_stamped
 * Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
 * Contributors: Atsushi Watanabe
 
-0.2.0 (2024-08-01)
-------------------
+Forthcoming
+-----------
+* Update CI actions (`#161 <https://github.com/seqsense/urg_stamped/issues/161>`_)
 * New timestamp estimator (`#151 <https://github.com/seqsense/urg_stamped/issues/151>`_)
 * Use C++14 (`#158 <https://github.com/seqsense/urg_stamped/issues/158>`_)
 * Include cstdint (`#157 <https://github.com/seqsense/urg_stamped/issues/157>`_)
