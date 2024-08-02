@@ -20,13 +20,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Cache test data
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .cached-dataset
           key: dataset-${{ hashFiles('test/CMakeLists.txt') }}
           restore-keys: dataset-
       - name: Cache docker layers
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: /home/runner/layers.tar
           key: docker-layers-${{ matrix.env }}-${{ github.sha }}
@@ -75,7 +75,7 @@ jobs:
         run: cd /tmp; tar -cJf logs.tar.xz log
       - name: Upload ROS logs
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: logs-${{ env.ROS_DISTRO }}.tar.xz
           path: /tmp/logs.tar.xz
