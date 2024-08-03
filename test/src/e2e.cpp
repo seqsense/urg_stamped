@@ -293,6 +293,7 @@ TEST_P(E2EWithParam, Simple)
       ok = true;
       break;
     }
+    std::cerr << "test attempt " << retry << " failed: " << serr->str() << std::endl;
   }
   EXPECT_TRUE(ok) << serr->str();
   err_rms = std::sqrt(err_rms / 50);
