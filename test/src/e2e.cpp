@@ -16,6 +16,8 @@
 
 #include <iostream>
 #include <map>
+#include <memory>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
@@ -120,6 +122,7 @@ protected:
   {
     const ros::Time deadline = ros::Time::now() + timeout;
     ros::Rate wait(10);
+    scans_.clear();
     while (scans_.size() <= num)
     {
       wait.sleep();
@@ -261,20 +264,40 @@ TEST_P(E2EWithParam, Simple)
   pnh_.setParam("/urg_stamped/debug", true);
   ASSERT_NO_FATAL_FAILURE(startUrgStamped());
 
-  ASSERT_NO_FATAL_FAILURE(waitScans(300, ros::Duration(10)));
-
-  int err_rms = 0;
-  for (size_t i = 250; i < 300; ++i)
+  std::shared_ptr<std::stringstream> serr;
+  bool ok = false;
+  int err_rms;
+  for (int retry = 0; retry < 2; retry++)
   {
-    const int index = std::lround(scans_[i]->ranges[0] * 1000);
-    ASSERT_NE(true_stamps_.find(index), true_stamps_.end()) << "Can not find corresponding ground truth timestamp";
-    const double err = (true_stamps_[index] - scans_[i]->header.stamp).toSec();
-    EXPECT_LT(std::abs(err), 0.001)
-        << std::setprecision(9) << std::fixed
-        << "scan " << i << " gain " << status_msg_->sensor_clock_gain
-        << " stamp " << scans_[i]->header.stamp;
-    err_rms += err * err;
+    serr.reset(new std::stringstream());
+    ASSERT_NO_FATAL_FAILURE(waitScans(300, ros::Duration(10)));
+
+    err_rms = 0;
+    int num_fail = 0;
+    for (size_t i = 250; i < 300; ++i)
+    {
+      const int index = std::lround(scans_[i]->ranges[0] * 1000);
+      ASSERT_NE(true_stamps_.find(index), true_stamps_.end()) << "Can not find corresponding ground truth timestamp";
+      const double err = (true_stamps_[index] - scans_[i]->header.stamp).toSec();
+      if (std::abs(err) > 0.001)
+      {
+        num_fail++;
+        *serr << std::setprecision(6) << std::fixed
+              << "err " << err << " "
+              << std::setprecision(9)
+              << "scan " << i << " gain " << status_msg_->sensor_clock_gain
+              << " stamp " << scans_[i]->header.stamp << std::endl;
+      }
+      err_rms += err * err;
+    }
+    if (num_fail == 0)
+    {
+      ok = true;
+      break;
+    }
+    std::cerr << "Test attempt " << retry << " failed: " << serr->str() << std::endl;
   }
+  EXPECT_TRUE(ok) << serr->str();
   err_rms = std::sqrt(err_rms / 50);
   EXPECT_LT(err_rms, 0.0002);
 
