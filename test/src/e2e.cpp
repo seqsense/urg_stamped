@@ -282,7 +282,9 @@ TEST_P(E2EWithParam, Simple)
       if (std::abs(err) > 0.001)
       {
         num_fail++;
-        *serr << std::setprecision(9) << std::fixed
+        *serr << std::setprecision(6) << std::fixed
+              << "err " << err << " "
+              << std::setprecision(9)
               << "scan " << i << " gain " << status_msg_->sensor_clock_gain
               << " stamp " << scans_[i]->header.stamp << std::endl;
       }
@@ -293,7 +295,7 @@ TEST_P(E2EWithParam, Simple)
       ok = true;
       break;
     }
-    std::cerr << "test attempt " << retry << " failed: " << serr->str() << std::endl;
+    std::cerr << "Test attempt " << retry << " failed: " << serr->str() << std::endl;
   }
   EXPECT_TRUE(ok) << serr->str();
   err_rms = std::sqrt(err_rms / 50);
