@@ -269,7 +269,7 @@ TEST_P(E2EWithParam, Simple)
   int err_rms;
   for (int retry = 0; retry < 2; retry++)
   {
-    serr.reset();
+    serr.reset(new std::stringstream());
     ASSERT_NO_FATAL_FAILURE(waitScans(300, ros::Duration(10)));
 
     err_rms = 0;
