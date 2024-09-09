@@ -692,7 +692,7 @@ UrgStampedNode::UrgStampedNode()
   pnh_.param("error_limit", error_count_max_, 4);
   pnh_.param("fallback_on_continuous_scan_drop", fallback_on_continuous_scan_drop_, 5);
 
-  // 30s * 40Hz = 1200scans total, output info level log if dropped 90/1200scans or more by default
+  // 30s * 40Hz = 1200scans total, output info level log if dropped 90/1200scans or more
   pnh_.param("log_scan_drop_more_than", log_scan_drop_more_than_, static_cast<int>(clock_estim_interval * 3));
 
   double tm_interval, tm_timeout;
