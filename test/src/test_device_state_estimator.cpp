@@ -171,6 +171,10 @@ TEST(DeviceStateEstimatorUTM, InitialClockState)
       t0 + 31.0000,
       est.getClockState().stampToTime(31000).toSec(),
       0.0001);
+  ASSERT_NEAR(
+      t0 + 51.0000,
+      est.getClockState().stampToTime(51000).toSec(),
+      0.0001);
 }
 
 TEST(DeviceStateEstimatorUST, InitialClockState)
@@ -188,6 +192,10 @@ TEST(DeviceStateEstimatorUST, InitialClockState)
   ASSERT_NEAR(
       t0 + 31.0000,
       est.getClockState().stampToTime(31000).toSec(),
+      0.0001);
+  ASSERT_NEAR(
+      t0 + 51.0000,
+      est.getClockState().stampToTime(51000).toSec(),
       0.0001);
 }
 
