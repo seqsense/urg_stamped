@@ -523,7 +523,7 @@ void UrgStampedNode::estimateSensorClock(const ros::TimerEvent& event)
 {
   if (scan_drop_count_ > 0)
   {
-    const auto& logger =
+    auto& logger =
         scan_drop_count_ > log_scan_drop_more_than_ ?
             scip2::logger::info() :
             scip2::logger::debug();
