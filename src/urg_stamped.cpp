@@ -523,7 +523,11 @@ void UrgStampedNode::estimateSensorClock(const ros::TimerEvent& event)
 {
   if (scan_drop_count_ > 0)
   {
-    scip2::logger::info()
+    auto& logger =
+        scan_drop_count_ > log_scan_drop_more_than_ ?
+            scip2::logger::info() :
+            scip2::logger::debug();
+    logger
         << "Dropped "
         << scan_drop_count_
         << " scans with large time estimation error" << std::endl;
@@ -687,6 +691,9 @@ UrgStampedNode::UrgStampedNode()
   pnh_.param("clock_estim_interval", clock_estim_interval, 30.0);
   pnh_.param("error_limit", error_count_max_, 4);
   pnh_.param("fallback_on_continuous_scan_drop", fallback_on_continuous_scan_drop_, 5);
+
+  // 30s * 40Hz = 1200scans total, output info level log if dropped 90/1200scans or more
+  pnh_.param("log_scan_drop_more_than", log_scan_drop_more_than_, static_cast<int>(clock_estim_interval * 3));
 
   double tm_interval, tm_timeout;
   pnh_.param("tm_interval", tm_interval, 0.06);

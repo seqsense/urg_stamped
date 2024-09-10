@@ -113,6 +113,7 @@ protected:
   int scan_drop_count_;
   int scan_drop_continuous_;
   int fallback_on_continuous_scan_drop_;
+  int log_scan_drop_more_than_;
 
   ros::Duration tm_command_interval_;
   std::string last_measurement_state_;
