@@ -10,6 +10,13 @@ Changelog for package urg_stamped
 * Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
 * Contributors: Atsushi Watanabe
 
+0.2.1 (2024-09-10)
+------------------
+* Fix out-of-bound vector access in urg_sim (`#169 <https://github.com/seqsense/urg_stamped/issues/169>`_)
+* Fix stamp on initial state (`#168 <https://github.com/seqsense/urg_stamped/issues/168>`_)
+* Reduce log level of scan drop count if small (`#167 <https://github.com/seqsense/urg_stamped/issues/167>`_)
+* Contributors: Atsushi Watanabe
+
 0.2.0 (2024-08-03)
 ------------------
 * Tweak E2E test timeout (`#165 <https://github.com/seqsense/urg_stamped/issues/165>`_)
