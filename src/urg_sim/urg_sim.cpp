@@ -633,7 +633,7 @@ void URGSimulator::scan()
     }
   }
 
-  const int num_points = params_.angle_max - params_.angle_min;
+  const int num_points = params_.angle_max - params_.angle_min + 1;
   RawScanData::Ptr raw_scan(new RawScanData);
   raw_scan->timestamp = timestamp(next_scan_);
   raw_scan->full_time = next_scan_;
