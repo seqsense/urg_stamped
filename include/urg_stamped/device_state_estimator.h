@@ -68,11 +68,11 @@ public:
   {
   }
 
-  inline ClockState(const ros::Time& origin, const double gain, const uint64_t stamp)
+  inline ClockState(const ros::Time& origin, const double gain, const uint64_t stamp, const bool initialized = true)
     : origin_(origin)
     , gain_(gain)
     , stamp_(stamp)
-    , initialized_(true)
+    , initialized_(initialized)
   {
   }
 

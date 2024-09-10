@@ -125,13 +125,15 @@ bool Estimator::finishSync()
 
   if (recent_clocks_.size() <= 1)
   {
+    // Initialized=false since clock gain is not yet estimated
+    clock_ = ClockState(clock.origin_, 1, min_delay->device_wall_stamp_, false);
+
     scip2::logger::debug()
         << "initial origin: " << clock.origin_
         << ", delay: " << min_delay->delay_
         << ", delay sigma: " << comm_delay_.sigma_
         << ", device timestamp: " << min_delay->device_wall_stamp_
         << std::endl;
-
     return true;
   }
 

@@ -155,6 +155,50 @@ TEST(DeviceStateEstimator, ClockGain)
   }
 }
 
+TEST(DeviceStateEstimatorUTM, InitialClockState)
+{
+  EstimatorUTM est(ros::Duration(0.1));
+  const double t0 = 100;
+
+  est.startSync();
+  for (double t = 10; t < 10.2; t += 0.0101)
+  {
+    est.pushSyncSample(ros::Time(t0 + t), ros::Time(t0 + t + 0.00001), t * 1000);
+  }
+  est.finishSync();
+
+  ASSERT_NEAR(
+      t0 + 31.0000,
+      est.getClockState().stampToTime(31000).toSec(),
+      0.0001);
+  ASSERT_NEAR(
+      t0 + 51.0000,
+      est.getClockState().stampToTime(51000).toSec(),
+      0.0001);
+}
+
+TEST(DeviceStateEstimatorUST, InitialClockState)
+{
+  EstimatorUST est(ros::Duration(0.1));
+  const double t0 = 100;
+
+  est.startSync();
+  for (double t = 10; t < 10.2; t += 0.0101)
+  {
+    est.pushSyncSample(ros::Time(t0 + t), ros::Time(t0 + t + 0.00001), t * 1000);
+  }
+  est.finishSync();
+
+  ASSERT_NEAR(
+      t0 + 31.0000,
+      est.getClockState().stampToTime(31000).toSec(),
+      0.0001);
+  ASSERT_NEAR(
+      t0 + 51.0000,
+      est.getClockState().stampToTime(51000).toSec(),
+      0.0001);
+}
+
 TEST(DeviceStateEstimatorUTM, PushScanSampleRaw)
 {
   EstimatorUTM est(ros::Duration(0.1));
