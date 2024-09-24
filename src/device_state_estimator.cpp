@@ -97,10 +97,10 @@ bool Estimator::finishSync()
   for (const auto& s : sync_samples_)
   {
     scip2::logger::debug()
-        << t_req_
-        << " " << t_res_
+        << t_req_.toSec()
+        << " " << t_res_.toSec()
         << " " << device_wall_stamp_
-        << " " << delay_
+        << " " << delay_.toSec()
         << std::endl;
   }
   scip2::logger::debug() << "/TM samples" << std::endl;
