@@ -93,6 +93,17 @@ bool Estimator::hasEnoughSyncSamples() const
 
 bool Estimator::finishSync()
 {
+  scip2::logger::debug() << "TM samples" << std::endl;
+  for (const auto& s : sync_samples_)
+  {
+    scip2::logger::debug()
+        << t_req_
+        << " " << t_res_
+        << " " << device_wall_stamp_
+        << " " << delay_
+        << std::endl;
+  }
+  scip2::logger::debug() << "/TM samples" << std::endl;
   const OriginFracPart overflow_range = originFracOverflow();
   if (!overflow_range)
   {
