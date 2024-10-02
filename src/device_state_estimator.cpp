@@ -66,7 +66,8 @@ void ClockEstimatorUUST1::startSync()
   sync_samples_.clear();
 }
 
-void ClockEstimatorUUST1::pushSyncSample(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
+void ClockEstimatorUUST1::pushSyncSample(
+    const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
 {
   const SyncSample s(t_req, t_res, device_wall_stamp);
   sync_samples_.push_back(s);
