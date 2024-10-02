@@ -71,7 +71,7 @@ void UrgStampedNode::cbM(
   const uint64_t walltime_device = walltime_.update(scan.timestamp_);
   const ros::Time time_read_ros = ros::Time::fromBoost(time_read);
 
-  std::pair<ros::Time, bool> t_scan = est_->pushScanSample(time_read_ros, walltime_device);
+  std::pair<ros::Time, bool> t_scan = est_->scan_->pushScanSample(time_read_ros, walltime_device);
   sensor_msgs::LaserScan msg(msg_base_);
   msg.header.stamp = t_scan.first;
   if (!t_scan.second)
@@ -81,7 +81,7 @@ void UrgStampedNode::cbM(
     if (scan_drop_continuous_ > fallback_on_continuous_scan_drop_)
     {
       // Fallback to naive sensor timestamp
-      msg.header.stamp = est_->getClockState().stampToTime(walltime_device);
+      msg.header.stamp = est_->clock_->getClockState().stampToTime(walltime_device);
     }
     else
     {
@@ -176,7 +176,7 @@ void UrgStampedNode::cbTM(
       delay_estim_state_ = DelayEstimState::ESTIMATING;
 
       tm_start_time_ = ros::Time::now();
-      est_->startSync();
+      est_->clock_->startSync();
 
       scip_->sendCommand(
           "TM1",
@@ -187,12 +187,12 @@ void UrgStampedNode::cbTM(
     {
       const uint64_t walltime_device = walltime_.update(time_device.timestamp_);
 
-      est_->pushSyncSample(
+      est_->clock_->pushSyncSample(
           ros::Time::fromBoost(time_tm_request),
           ros::Time::fromBoost(time_read),
           walltime_device);
 
-      if (est_->hasEnoughSyncSamples())
+      if (est_->clock_->hasEnoughSyncSamples())
       {
         scip_->sendCommand("TM2");
         break;
@@ -208,7 +208,7 @@ void UrgStampedNode::cbTM(
     }
     case '2':
     {
-      if (!est_->finishSync() && !est_->getClockState().initialized_)
+      if (!est_->clock_->finishSync() && !est_->clock_->getClockState().initialized_)
       {
         // Immediately retry if initial clock sync is failed
         scip2::logger::debug()
@@ -331,17 +331,29 @@ void UrgStampedNode::cbVV(
     }
     if (prod == "UST")
     {
-      est_.reset(new device_state_estimator::EstimatorUST(ideal_scan_interval_));
+      device_state_estimator::ClockEstimator::Ptr clock(
+          new device_state_estimator::ClockEstimatorUUST1());
+      device_state_estimator::ScanEstimator::Ptr scan(
+          new device_state_estimator::ScanEstimatorUST(clock, ideal_scan_interval_));
+      est_.reset(new device_state_estimator::Estimator(clock, scan));
       scip2::logger::info() << "Initialized timestamp estimator for UST" << std::endl;
     }
     else if (prod == "UTM")
     {
-      est_.reset(new device_state_estimator::EstimatorUTM(ideal_scan_interval_));
+      device_state_estimator::ClockEstimator::Ptr clock(
+          new device_state_estimator::ClockEstimatorUUST1());
+      device_state_estimator::ScanEstimator::Ptr scan(
+          new device_state_estimator::ScanEstimatorUTM(clock, ideal_scan_interval_));
+      est_.reset(new device_state_estimator::Estimator(clock, scan));
       scip2::logger::info() << "Initialized timestamp estimator for UTM" << std::endl;
     }
     else
     {
-      est_.reset(new device_state_estimator::EstimatorUST(ideal_scan_interval_));
+      device_state_estimator::ClockEstimator::Ptr clock(
+          new device_state_estimator::ClockEstimatorUUST1());
+      device_state_estimator::ScanEstimator::Ptr scan(
+          new device_state_estimator::ScanEstimatorUST(clock, ideal_scan_interval_));
+      est_.reset(new device_state_estimator::Estimator(clock, scan));
       scip2::logger::info()
           << "Unknown sensor model. Initialized timestamp estimator for UST"
           << std::endl;
@@ -651,9 +663,9 @@ void UrgStampedNode::publishStatus()
   {
     return;
   }
-  const device_state_estimator::ClockState clock = est_->getClockState();
-  const device_state_estimator::ScanState scan = est_->getScanState();
-  const device_state_estimator::CommDelay comm_delay = est_->getCommDelay();
+  const device_state_estimator::ClockState clock = est_->clock_->getClockState();
+  const device_state_estimator::ScanState scan = est_->scan_->getScanState();
+  const device_state_estimator::CommDelay comm_delay = est_->clock_->getCommDelay();
 
   urg_stamped::Status msg;
   msg.header.stamp = ros::Time::now();

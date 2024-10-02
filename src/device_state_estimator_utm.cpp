@@ -30,10 +30,11 @@ namespace urg_stamped
 namespace device_state_estimator
 {
 
-std::pair<ros::Time, bool> EstimatorUTM::pushScanSample(const ros::Time& t_recv, const uint64_t device_wall_stamp)
+std::pair<ros::Time, bool> ScanEstimatorUTM::pushScanSample(const ros::Time& t_recv, const uint64_t device_wall_stamp)
 {
-  const ros::Time t_stamp = clock_.stampToTime(device_wall_stamp);
-  if (!clock_.initialized_)
+  const ClockState clock = clock_estim_->getClockState();
+  const ros::Time t_stamp = clock.stampToTime(device_wall_stamp);
+  if (!clock.initialized_)
   {
     return std::pair<ros::Time, bool>(t_stamp, true);
   }
@@ -82,14 +83,15 @@ std::pair<ros::Time, bool> EstimatorUTM::pushScanSample(const ros::Time& t_recv,
   return std::pair<ros::Time, bool>(t_estimated, valid);
 }
 
-std::pair<ros::Time, bool> EstimatorUTM::estimateScanTime(const ros::Time& t_recv, const ros::Time& t_stamp)
+std::pair<ros::Time, bool> ScanEstimatorUTM::estimateScanTime(const ros::Time& t_recv, const ros::Time& t_stamp)
 {
-  if (!clock_.initialized_)
+  if (!clock_estim_->getClockState().initialized_)
   {
     return std::pair<ros::Time, bool>(t_stamp, false);
   }
 
-  const ros::Time t_sent = t_recv - comm_delay_.min_;
+  const CommDelay comm_delay = clock_estim_->getCommDelay();
+  const ros::Time t_sent = t_recv - comm_delay.min_;
   const ros::Duration stamp_to_send_raw = t_sent - t_stamp;
 
   stamp_to_sends_.push_back(stamp_to_send_raw);
@@ -116,7 +118,7 @@ std::pair<ros::Time, bool> EstimatorUTM::estimateScanTime(const ros::Time& t_rec
     min_stamp_to_send_ = stamp_to_send - ros::Duration(DEVICE_TIMESTAMP_RESOLUTION);
   }
 
-  const ros::Duration t_frac = stamp_to_send_raw - min_stamp_to_send_ - comm_delay_.sigma_;
+  const ros::Duration t_frac = stamp_to_send_raw - min_stamp_to_send_ - comm_delay.sigma_;
 
   return std::pair<ros::Time, bool>(
       t_stamp + t_frac,

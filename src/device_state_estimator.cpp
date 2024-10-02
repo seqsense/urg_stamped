@@ -61,12 +61,12 @@ ros::Time OriginFracPart::compensate(const ros::Time& t) const
   return ros::Time(t_integral + frac);
 }
 
-void Estimator::startSync()
+void ClockEstimatorUUST1::startSync()
 {
   sync_samples_.clear();
 }
 
-void Estimator::pushSyncSample(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
+void ClockEstimatorUUST1::pushSyncSample(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
 {
   const SyncSample s(t_req, t_res, device_wall_stamp);
   sync_samples_.push_back(s);
@@ -76,7 +76,7 @@ void Estimator::pushSyncSample(const ros::Time& t_req, const ros::Time& t_res, c
   }
 }
 
-bool Estimator::hasEnoughSyncSamples() const
+bool ClockEstimatorUUST1::hasEnoughSyncSamples() const
 {
   const size_t n = sync_samples_.size();
   if (n < MIN_SYNC_SAMPLES)
@@ -91,7 +91,7 @@ bool Estimator::hasEnoughSyncSamples() const
   return overflow_range.t_max_ > overflow_range.t_min_;
 }
 
-bool Estimator::finishSync()
+bool ClockEstimatorUUST1::finishSync()
 {
   const OriginFracPart overflow_range = originFracOverflow();
   if (!overflow_range)
@@ -166,7 +166,7 @@ bool Estimator::finishSync()
   return true;
 }
 
-std::vector<SyncSample>::const_iterator Estimator::findMinDelay(const OriginFracPart& overflow_range) const
+std::vector<SyncSample>::const_iterator ClockEstimatorUUST1::findMinDelay(const OriginFracPart& overflow_range) const
 {
   if (sync_samples_.size() == 0)
   {
@@ -187,7 +187,7 @@ std::vector<SyncSample>::const_iterator Estimator::findMinDelay(const OriginFrac
   return it_min_delay;
 }
 
-OriginFracPart Estimator::originFracOverflow() const
+OriginFracPart ClockEstimatorUUST1::originFracOverflow() const
 {
   if (sync_samples_.size() == 0)
   {
@@ -240,7 +240,7 @@ OriginFracPart Estimator::originFracOverflow() const
   return OriginFracPart(t_min, t_max);
 }
 
-ros::Duration Estimator::delaySigma() const
+ros::Duration ClockEstimatorUUST1::delaySigma() const
 {
   if (sync_samples_.size() == 0)
   {

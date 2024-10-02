@@ -177,64 +177,6 @@ public:
   ros::Time fit(const ros::Time& t) const;
 };
 
-class Estimator
-{
-public:
-  using Ptr = std::shared_ptr<Estimator>;
-
-  inline explicit Estimator(const ros::Duration& ideal_scan_interval)
-    : ideal_scan_interval_(ideal_scan_interval)
-  {
-  }
-
-  void startSync();
-  void pushSyncSample(
-      const ros::Time& t_req,
-      const ros::Time& t_res,
-      const uint64_t device_wall_stamp);
-  bool hasEnoughSyncSamples() const;
-  bool finishSync();
-
-  inline ClockState getClockState() const
-  {
-    return clock_;
-  }
-  inline CommDelay getCommDelay() const
-  {
-    return comm_delay_;
-  }
-  inline ScanState getScanState() const
-  {
-    return scan_;
-  }
-
-  virtual std::pair<ros::Time, bool> pushScanSample(
-      const ros::Time& t_recv, const uint64_t device_wall_stamp) = 0;
-
-protected:
-  ClockState clock_;
-  CommDelay comm_delay_;
-  ScanState scan_;
-  ros::Duration ideal_scan_interval_;
-
-private:
-  static constexpr int MIN_SYNC_SAMPLES = 10;
-  static constexpr int MAX_SYNC_SAMPLES = 50;
-  static constexpr int CLOCK_SAMPLES = 7;
-
-  std::vector<SyncSample> sync_samples_;
-  std::deque<ClockSample> recent_clocks_;
-
-  std::vector<SyncSample>::const_iterator findMinDelay(
-      const OriginFracPart& overflow_range) const;
-  OriginFracPart originFracOverflow() const;
-  ros::Duration delaySigma() const;
-
-  FRIEND_TEST(DeviceStateEstimator, FindMinDelay);
-  FRIEND_TEST(DeviceStateEstimator, RawClockOrigin);
-  FRIEND_TEST(DeviceStateEstimator, ClockGain);
-};
-
 class DurationWithOffset
 {
 public:
@@ -253,11 +195,109 @@ public:
   }
 };
 
-class EstimatorUTM : public Estimator
+class ClockEstimator
 {
 public:
-  inline explicit EstimatorUTM(const ros::Duration& ideal_scan_interval)
-    : Estimator(ideal_scan_interval)
+  using Ptr = std::shared_ptr<ClockEstimator>;
+
+  virtual void startSync() = 0;
+  virtual void pushSyncSample(
+      const ros::Time& t_req,
+      const ros::Time& t_res,
+      const uint64_t device_wall_stamp) = 0;
+  virtual bool hasEnoughSyncSamples() const = 0;
+  virtual bool finishSync() = 0;
+
+  inline ClockState getClockState() const
+  {
+    return clock_;
+  }
+  inline CommDelay getCommDelay() const
+  {
+    return comm_delay_;
+  }
+
+protected:
+  ClockState clock_;
+  CommDelay comm_delay_;
+};
+
+class ScanEstimator
+{
+public:
+  using Ptr = std::shared_ptr<ScanEstimator>;
+
+  inline explicit ScanEstimator(const ClockEstimator::Ptr clock_estim, const ros::Duration& ideal_scan_interval)
+    : clock_estim_(clock_estim)
+    , ideal_scan_interval_(ideal_scan_interval)
+  {
+  }
+
+  inline ScanState getScanState() const
+  {
+    return scan_;
+  }
+
+  virtual std::pair<ros::Time, bool> pushScanSample(
+      const ros::Time& t_recv, const uint64_t device_wall_stamp) = 0;
+
+protected:
+  ClockEstimator::Ptr clock_estim_;
+  ScanState scan_;
+  ros::Duration ideal_scan_interval_;
+};
+
+class Estimator
+{
+public:
+  using Ptr = std::shared_ptr<Estimator>;
+
+  inline Estimator(
+      const ClockEstimator::Ptr clock,
+      const ScanEstimator::Ptr scan)
+    : clock_(clock)
+    , scan_(scan)
+  {
+  }
+
+  ClockEstimator::Ptr clock_;
+  ScanEstimator::Ptr scan_;
+};
+
+class ClockEstimatorUUST1 : public ClockEstimator
+{
+public:
+  void startSync() override;
+  void pushSyncSample(
+      const ros::Time& t_req,
+      const ros::Time& t_res,
+      const uint64_t device_wall_stamp) override;
+  bool hasEnoughSyncSamples() const override;
+  bool finishSync() override;
+
+private:
+  static constexpr int MIN_SYNC_SAMPLES = 10;
+  static constexpr int MAX_SYNC_SAMPLES = 50;
+  static constexpr int CLOCK_SAMPLES = 7;
+
+  std::vector<SyncSample> sync_samples_;
+  std::deque<ClockSample> recent_clocks_;
+
+  std::vector<SyncSample>::const_iterator findMinDelay(
+      const OriginFracPart& overflow_range) const;
+  OriginFracPart originFracOverflow() const;
+  ros::Duration delaySigma() const;
+
+  FRIEND_TEST(ClockEstimatorUUST1, FindMinDelay);
+  FRIEND_TEST(ClockEstimatorUUST1, RawClockOrigin);
+  FRIEND_TEST(ClockEstimatorUUST1, ClockGain);
+};
+
+class ScanEstimatorUTM : public ScanEstimator
+{
+public:
+  inline explicit ScanEstimatorUTM(const ClockEstimator::Ptr clock_estim, const ros::Duration& ideal_scan_interval)
+    : ScanEstimator(clock_estim, ideal_scan_interval)
   {
   }
 
@@ -276,14 +316,14 @@ private:
   std::pair<ros::Time, bool> estimateScanTime(
       const ros::Time& t_recv, const ros::Time& t_stamp);
 
-  FRIEND_TEST(DeviceStateEstimatorUTM, PushScanSampleRaw);
+  FRIEND_TEST(ScanEstimatorUTM, PushScanSampleRaw);
 };
 
-class EstimatorUST : public Estimator
+class ScanEstimatorUST : public ScanEstimator
 {
 public:
-  inline explicit EstimatorUST(const ros::Duration& ideal_scan_interval)
-    : Estimator(ideal_scan_interval)
+  inline explicit ScanEstimatorUST(const ClockEstimator::Ptr clock_estim, const ros::Duration& ideal_scan_interval)
+    : ScanEstimator(clock_estim, ideal_scan_interval)
     , primary_interval_(0)
   {
   }
