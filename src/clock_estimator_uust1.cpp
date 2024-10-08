@@ -97,59 +97,19 @@ bool ClockEstimatorUUST1::finishSync()
   }
   comm_delay_.sigma_ = delaySigma();
 
+  scip2::logger::debug()
+      << "delay: " << min_delay->delay_
+      << ", delay sigma: " << comm_delay_.sigma_
+      << ", device timestamp: " << min_delay->device_wall_stamp_
+      << std::endl;
+
   const ClockSample clock =
       {
           .t_estim_ = min_delay->t_process_,
           .stamp_ = min_delay->device_wall_stamp_,
           .origin_ = overflow_range.compensate(min_delay->t_origin_),
       };
-  recent_clocks_.push_back(clock);
-  if (recent_clocks_.size() >= CLOCK_SAMPLES)
-  {
-    recent_clocks_.pop_front();
-  }
-
-  if (recent_clocks_.size() <= 1)
-  {
-    // Initialized=false since clock gain is not yet estimated
-    clock_ = ClockState(clock.origin_, 1, min_delay->device_wall_stamp_, false);
-
-    scip2::logger::debug()
-        << "initial origin: " << clock.origin_
-        << ", delay: " << min_delay->delay_
-        << ", delay sigma: " << comm_delay_.sigma_
-        << ", device timestamp: " << min_delay->device_wall_stamp_
-        << std::endl;
-    return true;
-  }
-
-  std::vector<ClockState> clocks;
-  for (size_t i = 1; i < recent_clocks_.size(); ++i)
-  {
-    for (size_t j = 0; j < i; ++j)
-    {
-      const double t_diff =
-          (recent_clocks_[i].t_estim_ - recent_clocks_[j].t_estim_).toSec();
-      const double origin_diff =
-          (recent_clocks_[i].origin_ - recent_clocks_[j].origin_).toSec();
-      clocks.emplace_back(
-          recent_clocks_[i].origin_,
-          (t_diff - origin_diff) / t_diff,
-          recent_clocks_[i].stamp_);
-    }
-  }
-  std::sort(clocks.begin(), clocks.end());
-  clock_ = clocks[clocks.size() / 2];
-
-  scip2::logger::debug()
-      << "origin: " << clock_.origin_
-      << ", gain: " << clock_.gain_
-      << ", delay: " << min_delay->delay_
-      << ", delay sigma: " << comm_delay_.sigma_
-      << ", device timestamp: " << min_delay->device_wall_stamp_
-      << std::endl;
-
-  return true;
+  return pushClockSample(clock);
 }
 
 std::vector<SyncSample>::const_iterator ClockEstimatorUUST1::findMinDelay(const OriginFracPart& overflow_range) const

@@ -18,6 +18,7 @@
 #define URG_STAMPED_DEVICE_STATE_ESTIMATOR_H
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <deque>
 #include <memory>
@@ -207,7 +208,7 @@ public:
       const uint64_t device_wall_stamp) = 0;
   virtual bool hasEnoughSyncSamples() const = 0;
   virtual bool finishSync() = 0;
-  virtual ros::Duration syncWaitDuration() const = 0;
+  virtual std::pair<ros::Duration, ros::Duration> syncWaitDuration() const = 0;
 
   inline ClockState getClockState() const
   {
@@ -219,8 +220,13 @@ public:
   }
 
 protected:
+  static constexpr int CLOCK_SAMPLES = 7;
+
   ClockState clock_;
   CommDelay comm_delay_;
+  std::deque<ClockSample> recent_clocks_;
+
+  bool pushClockSample(const ClockSample& clock);
 };
 
 class ScanEstimator
@@ -276,20 +282,20 @@ public:
   bool hasEnoughSyncSamples() const override;
   bool finishSync() override;
 
-  inline ros::Duration syncWaitDuration() const override
+  inline std::pair<ros::Duration, ros::Duration> syncWaitDuration() const override
   {
     // UST doesn't respond immediately when next TM1 command is sent without sleep
-    return ros::Duration(DEVICE_TIMESTAMP_RESOLUTION);
+    return std::make_pair<ros::Duration, ros::Duration>(
+        ros::Duration(0),
+        ros::Duration(DEVICE_TIMESTAMP_RESOLUTION));
   }
 
 private:
   static constexpr int MIN_SYNC_SAMPLES = 10;
   static constexpr int MAX_SYNC_SAMPLES = 50;
-  static constexpr int CLOCK_SAMPLES = 7;
   static constexpr int MAX_DROPPED_SAMPLES = 100;
 
   std::vector<SyncSample> sync_samples_;
-  std::deque<ClockSample> recent_clocks_;
   int cnt_dropped_samples_;
 
   std::vector<SyncSample>::const_iterator findMinDelay(
@@ -300,6 +306,52 @@ private:
   FRIEND_TEST(ClockEstimatorUUST1, FindMinDelay);
   FRIEND_TEST(ClockEstimatorUUST1, RawClockOrigin);
   FRIEND_TEST(ClockEstimatorUUST1, ClockGain);
+};
+
+class ClockEstimatorUUST2 : public ClockEstimator
+{
+public:
+  void startSync() override;
+  void pushSyncSample(
+      const ros::Time& t_req,
+      const ros::Time& t_res,
+      const uint64_t device_wall_stamp) override;
+  bool hasEnoughSyncSamples() const override;
+  bool finishSync() override;
+
+  inline std::pair<ros::Duration, ros::Duration> syncWaitDuration() const override
+  {
+    // UUST2 handles requests by 5ms timer.
+    // It requires one extra cycle before sending next request to get immediate response.
+    return std::make_pair<ros::Duration, ros::Duration>(
+        ros::Duration(0.007),
+        ros::Duration(0.010));
+  }
+
+private:
+  static constexpr int MIN_SYNC_SAMPLES = 5;
+  static constexpr int MAX_SYNC_SAMPLES = 100;
+  static constexpr double RESPONSE_TIMER_INTERVAL = 0.005;
+
+  class SyncSampleUUST2 : public SyncSample
+  {
+  public:
+    ros::Duration t_frac_;
+
+    inline SyncSampleUUST2(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
+      : SyncSample(t_req, t_res, device_wall_stamp)
+      , t_frac_(std::fmod(t_res.toSec(), RESPONSE_TIMER_INTERVAL))
+    {
+    }
+
+    inline bool operator<(const SyncSampleUUST2& b) const
+    {
+      return this->t_frac_ < b.t_frac_;
+    }
+  };
+
+  std::vector<SyncSampleUUST2> sync_samples_;
+  int cnt_samples_;
 };
 
 class ScanEstimatorUTM : public ScanEstimator

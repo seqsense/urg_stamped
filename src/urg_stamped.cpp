@@ -198,7 +198,8 @@ void UrgStampedNode::cbTM(
         break;
       }
 
-      sleepRandom(0, est_->clock_->syncWaitDuration().toSec());
+      const std::pair<ros::Duration, ros::Duration> wait = est_->clock_->syncWaitDuration();
+      sleepRandom(wait.first.toSec(), wait.second.toSec());
 
       scip_->sendCommand(
           "TM1",
@@ -364,7 +365,7 @@ void UrgStampedNode::cbVV(
       if (firm_major >= 4)
       {
         model = "UST (UUST2)";
-        clock.reset(new device_state_estimator::ClockEstimatorUUST1());
+        clock.reset(new device_state_estimator::ClockEstimatorUUST2());
       }
       else
       {

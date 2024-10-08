@@ -21,6 +21,7 @@
 #include <ros/time.h>
 
 #include <urg_stamped/device_state_estimator.h>
+#include <scip2/logger.h>
 
 namespace urg_stamped
 {
@@ -58,6 +59,48 @@ ros::Time OriginFracPart::compensate(const ros::Time& t) const
     t_integral -= DEVICE_TIMESTAMP_RESOLUTION;
   }
   return ros::Time(t_integral + frac);
+}
+
+bool ClockEstimator::pushClockSample(const ClockSample& clock)
+{
+  recent_clocks_.push_back(clock);
+  if (recent_clocks_.size() >= CLOCK_SAMPLES)
+  {
+    recent_clocks_.pop_front();
+  }
+
+  if (recent_clocks_.size() <= 1)
+  {
+    // Initialized=false since clock gain is not yet estimated
+    clock_ = ClockState(clock.origin_, 1, clock.stamp_, false);
+    scip2::logger::debug() << "initial origin: " << clock.origin_ << std::endl;
+    return true;
+  }
+
+  std::vector<ClockState> clocks;
+  for (size_t i = 1; i < recent_clocks_.size(); ++i)
+  {
+    for (size_t j = 0; j < i; ++j)
+    {
+      const double t_diff =
+          (recent_clocks_[i].t_estim_ - recent_clocks_[j].t_estim_).toSec();
+      const double origin_diff =
+          (recent_clocks_[i].origin_ - recent_clocks_[j].origin_).toSec();
+      clocks.emplace_back(
+          recent_clocks_[i].origin_,
+          (t_diff - origin_diff) / t_diff,
+          recent_clocks_[i].stamp_);
+    }
+  }
+  std::sort(clocks.begin(), clocks.end());
+  clock_ = clocks[clocks.size() / 2];
+
+  scip2::logger::debug()
+      << "origin: " << clock_.origin_
+      << ", gain: " << clock_.gain_
+      << std::endl;
+
+  return true;
 }
 
 }  // namespace device_state_estimator
