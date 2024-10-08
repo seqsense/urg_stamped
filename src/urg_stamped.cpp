@@ -316,48 +316,66 @@ void UrgStampedNode::cbVV(
   }
   if (!est_)
   {
+    int firm_major;
+    {
+      const auto firm_it = params.find("FIRM");
+      if (firm_it == params.end())
+      {
+        scip2::logger::error()
+            << "Could not detect sensor hardware revision. Fallback to UUST1 mode"
+            << std::endl;
+        firm_major = 1;
+      }
+      else
+      {
+        firm_major = std::stoi(firm_it->second);
+      }
+    }
     std::string prod;
-    const auto prod_it = params.find("PROD");
-    if (prod_it == params.end())
     {
-      scip2::logger::error()
-          << "Could not detect sensor model. Fallback to UTM mode"
-          << std::endl;
-      prod = "UTM";
+      const auto prod_it = params.find("PROD");
+      if (prod_it == params.end())
+      {
+        scip2::logger::error()
+            << "Could not detect sensor model. Fallback to UTM mode"
+            << std::endl;
+        prod = "UTM";
+      }
+      else
+      {
+        prod = prod_it->second.substr(0, 3);
+      }
+    }
+    device_state_estimator::ClockEstimator::Ptr clock;
+    device_state_estimator::ScanEstimator::Ptr scan;
+    std::string model;
+    if (prod == "UTM")
+    {
+      clock.reset(new device_state_estimator::ClockEstimatorUUST1());
+      scan.reset(new device_state_estimator::ScanEstimatorUTM(clock, ideal_scan_interval_));
     }
     else
     {
-      prod = prod_it->second.substr(0, 3);
+      if (prod != "UST")
+      {
+        scip2::logger::info()
+            << "Unknown sensor model. Fallback to UST mode"
+            << std::endl;
+      }
+      if (firm_major >= 4)
+      {
+        model = "UST (UUST2)";
+        clock.reset(new device_state_estimator::ClockEstimatorUUST1());
+      }
+      else
+      {
+        model = "UST (UUST1)";
+        clock.reset(new device_state_estimator::ClockEstimatorUUST1());
+      }
+      scan.reset(new device_state_estimator::ScanEstimatorUST(clock, ideal_scan_interval_));
     }
-    if (prod == "UST")
-    {
-      device_state_estimator::ClockEstimator::Ptr clock(
-          new device_state_estimator::ClockEstimatorUUST1());
-      device_state_estimator::ScanEstimator::Ptr scan(
-          new device_state_estimator::ScanEstimatorUST(clock, ideal_scan_interval_));
-      est_.reset(new device_state_estimator::Estimator(clock, scan));
-      scip2::logger::info() << "Initialized timestamp estimator for UST" << std::endl;
-    }
-    else if (prod == "UTM")
-    {
-      device_state_estimator::ClockEstimator::Ptr clock(
-          new device_state_estimator::ClockEstimatorUUST1());
-      device_state_estimator::ScanEstimator::Ptr scan(
-          new device_state_estimator::ScanEstimatorUTM(clock, ideal_scan_interval_));
-      est_.reset(new device_state_estimator::Estimator(clock, scan));
-      scip2::logger::info() << "Initialized timestamp estimator for UTM" << std::endl;
-    }
-    else
-    {
-      device_state_estimator::ClockEstimator::Ptr clock(
-          new device_state_estimator::ClockEstimatorUUST1());
-      device_state_estimator::ScanEstimator::Ptr scan(
-          new device_state_estimator::ScanEstimatorUST(clock, ideal_scan_interval_));
-      est_.reset(new device_state_estimator::Estimator(clock, scan));
-      scip2::logger::info()
-          << "Unknown sensor model. Initialized timestamp estimator for UST"
-          << std::endl;
-    }
+    est_.reset(new device_state_estimator::Estimator(clock, scan));
+    scip2::logger::info() << "Initialized timestamp estimator for " << model << std::endl;
   }
 }
 
