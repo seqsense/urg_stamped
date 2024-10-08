@@ -279,9 +279,11 @@ private:
   static constexpr int MIN_SYNC_SAMPLES = 10;
   static constexpr int MAX_SYNC_SAMPLES = 50;
   static constexpr int CLOCK_SAMPLES = 7;
+  static constexpr int MAX_DROPPED_SAMPLES = 100;
 
   std::vector<SyncSample> sync_samples_;
   std::deque<ClockSample> recent_clocks_;
+  int cnt_dropped_samples_;
 
   std::vector<SyncSample>::const_iterator findMinDelay(
       const OriginFracPart& overflow_range) const;

@@ -64,12 +64,18 @@ ros::Time OriginFracPart::compensate(const ros::Time& t) const
 void ClockEstimatorUUST1::startSync()
 {
   sync_samples_.clear();
+  cnt_dropped_samples_ = 0;
 }
 
 void ClockEstimatorUUST1::pushSyncSample(
     const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
 {
   const SyncSample s(t_req, t_res, device_wall_stamp);
+  if (s.delay_ > ros::Duration(DEVICE_TIMESTAMP_RESOLUTION))
+  {
+    cnt_dropped_samples_++;
+    return;
+  }
   sync_samples_.push_back(s);
   if (comm_delay_.min_.isZero() || comm_delay_.min_ > s.delay_)
   {
@@ -80,6 +86,10 @@ void ClockEstimatorUUST1::pushSyncSample(
 bool ClockEstimatorUUST1::hasEnoughSyncSamples() const
 {
   const size_t n = sync_samples_.size();
+  if (cnt_dropped_samples_ >= MAX_DROPPED_SAMPLES)
+  {
+    return true;
+  }
   if (n < MIN_SYNC_SAMPLES)
   {
     return false;
@@ -94,6 +104,13 @@ bool ClockEstimatorUUST1::hasEnoughSyncSamples() const
 
 bool ClockEstimatorUUST1::finishSync()
 {
+  if (cnt_dropped_samples_ >= MAX_DROPPED_SAMPLES)
+  {
+    scip2::logger::error()
+        << "Communication delay is too large. Maybe unsupported sensor model"
+        << std::endl;
+    return false;
+  }
   const OriginFracPart overflow_range = originFracOverflow();
   if (!overflow_range)
   {
