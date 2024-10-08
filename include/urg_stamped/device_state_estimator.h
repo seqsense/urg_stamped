@@ -285,7 +285,7 @@ public:
   inline std::pair<ros::Duration, ros::Duration> syncWaitDuration() const override
   {
     // UST doesn't respond immediately when next TM1 command is sent without sleep
-    return std::make_pair<ros::Duration, ros::Duration>(
+    return std::make_pair(
         ros::Duration(0),
         ros::Duration(DEVICE_TIMESTAMP_RESOLUTION));
   }
@@ -323,7 +323,7 @@ public:
   {
     // UUST2 handles requests by 5ms timer.
     // It requires one extra cycle before sending next request to get immediate response.
-    return std::make_pair<ros::Duration, ros::Duration>(
+    return std::make_pair(
         ros::Duration(0.007),
         ros::Duration(0.010));
   }
