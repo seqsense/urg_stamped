@@ -207,6 +207,7 @@ public:
       const uint64_t device_wall_stamp) = 0;
   virtual bool hasEnoughSyncSamples() const = 0;
   virtual bool finishSync() = 0;
+  virtual ros::Duration syncWaitDuration() const = 0;
 
   inline ClockState getClockState() const
   {
@@ -274,6 +275,12 @@ public:
       const uint64_t device_wall_stamp) override;
   bool hasEnoughSyncSamples() const override;
   bool finishSync() override;
+
+  inline ros::Duration syncWaitDuration() const override
+  {
+    // UST doesn't respond immediately when next TM1 command is sent without sleep
+    return ros::Duration(DEVICE_TIMESTAMP_RESOLUTION);
+  }
 
 private:
   static constexpr int MIN_SYNC_SAMPLES = 10;

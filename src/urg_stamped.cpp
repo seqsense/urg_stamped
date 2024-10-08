@@ -198,8 +198,7 @@ void UrgStampedNode::cbTM(
         break;
       }
 
-      // UST doesn't respond immediately when next TM1 command is sent without sleep
-      sleepRandom(0, urg_stamped::device_state_estimator::DEVICE_TIMESTAMP_RESOLUTION);
+      sleepRandom(0, est_->clock_->syncWaitDuration().toSec());
 
       scip_->sendCommand(
           "TM1",
