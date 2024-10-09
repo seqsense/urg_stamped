@@ -38,7 +38,7 @@ void ClockEstimatorUUST1::startSync()
 void ClockEstimatorUUST1::pushSyncSample(
     const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
 {
-  const SyncSample s(t_req, t_res, device_wall_stamp);
+  const SyncSampleUUST1 s(t_req, t_res, device_wall_stamp);
   if (s.delay_ > ros::Duration(DEVICE_TIMESTAMP_RESOLUTION))
   {
     cnt_dropped_samples_++;
@@ -112,7 +112,8 @@ bool ClockEstimatorUUST1::finishSync()
   return pushClockSample(clock);
 }
 
-std::vector<SyncSample>::const_iterator ClockEstimatorUUST1::findMinDelay(const OriginFracPart& overflow_range) const
+std::vector<ClockEstimatorUUST1::SyncSampleUUST1>::const_iterator
+ClockEstimatorUUST1::findMinDelay(const OriginFracPart& overflow_range) const
 {
   if (sync_samples_.size() == 0)
   {

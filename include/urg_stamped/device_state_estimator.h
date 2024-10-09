@@ -94,7 +94,6 @@ public:
 
   ros::Duration delay_;
   ros::Time t_process_;
-  ros::Time t_origin_;
 
   inline SyncSample(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
     : t_req_(t_req)
@@ -102,7 +101,6 @@ public:
     , device_wall_stamp_(device_wall_stamp)
     , delay_((t_res - t_req) * 0.5)
     , t_process_(t_res_ - delay_)
-    , t_origin_(t_process_ - ros::Duration(device_wall_stamp_ * DEVICE_TIMESTAMP_RESOLUTION))
   {
   }
 };
@@ -295,10 +293,22 @@ private:
   static constexpr int MAX_SYNC_SAMPLES = 50;
   static constexpr int MAX_DROPPED_SAMPLES = 100;
 
-  std::vector<SyncSample> sync_samples_;
+  class SyncSampleUUST1 : public SyncSample
+  {
+  public:
+    ros::Time t_origin_;
+
+    inline SyncSampleUUST1(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
+      : SyncSample(t_req, t_res, device_wall_stamp)
+      , t_origin_(t_process_ - ros::Duration(device_wall_stamp_ * DEVICE_TIMESTAMP_RESOLUTION))
+    {
+    }
+  };
+
+  std::vector<SyncSampleUUST1> sync_samples_;
   int cnt_dropped_samples_;
 
-  std::vector<SyncSample>::const_iterator findMinDelay(
+  std::vector<SyncSampleUUST1>::const_iterator findMinDelay(
       const OriginFracPart& overflow_range) const;
   OriginFracPart originFracOverflow() const;
   ros::Duration delaySigma() const;
@@ -330,16 +340,19 @@ public:
 
 private:
   static constexpr int MIN_SYNC_SAMPLES = 5;
-  static constexpr int MAX_SYNC_SAMPLES = 100;
+  static constexpr int MAX_SYNC_ATTEMPTS = 50;
   static constexpr double RESPONSE_TIMER_INTERVAL = 0.005;
+  static constexpr double ACCEPTABLE_SAMPLE_DELAY = 0.002;
 
   class SyncSampleUUST2 : public SyncSample
   {
   public:
+    ros::Time t_origin_;
     ros::Duration t_frac_;
 
     inline SyncSampleUUST2(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
       : SyncSample(t_req, t_res, device_wall_stamp)
+      , t_origin_(t_res_ - ros::Duration(device_wall_stamp_ * DEVICE_TIMESTAMP_RESOLUTION))
       , t_frac_(std::fmod(t_res.toSec(), RESPONSE_TIMER_INTERVAL))
     {
     }
@@ -351,6 +364,7 @@ private:
   };
 
   std::vector<SyncSampleUUST2> sync_samples_;
+  ros::Duration best_delay_;
   int cnt_samples_;
 };
 

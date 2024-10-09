@@ -32,6 +32,7 @@ namespace device_state_estimator
 void ClockEstimatorUUST2::startSync()
 {
   sync_samples_.clear();
+  best_delay_ = ros::Duration(RESPONSE_TIMER_INTERVAL);
   cnt_samples_ = 0;
 }
 
@@ -41,12 +42,13 @@ void ClockEstimatorUUST2::pushSyncSample(
   cnt_samples_++;
   const SyncSampleUUST2 s(t_req, t_res, device_wall_stamp);
 
-  // UUST2 sets a device timestamp of sometime between command receive time
-  // and 5ms response timer. So, the response is usable only when the response
-  // is returned within DEVICE_TIMESTAMP_RESOLUTION.
-  if (s.delay_ < ros::Duration(DEVICE_TIMESTAMP_RESOLUTION))
+  if (s.delay_ < ros::Duration(ACCEPTABLE_SAMPLE_DELAY))
   {
     sync_samples_.push_back(s);
+  }
+  if (s.delay_ < best_delay_)
+  {
+    best_delay_ = s.delay_;
   }
   if (comm_delay_.min_.isZero() || comm_delay_.min_ > s.delay_)
   {
@@ -56,7 +58,9 @@ void ClockEstimatorUUST2::pushSyncSample(
 
 bool ClockEstimatorUUST2::hasEnoughSyncSamples() const
 {
-  return cnt_samples_ >= MAX_SYNC_SAMPLES || sync_samples_.size() >= MIN_SYNC_SAMPLES;
+  return cnt_samples_ >= MAX_SYNC_ATTEMPTS ||
+         (sync_samples_.size() >= MIN_SYNC_SAMPLES &&
+          best_delay_ < ros::Duration(DEVICE_TIMESTAMP_RESOLUTION));
 }
 
 bool ClockEstimatorUUST2::finishSync()
@@ -70,15 +74,52 @@ bool ClockEstimatorUUST2::finishSync()
     return false;
   }
 
-  std::vector<SyncSampleUUST2> sorted_samples;
+  if (best_delay_ >= ros::Duration(DEVICE_TIMESTAMP_RESOLUTION))
+  {
+    // UUST2 sets a device timestamp of sometime between command receive time
+    // and 5ms response timer. So, the timestamp can be matched only when
+    // it's returned within DEVICE_TIMESTAMP_RESOLUTION.
+    scip2::logger::error()
+        << "No sync response with small delay. "
+        << "Communication delay may be too large"
+        << std::endl;
+    return false;
+  }
+
+  ros::Time min_t_origin = sync_samples_.front().t_origin_;
   for (const auto& s : sync_samples_)
   {
+    if (s.t_origin_ < min_t_origin)
+    {
+      min_t_origin = s.t_origin_;
+    }
+  }
+
+  std::vector<SyncSampleUUST2> sorted_samples;
+  for (auto& s : sync_samples_)
+  {
+    const double origin_compensate =
+        std::round((s.t_origin_ - min_t_origin).toSec() / DEVICE_TIMESTAMP_RESOLUTION) * DEVICE_TIMESTAMP_RESOLUTION;
+
+    s.t_origin_ -= ros::Duration(origin_compensate);
     sorted_samples.push_back(s);
 
     SyncSampleUUST2 s2 = s;
     s2.t_frac_ += ros::Duration(RESPONSE_TIMER_INTERVAL);
     sorted_samples.push_back(s2);
+
+    // TODO(at-wat): remove after test
+    std::cerr
+        << std::fixed << std::setprecision(6)
+        << s.delay_
+        << " " << s.device_wall_stamp_
+        << " " << s.t_frac_
+        << " " << s.t_res_.toSec()
+        << " " << s.t_origin_.toSec()
+        << " " << origin_compensate
+        << std::endl;
   }
+
   std::sort(sorted_samples.begin(), sorted_samples.end());
   const SyncSampleUUST2 med = sorted_samples[sorted_samples.size() / 2];
 
