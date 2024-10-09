@@ -24,9 +24,23 @@
 
 int main(int argc, char** argv)
 {
-  const urg_sim::URGSimulator::Params params_ust =
+  const urg_sim::URGSimulator::Params params_uust1 =
       {
-          .model = urg_sim::URGSimulator::Model::UST,
+          .model = urg_sim::URGSimulator::Model::UST_UUST1,
+          .boot_duration = 0.5,
+          .comm_delay_base = 0.0004,
+          .comm_delay_sigma = 0.00005,
+          .scan_interval = 0.02505,
+          .clock_rate = 1.00005,
+          .hex_ii_timestamp = false,
+          .angle_resolution = 1440,
+          .angle_min = 0,
+          .angle_max = 1080,
+          .angle_front = 540,
+      };
+  const urg_sim::URGSimulator::Params params_uust2 =
+      {
+          .model = urg_sim::URGSimulator::Model::UST_UUST2,
           .boot_duration = 0.5,
           .comm_delay_base = 0.0004,
           .comm_delay_sigma = 0.00005,
@@ -60,10 +74,15 @@ int main(int argc, char** argv)
     params = params_utm;
     std::cerr << "Using UTM model" << std::endl;
   }
-  else if (std::string(argv[1]) == "UST")
+  else if (std::string(argv[1]) == "UST" || std::string(argv[1]) == "UUST1")
   {
-    params = params_ust;
-    std::cerr << "Using UST model" << std::endl;
+    params = params_uust1;
+    std::cerr << "Using UST (UUST1) model" << std::endl;
+  }
+  else if (std::string(argv[1]) == "UUST2")
+  {
+    params = params_uust2;
+    std::cerr << "Using UST (UUST2) model" << std::endl;
   }
   else
   {
