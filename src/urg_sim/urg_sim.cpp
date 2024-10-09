@@ -514,6 +514,8 @@ void URGSimulator::booted()
     case Model::UST_UUST2:
       asyncRead();
       break;
+    default:
+      break;
   }
 
   next_scan_ = boost::posix_time::microsec_clock::universal_time();
@@ -739,6 +741,8 @@ void URGSimulator::sendScan()
       break;
     case Model::UST_UUST2:
       waitTick(5);  // 5ms tick on UUST2
+      break;
+    default:
       break;
   }
 
