@@ -818,8 +818,8 @@ UrgStampedNode::UrgStampedNode()
   pub_scan_ = nh_.advertise<sensor_msgs::LaserScan>("scan", 10);
   pub_status_ = pnh_.advertise<urg_stamped::Status>("status", 1, true);
 
-  pub_sync_start_ = pnh_.advertise<std_msgs::Header>("urg_stamped_sync_start", 1, true);
-  sub_sync_start_ = pnh_.subscribe("urg_stamped_sync_start", 1, &UrgStampedNode::cbSyncStart, this);
+  pub_sync_start_ = nh_.advertise<std_msgs::Header>("urg_stamped_sync_start", 1, true);
+  sub_sync_start_ = nh_.subscribe("urg_stamped_sync_start", 1, &UrgStampedNode::cbSyncStart, this);
 
   device_.reset(new scip2::ConnectionTcp(ip, port));
   device_->registerCloseCallback(
