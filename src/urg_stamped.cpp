@@ -131,9 +131,10 @@ void UrgStampedNode::cbM(
   error_count_ = ResponseErrorCount();
 }
 
-void UrgStampedNode::cbTMSend(const boost::posix_time::ptime& time_send)
+void UrgStampedNode::cbTMSend(
+    const boost::posix_time::ptime& time_send, const std::string& cmd)
 {
-  time_tm_request = time_send;
+  time_tm_request_ = std::make_pair(cmd, time_send);
 }
 
 void UrgStampedNode::cbTM(
@@ -178,17 +179,24 @@ void UrgStampedNode::cbTM(
       tm_start_time_ = ros::Time::now();
       est_->clock_->startSync();
 
-      scip_->sendCommand(
-          "TM1",
-          boost::bind(&UrgStampedNode::cbTMSend, this, boost::arg<1>()));
+      sendTM1();
       break;
     }
     case '1':
     {
+      if (time_tm_request_.first != echo_back)
+      {
+        scip2::logger::info()
+            << "Ignoring unmatched TM1 response. Expected " << time_tm_request_.first
+            << ", received " << echo_back
+            << std::endl;
+        break;
+      }
+
       const uint64_t walltime_device = walltime_.update(time_device.timestamp_);
 
       est_->clock_->pushSyncSample(
-          ros::Time::fromBoost(time_tm_request),
+          ros::Time::fromBoost(time_tm_request_.second),
           ros::Time::fromBoost(time_read),
           walltime_device);
 
@@ -201,9 +209,7 @@ void UrgStampedNode::cbTM(
       const std::pair<ros::Duration, ros::Duration> wait = est_->clock_->syncWaitDuration();
       sleepRandom(wait.first.toSec(), wait.second.toSec());
 
-      scip_->sendCommand(
-          "TM1",
-          boost::bind(&UrgStampedNode::cbTMSend, this, boost::arg<1>()));
+      sendTM1();
       break;
     }
     case '2':
@@ -675,6 +681,16 @@ void UrgStampedNode::sleepRandom(const double min, const double max)
   ros::Duration(rnd(random_engine_)).sleep();
 }
 
+void UrgStampedNode::sendTM1()
+{
+  std::stringstream cmd;
+  tm_key_++;
+  cmd << "TM1;" << std::hex << tm_key_;
+  scip_->sendCommand(
+      cmd.str(),
+      boost::bind(&UrgStampedNode::cbTMSend, this, boost::arg<1>(), cmd.str()));
+}
+
 void UrgStampedNode::publishStatus()
 {
   if (!est_)
@@ -701,6 +717,7 @@ UrgStampedNode::UrgStampedNode()
   , pnh_("~")
   , failed_(false)
   , delay_estim_state_(DelayEstimState::IDLE)
+  , tm_key_(0)
   , last_sync_time_(0)
   , tm_success_(false)
   , scan_drop_count_(0)
