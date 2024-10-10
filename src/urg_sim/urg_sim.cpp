@@ -98,6 +98,12 @@ void URGSimulator::processInput(
   wait.expires_at(when);
   wait.wait();
 
+  if (params_.model == Model::UST_UUST2)
+  {
+    // UST (UUST) series handle commands on 1ms tick
+    waitTick(1);
+  }
+
   h(cmd);
 }
 
@@ -149,7 +155,8 @@ void URGSimulator::handleII(const std::string cmd)
         }
         stat = "Stable 000 no error.";
         break;
-      case Model::UST:
+      case Model::UST_UUST1:
+      case Model::UST_UUST2:
         mesm = "Measuring by Sensitive Mode";
         stat = "sensor is working normally";
         break;
@@ -189,7 +196,7 @@ void URGSimulator::handleVV(const std::string cmd)
       {
           {"VEND", "Hokuyo Automatic Co., Ltd."},
           {"PROD", model_name_},
-          {"FIRM", "1.1.0 (2011-09-30)"},
+          {"FIRM", firm_version_},
           {"PROT", "SCIP 2.2"},
           {"SERI", "H0123456"},
       };
@@ -278,6 +285,12 @@ void URGSimulator::handleTM(const std::string cmd)
   const uint32_t stamp = timestamp();
   const std::string time = encode::encode(
       std::vector<uint32_t>(1, stamp), encode::EncodeType::CED4);
+
+  if (params_.model == Model::UST_UUST2)
+  {
+    // UST (UUST) series doesn't send responses immediately but at the next 5ms tick
+    waitTick(5);
+  }
   response(cmd, status_ok, encode::withChecksum(time) + "\n");
 }
 
@@ -501,9 +514,14 @@ void URGSimulator::booted()
     boot_cnt_++;
   }
 
-  if (params_.model == Model::UST)
+  switch (params_.model)
   {
-    asyncRead();
+    case Model::UST_UUST1:
+    case Model::UST_UUST2:
+      asyncRead();
+      break;
+    default:
+      break;
   }
 
   next_scan_ = boost::posix_time::microsec_clock::universal_time();
@@ -721,18 +739,17 @@ void URGSimulator::sendScan()
   }
   ss_echo << measurement_extra_string_;
 
-  if (params_.model == Model::UST)
+  // UST series doesn't send responses immediately but at the next tick
+  switch (params_.model)
   {
-    // UST-30 series doesn't send responses immediately but at the next 1ms tick
-    const auto now = boost::posix_time::microsec_clock::universal_time();
-    const uint64_t next_tick =
-        params_.clock_rate * (now - timestamp_epoch_).total_microseconds() / 1000.0 + 1;
-    const auto next_tick_system_microseconds =
-        static_cast<uint64_t>(next_tick * 1000.0 / params_.clock_rate);
-    boost::asio::deadline_timer ust_wait(io_service_);
-    ust_wait.expires_at(
-        timestamp_epoch_ + boost::posix_time::microseconds(next_tick_system_microseconds));
-    ust_wait.wait();
+    case Model::UST_UUST1:
+      waitTick(1);  // 1ms tick on UUST1
+      break;
+    case Model::UST_UUST2:
+      waitTick(5);  // 5ms tick on UUST2
+      break;
+    default:
+      break;
   }
 
   response(ss_echo.str(), "99", ss.str());
@@ -829,6 +846,20 @@ double URGSimulator::randomCommDelay()
 {
   // Communication delay must not be less than comm_delay_base.
   return std::abs(comm_delay_distribution_(rand_engine_)) + params_.comm_delay_base;
+}
+
+void URGSimulator::waitTick(const uint64_t n)
+{
+  const auto now = boost::posix_time::microsec_clock::universal_time();
+  const double tick_ms = 1000 * n;
+  const uint64_t next_tick =
+      params_.clock_rate * (now - timestamp_epoch_).total_microseconds() / tick_ms;
+  const auto next_tick_system_microseconds =
+      static_cast<uint64_t>(next_tick * tick_ms / params_.clock_rate);
+  boost::asio::deadline_timer wait(io_service_);
+  wait.expires_at(
+      timestamp_epoch_ + boost::posix_time::microseconds(next_tick_system_microseconds));
+  wait.wait();
 }
 
 }  // namespace urg_sim

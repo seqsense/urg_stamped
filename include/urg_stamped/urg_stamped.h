@@ -30,6 +30,7 @@
 #include <map>
 #include <random>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <scip2/scip2.h>
@@ -89,8 +90,9 @@ protected:
     EXITING,
   };
   DelayEstimState delay_estim_state_;
-  boost::posix_time::ptime time_tm_request;
+  std::pair<std::string, boost::posix_time::ptime> time_tm_request_;
   ros::Time tm_start_time_;
+  uint32_t tm_key_;
 
   scip2::Walltime<24> walltime_;
 
@@ -124,13 +126,18 @@ protected:
 
   device_state_estimator::Estimator::Ptr est_;
 
+  bool is_uust2_;
+  ros::Duration uust2_stamp_offset_;
+
   void cbM(
       const boost::posix_time::ptime& time_read,
       const std::string& echo_back,
       const std::string& status,
       const scip2::ScanData& scan,
       const bool has_intensity);
-  void cbTMSend(const boost::posix_time::ptime& time_send);
+  void cbTMSend(
+      const boost::posix_time::ptime& time_send,
+      const std::string& cmd);
   void cbTM(
       const boost::posix_time::ptime& time_read,
       const std::string& echo_back,
@@ -178,6 +185,7 @@ protected:
   void softReset();
   void hardReset();
   void sleepRandom(const double min, const double max);
+  void sendTM1();
 
 public:
   UrgStampedNode();

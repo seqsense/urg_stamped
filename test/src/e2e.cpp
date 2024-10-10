@@ -209,7 +209,7 @@ std::vector<urg_sim::URGSimulator::Params> params(
             .angle_front = 540,
         },  // NOLINT(whitespace/braces)
         {
-            .model = urg_sim::URGSimulator::Model::UST,
+            .model = urg_sim::URGSimulator::Model::UST_UUST1,
             .boot_duration = 0.01,
             .comm_delay_base = 0.0005,
             .comm_delay_sigma = 0.0005,
@@ -222,7 +222,7 @@ std::vector<urg_sim::URGSimulator::Params> params(
             .angle_front = 540,
         },  // NOLINT(whitespace/braces)
         {
-            .model = urg_sim::URGSimulator::Model::UST,
+            .model = urg_sim::URGSimulator::Model::UST_UUST1,
             .boot_duration = 0.01,
             .comm_delay_base = 0.0005,
             .comm_delay_sigma = 0.0005,
@@ -235,10 +235,49 @@ std::vector<urg_sim::URGSimulator::Params> params(
             .angle_front = 540,
         },  // NOLINT(whitespace/braces)
         {
-            .model = urg_sim::URGSimulator::Model::UST,
+            .model = urg_sim::URGSimulator::Model::UST_UUST1,
             .boot_duration = 0.01,
             .comm_delay_base = 0.0005,
             .comm_delay_sigma = 0.0005,
+            .scan_interval = 0.02505,
+            .clock_rate = 0.999,
+            .hex_ii_timestamp = true,
+            .angle_resolution = 1440,
+            .angle_min = 0,
+            .angle_max = 1080,
+            .angle_front = 540,
+        },  // NOLINT(whitespace/braces)
+        {
+            .model = urg_sim::URGSimulator::Model::UST_UUST2,
+            .boot_duration = 0.01,
+            .comm_delay_base = 0.0002,
+            .comm_delay_sigma = 0.0002,
+            .scan_interval = 0.02505,
+            .clock_rate = 1.0,
+            .hex_ii_timestamp = true,
+            .angle_resolution = 1440,
+            .angle_min = 0,
+            .angle_max = 1080,
+            .angle_front = 540,
+        },  // NOLINT(whitespace/braces)
+        {
+            .model = urg_sim::URGSimulator::Model::UST_UUST2,
+            .boot_duration = 0.01,
+            .comm_delay_base = 0.0002,
+            .comm_delay_sigma = 0.0002,
+            .scan_interval = 0.02505,
+            .clock_rate = 1.001,
+            .hex_ii_timestamp = true,
+            .angle_resolution = 1440,
+            .angle_min = 0,
+            .angle_max = 1080,
+            .angle_front = 540,
+        },  // NOLINT(whitespace/braces)
+        {
+            .model = urg_sim::URGSimulator::Model::UST_UUST2,
+            .boot_duration = 0.01,
+            .comm_delay_base = 0.0002,
+            .comm_delay_sigma = 0.0002,
             .scan_interval = 0.02505,
             .clock_rate = 0.999,
             .hex_ii_timestamp = true,
@@ -262,6 +301,7 @@ TEST_P(E2EWithParam, Simple)
   pnh_.setParam("/urg_stamped/clock_estim_interval", 2.5);
   pnh_.setParam("/urg_stamped/error_limit", 4);
   pnh_.setParam("/urg_stamped/debug", true);
+  pnh_.setParam("/urg_stamped/uust2_stamp_offset", -0.0002);
   ASSERT_NO_FATAL_FAILURE(startUrgStamped());
 
   std::shared_ptr<std::stringstream> serr;

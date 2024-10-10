@@ -12,8 +12,15 @@ Also, the resolution of the timestamp was not enough for a high-speed motion of 
 So, urg\_stamped estimates sub-millisecond by the following algorithm:
 
 - Determine sensor internal clock state (clock offset and gain) using TM command
-  - 1. Observe sub-millisecond clock offset by finding increment of millisecond resolution sensor timestamp
-  - 2. Observe clock gain from multiple observations of the clock offset
+  - UTM/UST(UUST1): (UTM and UST(UUST1) responds to TM command as expected in SCIP2 protocol)
+    - 1. Observe sub-millisecond clock offset by finding increment of millisecond resolution sensor timestamp
+    - 2. Observe clock gain from multiple observations of the clock offset
+  - UST(UUST2): (UST(UUST2) responds to TM command on the next 5ms frame which breaks SCIP2's time synchronization logic)
+    - 1. Request TM command many times with different timing
+    - 2. Filter responses with large delay
+    - 3. Collect sensor response timings which should be synchronized to the sensor timestamp increment
+    - 4. Observe sub-millisecond clock offset based on the sensor response timings and sensor timestamps
+    - 5. Observe clock gain from multiple observations of the clock offset
 - Determine scan origin time and interval
   - UTM: (UTM sends scan data right after the scan is finished)
     - 1. Observe scan timing based on scan data arrival time
@@ -48,7 +55,12 @@ Topics and major parameters are designed to be compatible with [urg\_node](http:
 ## Known Limitations
 
 - Timestamp estimation is designed for sensors connected by ethernet interface.
-  - Tested only for UTM-30LX-EW and UST-20LX at now.
+  - Tested on the following sensor models:
+    - UTM-30LX-EW
+    - UST-05LX
+    - UST-20LX
+    - UST-30LC
+  - UUST2 model of UST series (firmware version >=4.0.0) takes longer time to perform the time synchronization due to the sensor's behavior.
 - Some scans are dropped due to the clock synchronization and delay estimation.
 
 ## Comparison with urg\_node
