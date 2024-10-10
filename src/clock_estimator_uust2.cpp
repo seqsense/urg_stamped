@@ -107,17 +107,6 @@ bool ClockEstimatorUUST2::finishSync()
     SyncSampleUUST2 s2 = s;
     s2.t_frac_ += ros::Duration(RESPONSE_TIMER_INTERVAL);
     sorted_samples.push_back(s2);
-
-    // TODO(at-wat): remove after test
-    std::cerr
-        << std::fixed << std::setprecision(6)
-        << s.delay_
-        << " " << s.device_wall_stamp_
-        << " " << s.t_frac_
-        << " " << s.t_res_.toSec()
-        << " " << s.t_origin_.toSec()
-        << " " << origin_compensate
-        << std::endl;
   }
 
   std::sort(sorted_samples.begin(), sorted_samples.end());
