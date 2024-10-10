@@ -74,6 +74,10 @@ void UrgStampedNode::cbM(
   std::pair<ros::Time, bool> t_scan = est_->scan_->pushScanSample(time_read_ros, walltime_device);
   sensor_msgs::LaserScan msg(msg_base_);
   msg.header.stamp = t_scan.first;
+  if (is_uust2_)
+  {
+    msg.header.stamp += uust2_stamp_offset_;
+  }
   if (!t_scan.second)
   {
     scan_drop_count_++;
@@ -355,6 +359,7 @@ void UrgStampedNode::cbVV(
     device_state_estimator::ClockEstimator::Ptr clock;
     device_state_estimator::ScanEstimator::Ptr scan;
     std::string model;
+    is_uust2_ = false;
     if (prod == "UTM")
     {
       clock.reset(new device_state_estimator::ClockEstimatorUUST1());
@@ -372,6 +377,7 @@ void UrgStampedNode::cbVV(
       {
         model = "UST (UUST2)";
         clock.reset(new device_state_estimator::ClockEstimatorUUST2());
+        is_uust2_ = true;
       }
       else
       {
@@ -723,6 +729,7 @@ UrgStampedNode::UrgStampedNode()
   , scan_drop_count_(0)
   , scan_drop_continuous_(0)
   , cmd_resetting_(false)
+  , is_uust2_(false)
 {
   std::random_device rd;
   random_engine_.seed(rd());
@@ -747,6 +754,11 @@ UrgStampedNode::UrgStampedNode()
   tm_command_interval_ = ros::Duration(tm_interval);
   pnh_.param("tm_timeout", tm_timeout, 10.0);
   tm_try_max_ = static_cast<int>(tm_timeout / tm_interval);
+
+  // UUST2 doesn't support estimating communication delay. Static offset can be specified to compensate the delay
+  double uust2_stamp_offset;
+  pnh_.param("uust2_stamp_offset", uust2_stamp_offset, 0.0);
+  uust2_stamp_offset_ = ros::Duration(uust2_stamp_offset);
 
   urg_stamped::setROSLogger(msg_base_.header.frame_id + ": ");
 

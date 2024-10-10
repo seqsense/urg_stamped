@@ -301,6 +301,7 @@ TEST_P(E2EWithParam, Simple)
   pnh_.setParam("/urg_stamped/clock_estim_interval", 2.5);
   pnh_.setParam("/urg_stamped/error_limit", 4);
   pnh_.setParam("/urg_stamped/debug", true);
+  pnh_.setParam("/urg_stamped/uust2_stamp_offset", -0.0002);
   ASSERT_NO_FATAL_FAILURE(startUrgStamped());
 
   std::shared_ptr<std::stringstream> serr;
