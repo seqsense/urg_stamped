@@ -19,6 +19,7 @@
 
 #include <sensor_msgs/LaserScan.h>
 #include <urg_stamped/Status.h>
+#include <std_msgs/Header.h>
 
 #include <boost/bind/bind.hpp>
 #include <boost/format.hpp>
@@ -70,6 +71,12 @@ void UrgStampedNode::cbM(
 
   const uint64_t walltime_device = walltime_.update(scan.timestamp_);
   const ros::Time time_read_ros = ros::Time::fromBoost(time_read);
+
+  if (next_sync_.isValid() && time_read_ros > next_sync_)
+  {
+    estimateSensorClock();
+    next_sync_ += clock_estim_interval_;
+  }
 
   std::pair<ros::Time, bool> t_scan = est_->scan_->pushScanSample(time_read_ros, walltime_device);
   sensor_msgs::LaserScan msg(msg_base_);
@@ -592,6 +599,7 @@ void UrgStampedNode::retryTM(const ros::TimerEvent& event)
   {
     case DelayEstimState::STOPPING_SCAN:
       scip2::logger::debug() << "Stopping scan" << std::endl;
+      publishSyncStart();
       scip_->sendCommand("QT");
       tm_try_count_++;
       if (tm_try_count_ > tm_try_max_)
@@ -718,6 +726,39 @@ void UrgStampedNode::publishStatus()
   pub_status_.publish(msg);
 }
 
+void UrgStampedNode::cbSyncStart(const std_msgs::Header::ConstPtr& msg)
+{
+  if (msg->frame_id == msg_base_.header.frame_id)
+  {
+    return;
+  }
+  switch (delay_estim_state_)
+  {
+    case DelayEstimState::IDLE:
+    case DelayEstimState::EXITING:
+      return;
+      break;
+    default:
+      break;
+  }
+  std::uniform_real_distribution<double> rnd(0, clock_estim_interval_.toSec());
+  ros::Duration offset(rnd(random_engine_));
+  next_sync_ += offset;
+  scip2::logger::info()
+      << std::fixed << std::setprecision(3)
+      << "Concurrent time synchronization detected. Delaying the next time sync by "
+      << offset.toSec() << "s"
+      << std::endl;
+}
+
+void UrgStampedNode::publishSyncStart()
+{
+  std_msgs::Header msg;
+  msg.frame_id = msg_base_.header.frame_id;
+  msg.stamp = ros::Time::now();
+  pub_sync_start_.publish(msg);
+}
+
 UrgStampedNode::UrgStampedNode()
   : nh_("")
   , pnh_("~")
@@ -745,6 +786,7 @@ UrgStampedNode::UrgStampedNode()
   pnh_.param("clock_estim_interval", clock_estim_interval, 30.0);
   pnh_.param("error_limit", error_count_max_, 4);
   pnh_.param("fallback_on_continuous_scan_drop", fallback_on_continuous_scan_drop_, 5);
+  clock_estim_interval_ = ros::Duration(clock_estim_interval);
 
   // 30s * 40Hz = 1200scans total, output info level log if dropped 90/1200scans or more
   pnh_.param("log_scan_drop_more_than", log_scan_drop_more_than_, static_cast<int>(clock_estim_interval * 3));
@@ -775,6 +817,9 @@ UrgStampedNode::UrgStampedNode()
 
   pub_scan_ = nh_.advertise<sensor_msgs::LaserScan>("scan", 10);
   pub_status_ = pnh_.advertise<urg_stamped::Status>("status", 1, true);
+
+  pub_sync_start_ = pnh_.advertise<std_msgs::Header>("urg_stamped_sync_start", 1, true);
+  sub_sync_start_ = pnh_.subscribe("urg_stamped_sync_start", 1, &UrgStampedNode::cbSyncStart, this);
 
   device_.reset(new scip2::ConnectionTcp(ip, port));
   device_->registerCloseCallback(
@@ -837,10 +882,9 @@ UrgStampedNode::UrgStampedNode()
                   boost::arg<2>(),
                   boost::arg<3>()));
 
-  if (clock_estim_interval > 0.0)
+  if (clock_estim_interval_ > ros::Duration(0))
   {
-    timer_delay_estim_ = nh_.createTimer(
-        ros::Duration(clock_estim_interval), &UrgStampedNode::estimateSensorClock, this);
+    next_sync_ = ros::Time::now() + clock_estim_interval_;
   }
 }
 
