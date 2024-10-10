@@ -98,6 +98,12 @@ void URGSimulator::processInput(
   wait.expires_at(when);
   wait.wait();
 
+  if (params_.model == Model::UST_UUST2)
+  {
+    // UST (UUST) series handle commands on 1ms tick
+    waitTick(1);
+  }
+
   h(cmd);
 }
 
