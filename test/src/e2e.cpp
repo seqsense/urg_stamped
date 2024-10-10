@@ -33,6 +33,7 @@
 #include <xmlrpcpp/XmlRpc.h>
 
 #include <urg_sim/urg_sim.h>
+#include <e2e_utils.h>
 
 #include <gtest/gtest.h>
 
@@ -41,24 +42,7 @@ namespace
 
 bool shutdownUrgStamped()
 {
-  XmlRpc::XmlRpcValue req, res, payload;
-  req[0] = ros::this_node::getName();
-  req[1] = "urg_stamped";
-  if (!ros::master::execute("lookupNode", req, res, payload, true))
-  {
-    return false;
-  }
-
-  std::string host;
-  uint32_t port;
-  if (!ros::network::splitURI(static_cast<std::string>(res[2]), host, port))
-  {
-    return false;
-  }
-
-  XmlRpc::XmlRpcClient cli(host.c_str(), port, "/");
-  XmlRpc::XmlRpcValue req2, res2;
-  return cli.execute("shutdown", req2, res2);
+  return shutdownNode("urg_stamped");
 }
 
 }  // namespace
