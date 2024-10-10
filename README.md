@@ -55,7 +55,12 @@ Topics and major parameters are designed to be compatible with [urg\_node](http:
 ## Known Limitations
 
 - Timestamp estimation is designed for sensors connected by ethernet interface.
-  - Tested only for UTM-30LX-EW and UST-20LX at now.
+  - Tested on the following sensor models:
+    - UTM-30LX-EW
+    - UST-05LX
+    - UST-20LX
+    - UST-30LC
+  - UUST2 model of UST series (firmware version >=4.0.0) takes longer time to perform the time synchronization due to the sensor's behavior.
 - Some scans are dropped due to the clock synchronization and delay estimation.
 
 ## Comparison with urg\_node
