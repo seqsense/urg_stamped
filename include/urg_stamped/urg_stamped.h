@@ -30,6 +30,7 @@
 #include <map>
 #include <random>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <scip2/scip2.h>
