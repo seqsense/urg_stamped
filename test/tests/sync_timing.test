@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<launch>
+  <env name="GCOV_PREFIX" value="/tmp/gcov/sync_timing" />
+
+  <test test-name="sync_timing" pkg="urg_stamped" type="sync_timing" />
+
+  <node name="urg_stamped0" pkg="urg_stamped" type="urg_stamped" respawn="true" output="screen">
+    <param name="ip_address" value="127.0.0.1" />
+    <param name="debug" value="true" />
+    <param name="frame_id" value="laser0" />
+    <param name="clock_estim_interval" value="1.0" />
+    <param name="error_limit" value="100" />
+  </node>
+  <node name="urg_stamped1" pkg="urg_stamped" type="urg_stamped" respawn="true" output="screen">
+    <param name="ip_address" value="127.0.0.1" />
+    <param name="debug" value="true" />
+    <param name="frame_id" value="laser1" />
+    <param name="clock_estim_interval" value="1.0" />
+    <param name="error_limit" value="100" />
+  </node>
+</launch>
