@@ -232,7 +232,7 @@ class ScanEstimator
 public:
   using Ptr = std::shared_ptr<ScanEstimator>;
 
-  inline explicit ScanEstimator(const ClockEstimator::Ptr clock_estim, const ros::Duration& ideal_scan_interval)
+  inline ScanEstimator(const ClockEstimator::Ptr clock_estim, const ros::Duration& ideal_scan_interval)
     : clock_estim_(clock_estim)
     , ideal_scan_interval_(ideal_scan_interval)
   {
@@ -371,7 +371,7 @@ private:
 class ScanEstimatorUTM : public ScanEstimator
 {
 public:
-  inline explicit ScanEstimatorUTM(const ClockEstimator::Ptr clock_estim, const ros::Duration& ideal_scan_interval)
+  inline ScanEstimatorUTM(const ClockEstimator::Ptr clock_estim, const ros::Duration& ideal_scan_interval)
     : ScanEstimator(clock_estim, ideal_scan_interval)
   {
   }
@@ -397,7 +397,7 @@ private:
 class ScanEstimatorUST : public ScanEstimator
 {
 public:
-  inline explicit ScanEstimatorUST(const ClockEstimator::Ptr clock_estim, const ros::Duration& ideal_scan_interval)
+  inline ScanEstimatorUST(const ClockEstimator::Ptr clock_estim, const ros::Duration& ideal_scan_interval)
     : ScanEstimator(clock_estim, ideal_scan_interval)
     , primary_interval_(0)
   {
