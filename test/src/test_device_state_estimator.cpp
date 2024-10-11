@@ -67,9 +67,9 @@ TEST(ClockState, StampToTime)
   }
 }
 
-TEST(DeviceStateEstimator, FindMinDelay)
+TEST(ClockEstimatorUUST1, FindMinDelay)
 {
-  EstimatorUTM est(ros::Duration(0.025));
+  ClockEstimatorUUST1 est;
 
   est.startSync();
   est.pushSyncSample(ros::Time(100.0001), ros::Time(100.00015), 100);
@@ -105,9 +105,9 @@ TEST(DeviceStateEstimator, FindMinDelay)
   }
 }
 
-TEST(DeviceStateEstimator, RawClockOrigin)
+TEST(ClockEstimatorUUST1, RawClockOrigin)
 {
-  EstimatorUTM est(ros::Duration(0.025));
+  ClockEstimatorUUST1 est;
   for (double d = 0; d < 0.003; d += 0.00025)
   {
     SCOPED_TRACE("Offset " + std::to_string(d));
@@ -122,7 +122,7 @@ TEST(DeviceStateEstimator, RawClockOrigin)
   }
 }
 
-TEST(DeviceStateEstimator, ClockGain)
+TEST(ClockEstimatorUUST1, ClockGain)
 {
   const std::vector<double> gains =
       {
@@ -133,7 +133,7 @@ TEST(DeviceStateEstimator, ClockGain)
 
   for (const double gain : gains)
   {
-    EstimatorUTM est(ros::Duration(0.025));
+    ClockEstimatorUUST1 est;
     SCOPED_TRACE("Gain " + std::to_string(gain));
 
     for (double t0 = 0; t0 < 50; t0 += 10)
@@ -155,9 +155,9 @@ TEST(DeviceStateEstimator, ClockGain)
   }
 }
 
-TEST(DeviceStateEstimatorUTM, InitialClockState)
+TEST(ClockEstimatorUUST1, InitialClockState)
 {
-  EstimatorUTM est(ros::Duration(0.1));
+  ClockEstimatorUUST1 est;
   const double t0 = 100;
 
   est.startSync();
@@ -177,60 +177,40 @@ TEST(DeviceStateEstimatorUTM, InitialClockState)
       0.0001);
 }
 
-TEST(DeviceStateEstimatorUST, InitialClockState)
+TEST(ScanEstimatorUTM, PushScanSampleRaw)
 {
-  EstimatorUST est(ros::Duration(0.1));
+  ClockEstimatorUUST1::Ptr clock_est(new ClockEstimatorUUST1());
+  ScanEstimatorUTM est(clock_est, ros::Duration(0.1));
   const double t0 = 100;
 
-  est.startSync();
+  clock_est->startSync();
   for (double t = 10; t < 10.2; t += 0.0101)
   {
-    est.pushSyncSample(ros::Time(t0 + t), ros::Time(t0 + t + 0.00001), t * 1000);
+    clock_est->pushSyncSample(ros::Time(t0 + t), ros::Time(t0 + t + 0.00001), t * 1000);
   }
-  est.finishSync();
-
-  ASSERT_NEAR(
-      t0 + 31.0000,
-      est.getClockState().stampToTime(31000).toSec(),
-      0.0001);
-  ASSERT_NEAR(
-      t0 + 51.0000,
-      est.getClockState().stampToTime(51000).toSec(),
-      0.0001);
-}
-
-TEST(DeviceStateEstimatorUTM, PushScanSampleRaw)
-{
-  EstimatorUTM est(ros::Duration(0.1));
-  const double t0 = 100;
-
-  est.startSync();
-  for (double t = 10; t < 10.2; t += 0.0101)
-  {
-    est.pushSyncSample(ros::Time(t0 + t), ros::Time(t0 + t + 0.00001), t * 1000);
-  }
-  est.finishSync();
-  est.startSync();
+  clock_est->finishSync();
+  clock_est->startSync();
   for (double t = 20; t < 20.2; t += 0.0101)
   {
-    est.pushSyncSample(ros::Time(t0 + t), ros::Time(t0 + t + 0.00001), t * 1000);
+    clock_est->pushSyncSample(ros::Time(t0 + t), ros::Time(t0 + t + 0.00001), t * 1000);
   }
-  est.finishSync();
+  clock_est->finishSync();
 
+  const auto clock = clock_est->getClockState();
   est.estimateScanTime(
-      ros::Time(t0 + 30.0200), est.clock_.stampToTime(30000));  // minimal scan stamp to send delay: 20ms
+      ros::Time(t0 + 30.0200), clock.stampToTime(30000));  // minimal scan stamp to send delay: 20ms
   est.estimateScanTime(
-      ros::Time(t0 + 30.1206), est.clock_.stampToTime(30100));
+      ros::Time(t0 + 30.1206), clock.stampToTime(30100));
   est.estimateScanTime(
-      ros::Time(t0 + 30.2203), est.clock_.stampToTime(30200));
+      ros::Time(t0 + 30.2203), clock.stampToTime(30200));
 
   ASSERT_NEAR(
       t0 + 31.0000,
-      est.estimateScanTime(ros::Time(t0 + 31.0200), est.clock_.stampToTime(31000)).first.toSec(),
+      est.estimateScanTime(ros::Time(t0 + 31.0200), clock.stampToTime(31000)).first.toSec(),
       0.0001);
   ASSERT_NEAR(
       t0 + 32.0005,
-      est.estimateScanTime(ros::Time(t0 + 32.0205), est.clock_.stampToTime(32000)).first.toSec(),
+      est.estimateScanTime(ros::Time(t0 + 32.0205), clock.stampToTime(32000)).first.toSec(),
       0.0001);
 }
 

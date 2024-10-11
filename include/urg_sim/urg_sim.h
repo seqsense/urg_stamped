@@ -62,7 +62,8 @@ public:
   enum class Model
   {
     UTM,
-    UST,
+    UST_UUST1,
+    UST_UUST2,
   };
   struct Params
   {
@@ -127,9 +128,15 @@ public:
     {
       case Model::UTM:
         model_name_ = "UTM-30LX-EW";
+        firm_version_ = "1.1.0 (2011-09-30)";
         break;
-      case Model::UST:
+      case Model::UST_UUST1:
         model_name_ = "UST-30LC";
+        firm_version_ = "1.1.0 (2011-09-30)";
+        break;
+      case Model::UST_UUST2:
+        model_name_ = "UST-30LC";
+        firm_version_ = "4.0.2-A";
         break;
     }
   }
@@ -150,6 +157,7 @@ private:
 
   const URGSimulator::Params params_;
   std::string model_name_;
+  std::string firm_version_;
 
   boost::asio::io_service io_service_;
   boost::asio::io_service input_fifo_;
@@ -230,6 +238,7 @@ private:
       const std::string& cmd,
       const size_t expected_size);
   double randomCommDelay();
+  void waitTick(const uint64_t n);
 };
 
 }  // namespace urg_sim
