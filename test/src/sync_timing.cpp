@@ -135,7 +135,7 @@ TEST_F(SyncTiming, NoConcurrentSync)
 
   ASSERT_NO_FATAL_FAILURE(startSimulator(0, params));
   ASSERT_NO_FATAL_FAILURE(startSimulator(1, params));
-  ros::Duration(1).sleep();  // Wait starup
+  ros::Duration(1).sleep();  // Wait startup
 
   ASSERT_NO_FATAL_FAILURE(startUrgStamped());
   ros::Duration(1).sleep();  // Wait node respawn
