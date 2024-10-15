@@ -10,6 +10,12 @@ Changelog for package urg_stamped
 * Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
 * Contributors: Atsushi Watanabe
 
+0.3.0 (2024-10-15)
+------------------
+* Avoid concurrent time sync of multiple sensors (`#173 <https://github.com/seqsense/urg_stamped/issues/173>`_)
+* Support UUST2 (`#172 <https://github.com/seqsense/urg_stamped/issues/172>`_)
+* Contributors: Atsushi Watanabe
+
 0.2.1 (2024-09-10)
 ------------------
 * Fix out-of-bound vector access in urg_sim (`#169 <https://github.com/seqsense/urg_stamped/issues/169>`_)
