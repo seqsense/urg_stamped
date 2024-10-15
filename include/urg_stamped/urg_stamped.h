@@ -66,7 +66,8 @@ protected:
   ros::NodeHandle pnh_;
   ros::Publisher pub_scan_;
   ros::Publisher pub_status_;
-  ros::Timer timer_delay_estim_;
+  ros::Publisher pub_sync_start_;
+  ros::Subscriber sub_sync_start_;
   ros::Timer timer_retry_tm_;
 
   sensor_msgs::LaserScan msg_base_;
@@ -80,6 +81,8 @@ protected:
   bool publish_intensity_;
   bool failed_;
 
+  ros::Time next_sync_;
+  ros::Duration clock_estim_interval_;
   enum class DelayEstimState
   {
     IDLE,
@@ -186,6 +189,9 @@ protected:
   void hardReset();
   void sleepRandom(const double min, const double max);
   void sendTM1();
+
+  void cbSyncStart(const std_msgs::Header::ConstPtr& msg);
+  void publishSyncStart();
 
 public:
   UrgStampedNode();

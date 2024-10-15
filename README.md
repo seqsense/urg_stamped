@@ -11,7 +11,7 @@ Also, the resolution of the timestamp was not enough for a high-speed motion of 
 
 So, urg\_stamped estimates sub-millisecond by the following algorithm:
 
-- Determine sensor internal clock state (clock offset and gain) using TM command
+- Determine sensor internal clock state (clock offset and gain) using TM command (Triggered by 30s timer by default)
   - UTM/UST(UUST1): (UTM and UST(UUST1) responds to TM command as expected in SCIP2 protocol)
     - 1. Observe sub-millisecond clock offset by finding increment of millisecond resolution sensor timestamp
     - 2. Observe clock gain from multiple observations of the clock offset
@@ -28,6 +28,9 @@ So, urg\_stamped estimates sub-millisecond by the following algorithm:
     - 1. Find sensor scan timestamp jitter
     - 2. Observe scan origin time and scan interval using scan timestamp jitter
 - Calculate sub-millisecond scan timestamp based on the observed scan origin time and scan interval
+
+LaserScan data is stopped during sensor internal clock estimation which takes at most ~100ms on UTM/UUST1 and ~1s on UUST2.
+To avoid stopping all sensors at once on multi-sensor configuration, urg\_stamped automatically adjusts the timing of sensor internal clock estimation based on the messages on urg\_stamped\_sync\_start topic.
 
 ## Usages
 
