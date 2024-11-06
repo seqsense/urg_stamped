@@ -2,12 +2,12 @@ ARG ROS_DISTRO=noetic
 # ========================================
 FROM ghcr.io/alpine-ros/alpine-ros:noetic-3.20-bare as cloner
 
-RUN apk add --no-cache git py3-wstool
+RUN apk add --no-cache git py3-vcstool
 
 WORKDIR /repos-isolated
 COPY .rosinstall-isolated /repos-isolated/deps.rosinstall
 
-RUN wstool init src --shallow deps.rosinstall
+RUN vcs import --input deps.rosinstall ./src
 
 RUN mkdir -p /repos-isolated-manifests/src
 RUN find . -name package.xml | xargs -ISRC cp --parents SRC /repos-isolated-manifests/
