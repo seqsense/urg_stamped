@@ -1,13 +1,19 @@
 ARG ROS_DISTRO=noetic
 # ========================================
-FROM ghcr.io/alpine-ros/alpine-ros:noetic-3.14-bare as cloner
+FROM ghcr.io/alpine-ros/alpine-ros:noetic-3.20-bare AS cloner
 
-RUN apk add --no-cache git py3-wstool
+RUN apk add --no-cache git py3-vcstool
 
 WORKDIR /repos-isolated
 COPY .rosinstall-isolated /repos-isolated/deps.rosinstall
 
-RUN wstool init src --shallow deps.rosinstall
+RUN mkdir -p ./src \
+  && if [ $(cat deps.rosinstall | sed '/^\s*#/d;/^\s*$/d' | wc -l) -gt 0 ]; then \
+    if ! vcs validate --input deps.rosinstall; then \
+      echo "deps.rosinstall is invalid"; \
+    fi; \
+    vcs import --input deps.rosinstall --shallow ./src; \
+  fi
 
 RUN mkdir -p /repos-isolated-manifests/src
 RUN find . -name package.xml | xargs -ISRC cp --parents SRC /repos-isolated-manifests/
@@ -15,7 +21,13 @@ RUN find . -name package.xml | xargs -ISRC cp --parents SRC /repos-isolated-mani
 WORKDIR /repos
 COPY .rosinstall /repos/deps.rosinstall
 
-RUN wstool init src --shallow deps.rosinstall
+RUN if [ $(cat deps.rosinstall | sed '/^\s*#/d;/^\s*$/d' | wc -l) -gt 0 ]; then \
+    if ! vcs validate --input deps.rosinstall; then \
+      echo "deps.rosinstall is invalid"; \
+    fi; \
+    vcs import --input deps.rosinstall --shallow ./src; \
+  fi
+
 COPY . /repos/src/self
 
 RUN mkdir -p /repos-manifests/src
