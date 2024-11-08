@@ -39,6 +39,7 @@
 #include <scip2/logger.h>
 
 #include <urg_stamped/ros_logger.h>
+#include <urg_stamped/strings.h>
 
 #include <urg_stamped/urg_stamped.h>
 
@@ -333,7 +334,9 @@ void UrgStampedNode::cbVV(
   }
   if (!est_)
   {
-    int firm_major;
+    int firm_major = 1;
+    int firm_minor = 0;
+    int firm_patch = 0;
     {
       const auto firm_it = params.find("FIRM");
       if (firm_it == params.end())
@@ -341,11 +344,22 @@ void UrgStampedNode::cbVV(
         scip2::logger::error()
             << "Could not detect sensor hardware revision. Fallback to UUST1 mode"
             << std::endl;
-        firm_major = 1;
       }
       else
       {
-        firm_major = std::stoi(firm_it->second);
+        const std::vector<std::string> version = urg_stamped::strings::split(firm_it->second, '.');
+        if (version.size() < 3)
+        {
+          scip2::logger::error()
+              << "Invalid firmware version (" << firm_it->second << "). Fallback to UUST1 mode"
+              << std::endl;
+        }
+        else
+        {
+          firm_major = std::stoi(version[0]);
+          firm_minor = std::stoi(version[1]);
+          firm_patch = std::stoi(version[2]);
+        }
       }
     }
     std::string prod;
@@ -380,7 +394,7 @@ void UrgStampedNode::cbVV(
             << "Unknown sensor model. Fallback to UST mode"
             << std::endl;
       }
-      if (firm_major >= 4)
+      if (firm_major == 4 && firm_minor == 0 && firm_patch < 3)
       {
         model = "UST (UUST2)";
         clock.reset(new device_state_estimator::ClockEstimatorUUST2());
@@ -388,7 +402,7 @@ void UrgStampedNode::cbVV(
       }
       else
       {
-        model = "UST (UUST1)";
+        model = "UST (UUST1, UUST2FIXED)";
         clock.reset(new device_state_estimator::ClockEstimatorUUST1());
       }
       scan.reset(new device_state_estimator::ScanEstimatorUST(clock, ideal_scan_interval_));
