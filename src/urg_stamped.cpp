@@ -396,13 +396,13 @@ void UrgStampedNode::cbVV(
       }
       if (firm_major == 4 && firm_minor == 0 && firm_patch < 3)
       {
-        model = "UST (UUST2)";
+        model = "UST (UUST2Unfixed)";
         clock.reset(new device_state_estimator::ClockEstimatorUUST2());
         is_uust2_ = true;
       }
       else
       {
-        model = "UST (UUST1, UUST2FIXED)";
+        model = "UST (UUST1, UUST2Fixed)";
         clock.reset(new device_state_estimator::ClockEstimatorUUST1());
       }
       scan.reset(new device_state_estimator::ScanEstimatorUST(clock, ideal_scan_interval_));
