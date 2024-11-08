@@ -600,15 +600,13 @@ void UrgStampedNode::estimateSensorClock(const ros::TimerEvent& event)
   tm_try_count_ = 0;
   scip2::logger::debug() << "Starting communication delay estimation" << std::endl;
   delay_estim_state_ = DelayEstimState::STOPPING_SCAN;
-  timer_retry_tm_.stop();
-  timer_retry_tm_ = nh_.createTimer(
-      tm_command_interval_,
-      &UrgStampedNode::retryTM, this);
   retryTM();
 }
 
 void UrgStampedNode::retryTM(const ros::TimerEvent& event)
 {
+  bool retry = true;
+  timer_retry_tm_.stop();
   switch (delay_estim_state_)
   {
     case DelayEstimState::STOPPING_SCAN:
@@ -634,9 +632,15 @@ void UrgStampedNode::retryTM(const ros::TimerEvent& event)
     case DelayEstimState::ESTIMATING:
       scip2::logger::warn() << "Timeout occured during the time synchronization" << std::endl;
       scip_->sendCommand("TM2");
+      retry = false;
       break;
     default:
+      retry = false;
       break;
+  }
+  if (retry)
+  {
+    timer_retry_tm_ = nh_.createTimer(tm_command_interval_, &UrgStampedNode::retryTM, this, true);
   }
 }
 
