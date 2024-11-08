@@ -14,6 +14,8 @@ target_link_libraries(test_device_state_estimator ${catkin_LIBRARIES} ${Boost_LI
 catkin_add_gtest(test_decode src/test_decode.cpp)
 target_link_libraries(test_decode ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
+catkin_add_gtest(test_strings src/test_strings.cpp)
+
 catkin_add_gtest(test_param src/test_param.cpp)
 
 catkin_add_gtest(test_scip2
