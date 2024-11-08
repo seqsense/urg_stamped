@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 #include <string>
+#include <vector>
 
 #include <urg_stamped/strings.h>
 
