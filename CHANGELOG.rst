@@ -10,8 +10,8 @@ Changelog for package urg_stamped
 * Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
 * Contributors: Atsushi Watanabe
 
-Forthcoming
------------
+0.4.0 (2024-11-25)
+------------------
 * Support UUST2 with fixed firmware (`#177 <https://github.com/seqsense/urg_stamped/issues/177>`_)
 * CI: Use alpine 3.20 in cloner stage (`#176 <https://github.com/seqsense/urg_stamped/issues/176>`_)
 * Contributors: Atsushi Watanabe, f-fl0
