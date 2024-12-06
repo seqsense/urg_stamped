@@ -328,6 +328,7 @@ TEST_P(E2EWithParam, Simple)
   EXPECT_LT(err_rms, 0.0002);
 
   ASSERT_TRUE(static_cast<bool>(status_msg_));
+  ASSERT_EQ(status_msg_->header.frame_id, std::string("laser"));
   ASSERT_NEAR(status_msg_->sensor_clock_gain, param.clock_rate, 2.5e-4);
   ASSERT_GE(status_msg_->communication_delay.toSec(), param.comm_delay_base);
   ASSERT_LT(status_msg_->communication_delay.toSec(), param.comm_delay_base + param.comm_delay_sigma * 3);
