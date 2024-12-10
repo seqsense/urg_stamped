@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>urg_stamped</name>
-  <version>0.3.0</version>
+  <version>0.4.0</version>
   <description>Precisely stamped URG driver for ROS</description>
 
   <maintainer email="atsushi.w@ieee.org">Atsushi Watanabe</maintainer>
