@@ -3,6 +3,9 @@ urg\_stamped
 
 Precisely and accurately stamped URG driver for ROS
 
+> [!NOTE]
+> After official ROS 1 EOL, this package is released to [Alpine ROS](https://www.seqsense.org/alpine-ros).
+
 ## Background and Algorithm
 
 2D-LIDAR URG series provides 1ms resolution timestamp and exclusive clock synchronization mode.
