@@ -12,6 +12,7 @@ jobs:
     with:
       release-ref: ${{ github.event.release.tag_name }}
       source-branch: master
+      rosdistro-fork-slug: sqbot/rosdistro1
       git-user: sqbot
       git-email: 30003564+sqbot@users.noreply.github.com
       dry-run: false
