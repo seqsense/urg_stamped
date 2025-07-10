@@ -117,7 +117,7 @@ std::pair<ros::Time, bool> ScanEstimatorUST::pushScanSample(const ros::Time& t_r
     }
     else
     {
-      if (scan_.origin_.isValid() && scan_.origin_ + ros::Duration(30) < t_recv)
+      if (!scan_.origin_.isZero() && scan_.origin_ + ros::Duration(30) < t_recv)
       {
         scan_.origin_ = t_stamp;
         scan_.interval_ = ideal_scan_interval_ * (1.0 / clock.gain_);
