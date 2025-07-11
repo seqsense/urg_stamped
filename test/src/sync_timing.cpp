@@ -142,8 +142,8 @@ TEST_F(SyncTiming, NoConcurrentSync)
 
   ASSERT_NO_FATAL_FAILURE(spinFor(ros::Duration(5)));
 
-  ASSERT_TRUE(sync_start_time_["laser0"].isValid());
-  ASSERT_TRUE(sync_start_time_["laser1"].isValid());
+  ASSERT_TRUE(!sync_start_time_["laser0"].isZero());
+  ASSERT_TRUE(!sync_start_time_["laser1"].isZero());
 
   // Base interval is 1s
   const double diff = std::remainder(

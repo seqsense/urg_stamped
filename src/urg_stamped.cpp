@@ -73,7 +73,7 @@ void UrgStampedNode::cbM(
   const uint64_t walltime_device = walltime_.update(scan.timestamp_);
   const ros::Time time_read_ros = ros::Time::fromBoost(time_read);
 
-  if (next_sync_.isValid() && time_read_ros > next_sync_)
+  if (!next_sync_.isZero() && time_read_ros > next_sync_)
   {
     estimateSensorClock();
     next_sync_ += clock_estim_interval_;
