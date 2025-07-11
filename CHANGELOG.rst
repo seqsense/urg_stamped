@@ -10,6 +10,12 @@ Changelog for package urg_stamped
 * Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
 * Contributors: Atsushi Watanabe
 
+0.4.1 (2025-07-11)
+------------------
+* Fix time validation (`#184 <https://github.com/seqsense/urg_stamped/issues/184>`_)
+* Migrate to Alpine ROS 1 (`#183 <https://github.com/seqsense/urg_stamped/issues/183>`_)
+* Contributors: Atsushi Watanabe
+
 0.4.0 (2024-12-10)
 ------------------
 * Set frame_id to status message (`#180 <https://github.com/seqsense/urg_stamped/issues/180>`_)
