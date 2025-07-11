@@ -10,8 +10,8 @@ Changelog for package urg_stamped
 * Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
 * Contributors: Atsushi Watanabe
 
-Forthcoming
------------
+0.4.1 (2025-07-11)
+------------------
 * Fix time validation (`#184 <https://github.com/seqsense/urg_stamped/issues/184>`_)
 * Migrate to Alpine ROS 1 (`#183 <https://github.com/seqsense/urg_stamped/issues/183>`_)
 * Contributors: Atsushi Watanabe
