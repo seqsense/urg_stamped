@@ -82,7 +82,7 @@ void UrgStampedNode::cbM(
   std::pair<ros::Time, bool> t_scan = est_->scan_->pushScanSample(time_read_ros, walltime_device);
   sensor_msgs::LaserScan msg(msg_base_);
   msg.header.stamp = t_scan.first;
-  if (is_uust2_)
+  if (is_uust2unfixed_)
   {
     msg.header.stamp += uust2_stamp_offset_;
   }
@@ -123,7 +123,7 @@ void UrgStampedNode::cbM(
         << step_max_ - step_min_ + 1
         << ", received: " << scan.ranges_.size() << "); refreshing" << std::endl;
     scip_->sendCommand(
-        (has_intensity ? "ME" : "MD") +
+        stamp_command_prefix_ + (has_intensity ? "ME" : "MD") +
         (boost::format("%04d%04d") % step_min_ % step_max_).str() +
         "00000");
     return;
@@ -380,7 +380,7 @@ void UrgStampedNode::cbVV(
     device_state_estimator::ClockEstimator::Ptr clock;
     device_state_estimator::ScanEstimator::Ptr scan;
     std::string model;
-    is_uust2_ = false;
+    is_uust2unfixed_ = false;
     if (prod == "UTM")
     {
       clock.reset(new device_state_estimator::ClockEstimatorUUST1());
@@ -394,15 +394,21 @@ void UrgStampedNode::cbVV(
             << "Unknown sensor model. Fallback to UST mode"
             << std::endl;
       }
-      if (firm_major == 4 && firm_minor == 0 && firm_patch < 3)
+      if (firm_major == 4 && firm_minor >= 1)
       {
-        model = "UST (UUST2Unfixed)";
+        model = "UST (UUST-HighPrecStamp)";
+        clock.reset(new device_state_estimator::ClockEstimatorUUSTHighPrecStamp());
+        stamp_command_prefix_ = "%";
+      }
+      else if (firm_major == 4 && firm_minor == 0 && firm_patch < 3)
+      {
+        model = "UST (UUST2-Unfixed)";
         clock.reset(new device_state_estimator::ClockEstimatorUUST2());
-        is_uust2_ = true;
+        is_uust2unfixed_ = true;
       }
       else
       {
-        model = "UST (UUST1, UUST2Fixed)";
+        model = "UST (UUST1, UUST2-Fixed)";
         clock.reset(new device_state_estimator::ClockEstimatorUUST1());
       }
       scan.reset(new device_state_estimator::ScanEstimatorUST(clock, ideal_scan_interval_));
@@ -717,7 +723,7 @@ void UrgStampedNode::sendTM1()
 {
   std::stringstream cmd;
   tm_key_++;
-  cmd << "TM1;" << std::hex << tm_key_;
+  cmd << stamp_command_prefix_ << "TM1;" << std::hex << tm_key_;
   scip_->sendCommand(
       cmd.str(),
       boost::bind(&UrgStampedNode::cbTMSend, this, boost::arg<1>(), cmd.str()));
@@ -789,7 +795,7 @@ UrgStampedNode::UrgStampedNode()
   , scan_drop_count_(0)
   , scan_drop_continuous_(0)
   , cmd_resetting_(false)
-  , is_uust2_(false)
+  , is_uust2unfixed_(false)
 {
   std::random_device rd;
   random_engine_.seed(rd());
