@@ -46,7 +46,7 @@ std::pair<ros::Time, bool> ScanEstimatorUST::pushScanSample(const ros::Time& t_r
   }
   stamps_ms_.pop_front();
 
-  const int64_t interval = device_wall_stamp - stamps_ms_[stamps_ms_.size() - 2];
+  const int64_t interval = device_wall_stamp / 1000 - stamps_ms_[stamps_ms_.size() - 2];
 
   std::vector<int64_t> intervals;
   for (size_t i = 1; i < stamps_ms_.size(); ++i)
