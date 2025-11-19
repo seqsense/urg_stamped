@@ -48,7 +48,7 @@ public:
       if (walltime_device_base_ >= (1 << DEVICE_TIMESTAMP_BITS))
       {
         time_device_prev_ = (1 << DEVICE_TIMESTAMP_BITS) - time_device;
-        return walltime_device_base_ - time_device_prev_;
+        return (walltime_device_base_ - time_device_prev_) * 1000;
       }
       logger::warn() << "Device time jumped. prev: " << time_device_prev_
                      << ", current: " << time_device << std::endl;
@@ -65,19 +65,19 @@ public:
     return (walltime_device_base_ + time_device) * 1000;
   }
 
-  bool detectDeviceTimeUnderflow(uint32_t time_device) const
-  {
-    time_device /= 1000;
-    return (time_device_prev_ < middle_bits_ &&
-            middle_bits_ < time_device &&
-            time_device - time_device_prev_ > middle_bits_);
-  }
-
   Walltime()
     : initialized_(false)
     , time_device_prev_(0)
     , walltime_device_base_(0)
   {
+  }
+
+private:
+  bool detectDeviceTimeUnderflow(uint32_t time_device) const
+  {
+    return (time_device_prev_ < middle_bits_ &&
+            middle_bits_ < time_device &&
+            time_device - time_device_prev_ > middle_bits_);
   }
 };
 }  // namespace scip2

@@ -31,7 +31,7 @@ TEST(WalltimeTest, testTimestampOverflow)
          device_time += 25)
     {
       const uint32_t device_timestamp = device_time & 0xFFFFFF;
-      ASSERT_EQ(walltime.update(device_timestamp * 1e3), device_time);
+      ASSERT_EQ(walltime.update(device_timestamp * 1e3), device_time * 1e3);
     }
   }
 }
@@ -41,7 +41,7 @@ TEST(WalltimeTest, testDeviceTimeBoundary)
   scip2::Walltime<24> walltime;
 
   uint64_t device_time = (1 << 24) - 1;
-  uint32_t device_timestamp = device_time & 0xFFFFFF;
+  uint64_t device_timestamp = device_time & 0xFFFFFF;
   ASSERT_EQ(walltime.update(device_timestamp * 1e3), device_time * 1e3);
 
   device_time = 0;
