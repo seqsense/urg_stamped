@@ -28,14 +28,15 @@ class Walltime
 {
 protected:
   bool initialized_;
-  uint32_t time_device_prev_;
+  uint64_t time_device_prev_;
   uint64_t walltime_device_base_;
 
   constexpr static uint32_t middle_bits_ = (1 << DEVICE_TIMESTAMP_BITS) / 2;
 
 public:
-  uint64_t update(const uint32_t& time_device)
+  uint64_t update(uint64_t time_device)
   {
+    time_device /= 1000;
     if (!initialized_)
     {
       time_device_prev_ = time_device;
@@ -61,11 +62,12 @@ public:
 
     time_device_prev_ = time_device;
 
-    return walltime_device_base_ + time_device;
+    return (walltime_device_base_ + time_device) * 1000;
   }
 
-  bool detectDeviceTimeUnderflow(const uint32_t& time_device) const
+  bool detectDeviceTimeUnderflow(uint32_t time_device) const
   {
+    time_device /= 1000;
     return (time_device_prev_ < middle_bits_ &&
             middle_bits_ < time_device &&
             time_device - time_device_prev_ > middle_bits_);

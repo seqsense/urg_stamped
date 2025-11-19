@@ -70,7 +70,10 @@ void UrgStampedNode::cbM(
     return;
   }
 
-  const uint64_t walltime_device = walltime_.update(scan.timestamp_);
+  const uint64_t walltime_device =
+      scan.is_wall_ ?
+          scan.timestamp_ :
+          walltime_.update(scan.timestamp_);
   const ros::Time time_read_ros = ros::Time::fromBoost(time_read);
 
   if (!next_sync_.isZero() && time_read_ros > next_sync_)
@@ -82,7 +85,7 @@ void UrgStampedNode::cbM(
   std::pair<ros::Time, bool> t_scan = est_->scan_->pushScanSample(time_read_ros, walltime_device);
   sensor_msgs::LaserScan msg(msg_base_);
   msg.header.stamp = t_scan.first;
-  if (is_uust2unfixed_)
+  if (is_uust2_unfixed_)
   {
     msg.header.stamp += uust2_stamp_offset_;
   }
@@ -205,7 +208,10 @@ void UrgStampedNode::cbTM(
         break;
       }
 
-      const uint64_t walltime_device = walltime_.update(time_device.timestamp_);
+      const uint64_t walltime_device =
+          time_device.is_wall_ ?
+              time_device.timestamp_ :
+              walltime_.update(time_device.timestamp_);
 
       est_->clock_->pushSyncSample(
           ros::Time::fromBoost(time_tm_request_.second),
@@ -380,7 +386,7 @@ void UrgStampedNode::cbVV(
     device_state_estimator::ClockEstimator::Ptr clock;
     device_state_estimator::ScanEstimator::Ptr scan;
     std::string model;
-    is_uust2unfixed_ = false;
+    is_uust2_unfixed_ = false;
     if (prod == "UTM")
     {
       clock.reset(new device_state_estimator::ClockEstimatorUUST1());
@@ -394,17 +400,19 @@ void UrgStampedNode::cbVV(
             << "Unknown sensor model. Fallback to UST mode"
             << std::endl;
       }
+      /*
       if (firm_major == 4 && firm_minor >= 1)
       {
         model = "UST (UUST-HighPrecStamp)";
         clock.reset(new device_state_estimator::ClockEstimatorUUSTHighPrecStamp());
         stamp_command_prefix_ = "%";
       }
+      */
       else if (firm_major == 4 && firm_minor == 0 && firm_patch < 3)
       {
         model = "UST (UUST2-Unfixed)";
         clock.reset(new device_state_estimator::ClockEstimatorUUST2());
-        is_uust2unfixed_ = true;
+        is_uust2_unfixed_ = true;
       }
       else
       {
@@ -795,7 +803,7 @@ UrgStampedNode::UrgStampedNode()
   , scan_drop_count_(0)
   , scan_drop_continuous_(0)
   , cmd_resetting_(false)
-  , is_uust2unfixed_(false)
+  , is_uust2_unfixed_(false)
 {
   std::random_device rd;
   random_engine_.seed(rd());

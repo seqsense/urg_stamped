@@ -37,7 +37,8 @@ namespace urg_stamped
 namespace device_state_estimator
 {
 
-static constexpr double DEVICE_TIMESTAMP_RESOLUTION = 0.001;
+static constexpr double TIMESTAMP_RESOLUTION = 1e-6;
+static constexpr double DEVICE_TIMESTAMP_RESOLUTION = 1e-3;
 
 class CommDelay
 {
@@ -300,7 +301,7 @@ private:
 
     inline SyncSampleUUST1(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
       : SyncSample(t_req, t_res, device_wall_stamp)
-      , t_origin_(t_process_ - ros::Duration(device_wall_stamp_ * DEVICE_TIMESTAMP_RESOLUTION))
+      , t_origin_(t_process_ - ros::Duration(device_wall_stamp_ * TIMESTAMP_RESOLUTION))
     {
     }
   };
@@ -352,7 +353,7 @@ private:
 
     inline SyncSampleUUST2(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
       : SyncSample(t_req, t_res, device_wall_stamp)
-      , t_origin_(t_res_ - ros::Duration(device_wall_stamp_ * DEVICE_TIMESTAMP_RESOLUTION))
+      , t_origin_(t_res_ - ros::Duration(device_wall_stamp_ * TIMESTAMP_RESOLUTION))
       , t_frac_(std::fmod(t_res.toSec(), RESPONSE_TIMER_INTERVAL))
     {
     }
@@ -411,7 +412,7 @@ private:
   static constexpr size_t STAMP_SAMPLES = 8;
   static constexpr size_t MAX_INTERVAL_SAMPLES = 2048;
   static constexpr size_t MIN_INTERVAL_SAMPLES = 10;
-  std::deque<uint64_t> stamps_;
+  std::deque<uint64_t> stamps_ms_;
   std::deque<ScanSampleUST> scans_;
   int64_t primary_interval_;
 };

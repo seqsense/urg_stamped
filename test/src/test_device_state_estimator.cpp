@@ -33,37 +33,37 @@ TEST(ClockState, StampToTime)
     SCOPED_TRACE("ClockGain 1.5");
     ClockState s;
 
-    s.stamp_ = 1000;
+    s.stamp_ = 1e6;
     s.origin_ = ros::Time(100);
     s.gain_ = 1.0 / 1.5;
 
     ASSERT_EQ(ros::Time(99.5), s.stampToTime(0));
-    ASSERT_EQ(ros::Time(101.0), s.stampToTime(1000));
-    ASSERT_EQ(ros::Time(102.5), s.stampToTime(2000));
+    ASSERT_EQ(ros::Time(101.0), s.stampToTime(1000000));
+    ASSERT_EQ(ros::Time(102.5), s.stampToTime(2000000));
   }
   {
     SCOPED_TRACE("ClockGain 1.0");
     ClockState s;
 
-    s.stamp_ = 1000;
+    s.stamp_ = 1e6;
     s.origin_ = ros::Time(100);
     s.gain_ = 1.0;
 
     ASSERT_EQ(ros::Time(100.0), s.stampToTime(0));
-    ASSERT_EQ(ros::Time(101.0), s.stampToTime(1000));
-    ASSERT_EQ(ros::Time(102.0), s.stampToTime(2000));
+    ASSERT_EQ(ros::Time(101.0), s.stampToTime(1000000));
+    ASSERT_EQ(ros::Time(102.0), s.stampToTime(2000000));
   }
   {
     SCOPED_TRACE("ClockGain 0.5");
     ClockState s;
 
-    s.stamp_ = 1000;
+    s.stamp_ = 1e6;
     s.origin_ = ros::Time(100);
     s.gain_ = 1.0 / 0.5;
 
     ASSERT_EQ(ros::Time(100.5), s.stampToTime(0));
-    ASSERT_EQ(ros::Time(101.0), s.stampToTime(1000));
-    ASSERT_EQ(ros::Time(101.5), s.stampToTime(2000));
+    ASSERT_EQ(ros::Time(101.0), s.stampToTime(1000000));
+    ASSERT_EQ(ros::Time(101.5), s.stampToTime(2000000));
   }
 }
 
@@ -72,19 +72,19 @@ TEST(ClockEstimatorUUST1, FindMinDelay)
   ClockEstimatorUUST1 est;
 
   est.startSync();
-  est.pushSyncSample(ros::Time(100.0001), ros::Time(100.00015), 100);
-  est.pushSyncSample(ros::Time(101.0002), ros::Time(101.00023), 1100);
-  est.pushSyncSample(ros::Time(102.0003), ros::Time(102.00031), 2100);  // Minimal delay
-  est.pushSyncSample(ros::Time(103.0004), ros::Time(103.00046), 3100);
-  est.pushSyncSample(ros::Time(104.0005), ros::Time(104.00054), 4100);
-  est.pushSyncSample(ros::Time(105.0006), ros::Time(105.00062), 5100);  // Second minimal delay
+  est.pushSyncSample(ros::Time(100.0001), ros::Time(100.00015), 100000);
+  est.pushSyncSample(ros::Time(101.0002), ros::Time(101.00023), 1100000);
+  est.pushSyncSample(ros::Time(102.0003), ros::Time(102.00031), 2100000);  // Minimal delay
+  est.pushSyncSample(ros::Time(103.0004), ros::Time(103.00046), 3100000);
+  est.pushSyncSample(ros::Time(104.0005), ros::Time(104.00054), 4100000);
+  est.pushSyncSample(ros::Time(105.0006), ros::Time(105.00062), 5100000);  // Second minimal delay
 
   {
     SCOPED_TRACE("Without OriginFracPart");
     const auto it = est.findMinDelay(OriginFracPart());
     ASSERT_EQ(ros::Time(102.0003), it->t_req_);
     ASSERT_EQ(ros::Time(102.00031), it->t_res_);
-    ASSERT_EQ(2100, it->device_wall_stamp_);
+    ASSERT_EQ(2100000, it->device_wall_stamp_);
   }
 
   {
@@ -92,7 +92,7 @@ TEST(ClockEstimatorUUST1, FindMinDelay)
     const auto it = est.findMinDelay(OriginFracPart(0.00029, 0.00031));
     ASSERT_EQ(ros::Time(105.0006), it->t_req_);
     ASSERT_EQ(ros::Time(105.00062), it->t_res_);
-    ASSERT_EQ(5100, it->device_wall_stamp_);
+    ASSERT_EQ(5100000, it->device_wall_stamp_);
   }
 
   est.finishSync();
@@ -114,7 +114,7 @@ TEST(ClockEstimatorUUST1, RawClockOrigin)
     est.startSync();
     for (double t = 0; t < 0.11; t += 0.0101)
     {
-      const uint64_t ts = (t + d) * 1000;
+      const uint64_t ts = (t + d) * 1e6;
       est.pushSyncSample(ros::Time(1 + t), ros::Time(1 + t + 0.0001), ts);
     }
     est.finishSync();
@@ -142,7 +142,7 @@ TEST(ClockEstimatorUUST1, ClockGain)
       est.startSync();
       for (double t = t0; t < t0 + 0.11; t += 0.0101)
       {
-        const uint64_t ts = t * gain * 1000;
+        const uint64_t ts = t * gain * 1e6;
         est.pushSyncSample(ros::Time(1 + t), ros::Time(1 + t + 0.0001), ts);
       }
       est.finishSync();
@@ -163,7 +163,7 @@ TEST(ClockEstimatorUUST1, InitialClockState)
   est.startSync();
   for (double t = 10; t < 10.2; t += 0.0101)
   {
-    est.pushSyncSample(ros::Time(t0 + t), ros::Time(t0 + t + 0.00001), t * 1000);
+    est.pushSyncSample(ros::Time(t0 + t), ros::Time(t0 + t + 0.00001), t * 1e6);
   }
   est.finishSync();
 
@@ -186,31 +186,31 @@ TEST(ScanEstimatorUTM, PushScanSampleRaw)
   clock_est->startSync();
   for (double t = 10; t < 10.2; t += 0.0101)
   {
-    clock_est->pushSyncSample(ros::Time(t0 + t), ros::Time(t0 + t + 0.00001), t * 1000);
+    clock_est->pushSyncSample(ros::Time(t0 + t), ros::Time(t0 + t + 0.00001), t * 1e6);
   }
   clock_est->finishSync();
   clock_est->startSync();
   for (double t = 20; t < 20.2; t += 0.0101)
   {
-    clock_est->pushSyncSample(ros::Time(t0 + t), ros::Time(t0 + t + 0.00001), t * 1000);
+    clock_est->pushSyncSample(ros::Time(t0 + t), ros::Time(t0 + t + 0.00001), t * 1e6);
   }
   clock_est->finishSync();
 
   const auto clock = clock_est->getClockState();
   est.estimateScanTime(
-      ros::Time(t0 + 30.0200), clock.stampToTime(30000));  // minimal scan stamp to send delay: 20ms
+      ros::Time(t0 + 30.0200), clock.stampToTime(30000000));  // minimal scan stamp to send delay: 20ms
   est.estimateScanTime(
-      ros::Time(t0 + 30.1206), clock.stampToTime(30100));
+      ros::Time(t0 + 30.1206), clock.stampToTime(30100000));
   est.estimateScanTime(
-      ros::Time(t0 + 30.2203), clock.stampToTime(30200));
+      ros::Time(t0 + 30.2203), clock.stampToTime(30200000));
 
   ASSERT_NEAR(
       t0 + 31.0000,
-      est.estimateScanTime(ros::Time(t0 + 31.0200), clock.stampToTime(31000)).first.toSec(),
+      est.estimateScanTime(ros::Time(t0 + 31.0200), clock.stampToTime(31000000)).first.toSec(),
       0.0001);
   ASSERT_NEAR(
       t0 + 32.0005,
-      est.estimateScanTime(ros::Time(t0 + 32.0205), clock.stampToTime(32000)).first.toSec(),
+      est.estimateScanTime(ros::Time(t0 + 32.0205), clock.stampToTime(32000000)).first.toSec(),
       0.0001);
 }
 

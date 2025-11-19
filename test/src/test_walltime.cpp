@@ -31,7 +31,7 @@ TEST(WalltimeTest, testTimestampOverflow)
          device_time += 25)
     {
       const uint32_t device_timestamp = device_time & 0xFFFFFF;
-      ASSERT_EQ(walltime.update(device_timestamp), device_time);
+      ASSERT_EQ(walltime.update(device_timestamp * 1e3), device_time);
     }
   }
 }
@@ -42,19 +42,19 @@ TEST(WalltimeTest, testDeviceTimeBoundary)
 
   uint64_t device_time = (1 << 24) - 1;
   uint32_t device_timestamp = device_time & 0xFFFFFF;
-  ASSERT_EQ(walltime.update(device_timestamp), device_time);
+  ASSERT_EQ(walltime.update(device_timestamp * 1e3), device_time * 1e3);
 
   device_time = 0;
   device_timestamp = device_time & 0xFFFFFF;
-  ASSERT_EQ(walltime.update(device_timestamp), (1 << 24) + device_time);
+  ASSERT_EQ(walltime.update(device_timestamp * 1e3), ((1 << 24) + device_time) * 1e3);
 
   device_time = (1 << 24) - 1;
   device_timestamp = device_time & 0xFFFFFF;
-  ASSERT_EQ(walltime.update(device_timestamp), device_time);
+  ASSERT_EQ(walltime.update(device_timestamp * 1e3), device_time * 1e3);
 
   device_time = 0;
   device_timestamp = device_time & 0xFFFFFF;
-  ASSERT_EQ(walltime.update(device_timestamp), (1 << 24) + device_time);
+  ASSERT_EQ(walltime.update(device_timestamp * 1e3), ((1 << 24) + device_time) * 1e3);
 }
 
 int main(int argc, char** argv)
