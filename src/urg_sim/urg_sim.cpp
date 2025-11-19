@@ -87,7 +87,7 @@ void URGSimulator::processInput(
     const boost::posix_time::ptime& when)
 {
   // Find handler from command string
-  const std::string op = cmd.substr(0, 2);
+  const std::string op = cmd.substr(0, cmd[0] == '%' ? 3 : 2);
   const auto it_h = handlers_.find(op);
   const auto h =
       (it_h != handlers_.end()) ?
@@ -113,7 +113,7 @@ void URGSimulator::handleII(const std::string cmd)
   {
     return;
   }
-  const uint32_t stamp = timestamp();
+  const uint32_t stamp = timestampMs();
   std::string time;
   if (params_.hex_ii_timestamp)
   {
@@ -124,7 +124,7 @@ void URGSimulator::handleII(const std::string cmd)
   else
   {
     time = encode::encode(
-        std::vector<uint32_t>(1, stamp), encode::EncodeType::CED4);
+        std::vector<uint64_t>(1, stamp), encode::EncodeType::CED4);
   }
   const int32_t rpm =
       static_cast<int32_t>(60.0 / params_.scan_interval);
@@ -157,6 +157,7 @@ void URGSimulator::handleII(const std::string cmd)
         break;
       case Model::UST_UUST1:
       case Model::UST_UUST2:
+      case Model::UST_UUST_HPTS:
         mesm = "Measuring by Sensitive Mode";
         stat = "sensor is working normally";
         break;
@@ -227,8 +228,22 @@ void URGSimulator::handlePP(const std::string cmd)
   responseKeyValues(cmd, status_ok, kvs);
 }
 
-void URGSimulator::handleTM(const std::string cmd)
+void URGSimulator::handleTM(const std::string cmd0)
 {
+  if (cmd0[0] == '%' && params_.model != Model::UST_UUST_HPTS)
+  {
+    std::cerr << "hote" << std::endl;
+    handleUnknown(cmd0);
+    return;
+  }
+  if (cmd0[0] == '%' && cmd0[3] != '1')
+  {
+    response(cmd0, "01");
+    return;
+  }
+  const std::string cmd =
+      cmd0[0] == '%' ? cmd0.substr(1, std::string::npos) : cmd0;
+
   if (!validateExtraString(cmd, 3))
   {
     return;
@@ -238,7 +253,7 @@ void URGSimulator::handleTM(const std::string cmd)
 
   if (sensor_state_ == SensorState::ERROR_DETECTED)
   {
-    response(cmd, status_error_abnormal);
+    response(cmd0, status_error_abnormal);
     return;
   }
 
@@ -249,14 +264,14 @@ void URGSimulator::handleTM(const std::string cmd)
       {
         case SensorState::IDLE:
         case SensorState::SINGLE_SCAN:
-          response(cmd, status_ok);
+          response(cmd0, status_ok);
           sensor_state_ = SensorState::TIME_ADJUSTMENT;
           return;
         case SensorState::TIME_ADJUSTMENT:
-          response(cmd, "02");
+          response(cmd0, "02");
           return;
         default:
-          response(cmd, status_error_denied);
+          response(cmd0, status_error_denied);
           return;
       }
       break;
@@ -267,31 +282,42 @@ void URGSimulator::handleTM(const std::string cmd)
       switch (sensor_state_)
       {
         case SensorState::TIME_ADJUSTMENT:
-          response(cmd, status_ok);
+          response(cmd0, status_ok);
           sensor_state_ = SensorState::IDLE;
           return;
         case SensorState::IDLE:
-          response(cmd, "03");
+          response(cmd0, "03");
           return;
         default:
-          response(cmd, status_error_denied);
+          response(cmd0, status_error_denied);
           return;
       }
       break;
     default:
-      response(cmd, "01");
+      response(cmd0, "01");
       return;
   }
-  const uint32_t stamp = timestamp();
-  const std::string time = encode::encode(
-      std::vector<uint32_t>(1, stamp), encode::EncodeType::CED4);
+
+  std::string time;
+  if (cmd0[0] == '%')
+  {
+    const uint64_t stamp = timestampUs();
+    time = encode::encode(
+        std::vector<uint64_t>(1, stamp), encode::EncodeType::CED11);
+  }
+  else
+  {
+    const uint32_t stamp = timestampMs();
+    time = encode::encode(
+        std::vector<uint64_t>(1, stamp), encode::EncodeType::CED4);
+  }
 
   if (params_.model == Model::UST_UUST2)
   {
     // UST (UUST) series doesn't send responses immediately but at the next 5ms tick
     waitTick(5);
   }
-  response(cmd, status_ok, encode::withChecksum(time) + "\n");
+  response(cmd0, status_ok, encode::withChecksum(time) + "\n");
 }
 
 void URGSimulator::handleBM(const std::string cmd)
@@ -398,8 +424,16 @@ void URGSimulator::handleRB(const std::string cmd)
           this));
 }
 
-void URGSimulator::handleMX(const std::string cmd)
+void URGSimulator::handleMX(const std::string cmd0)
 {
+  if (cmd0[0] == '%' && params_.model != Model::UST_UUST_HPTS)
+  {
+    handleUnknown(cmd0);
+    return;
+  }
+  const std::string cmd =
+      cmd0[0] == '%' ? cmd0.substr(1, std::string::npos) : cmd0;
+
   if (!validateExtraString(cmd, 15))
   {
     return;
@@ -417,18 +451,18 @@ void URGSimulator::handleMX(const std::string cmd)
   }
   catch (const std::invalid_argument& e)
   {
-    response(cmd, "02");
+    response(cmd0, "02");
     return;
   }
   if (measurement_start_step_ > measurement_end_step_)
   {
-    response(cmd, "05");
+    response(cmd0, "05");
     return;
   }
   if (measurement_start_step_ < params_.angle_min ||
       measurement_end_step_ > params_.angle_max)
   {
-    response(cmd, "04");
+    response(cmd0, "04");
     return;
   }
   if (measurement_grouping_step_ == 0)
@@ -439,6 +473,7 @@ void URGSimulator::handleMX(const std::string cmd)
   measurement_sent_ = 0;
   measurement_cmd_ = cmd.substr(0, 13);
   measurement_extra_string_ = cmd.substr(15);
+  measurement_hpts_ = cmd0[0] == '%';
 
   sensor_state_ = SensorState::MULTI_SCAN;
   switch (cmd[1])
@@ -450,7 +485,7 @@ void URGSimulator::handleMX(const std::string cmd)
       measurement_mode_ = MeasurementMode::RANGE_INTENSITY;
       break;
   }
-  response(cmd, status_ok);
+  response(cmd0, status_ok);
 }
 
 void URGSimulator::handleUnknown(const std::string cmd)
@@ -518,6 +553,7 @@ void URGSimulator::booted()
   {
     case Model::UST_UUST1:
     case Model::UST_UUST2:
+    case Model::UST_UUST_HPTS:
       asyncRead();
       break;
     default:
@@ -577,10 +613,16 @@ void URGSimulator::send(
   }
 }
 
-uint32_t URGSimulator::timestamp(const boost::posix_time::ptime& now)
+uint32_t URGSimulator::timestampMs(const boost::posix_time::ptime& now)
 {
   const uint32_t diff = params_.clock_rate * (now - timestamp_epoch_).total_microseconds() / 1000.0;
   return diff & 0xFFFFFF;
+}
+
+uint64_t URGSimulator::timestampUs(const boost::posix_time::ptime& now)
+{
+  const uint64_t diff = params_.clock_rate * (now - timestamp_epoch_).total_nanoseconds() / 1000.0;
+  return diff;
 }
 
 void URGSimulator::accept()
@@ -653,7 +695,8 @@ void URGSimulator::scan()
 
   const int num_points = params_.angle_max - params_.angle_min + 1;
   RawScanData::Ptr raw_scan(new RawScanData);
-  raw_scan->timestamp = timestamp(next_scan_);
+  raw_scan->timestamp_ms = timestampMs(next_scan_);
+  raw_scan->timestamp_us = timestampUs(next_scan_);
   raw_scan->full_time = next_scan_;
   raw_scan->ranges.resize(num_points);
   raw_scan->intensities.resize(num_points);
@@ -701,7 +744,7 @@ void URGSimulator::scan()
 
 void URGSimulator::sendScan()
 {
-  std::vector<uint32_t> data;
+  std::vector<uint64_t> data;
   for (int i = measurement_start_step_; i <= measurement_end_step_; i += measurement_grouping_step_)
   {
     data.push_back(last_raw_scan_->ranges[i]);
@@ -713,9 +756,14 @@ void URGSimulator::sendScan()
 
   std::stringstream ss;
 
-  const std::string time = encode::encode(
-      std::vector<uint32_t>(1, last_raw_scan_->timestamp),
-      encode::EncodeType::CED4);
+  const std::string time =
+      measurement_hpts_ ?
+          encode::encode(
+              std::vector<uint64_t>(1, last_raw_scan_->timestamp_us),
+              encode::EncodeType::CED11) :
+          encode::encode(
+              std::vector<uint64_t>(1, last_raw_scan_->timestamp_ms),
+              encode::EncodeType::CED4);
   ss << encode::withChecksum(time) + "\n";
 
   const std::string encoded = encode::encode(data, encode::EncodeType::CED3);
@@ -743,6 +791,7 @@ void URGSimulator::sendScan()
   switch (params_.model)
   {
     case Model::UST_UUST1:
+    case Model::UST_UUST_HPTS:
       waitTick(1);  // 1ms tick on UUST1
       break;
     case Model::UST_UUST2:
