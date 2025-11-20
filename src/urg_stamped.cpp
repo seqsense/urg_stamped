@@ -405,7 +405,7 @@ void UrgStampedNode::cbVV(
       }
       if (firm_major == 4 && firm_minor >= 1)
       {
-        model = "UST (UUST-HighPrecStamp)";
+        model = "UST (UUST-HighPrecisionTimestamp)";
         stamp_command_prefix_ = "%";
         clock.reset(new device_state_estimator::ClockEstimatorRaw());
         scan.reset(new device_state_estimator::ScanEstimatorRaw(clock, ideal_scan_interval_));
