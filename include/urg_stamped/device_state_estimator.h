@@ -293,6 +293,7 @@ private:
   static constexpr int MIN_SYNC_SAMPLES = 10;
   static constexpr int MAX_SYNC_SAMPLES = 50;
   static constexpr int MAX_DROPPED_SAMPLES = 100;
+  static constexpr double ACCEPTABLE_SAMPLE_DELAY = 0.001;
 
   class SyncSampleUUST1 : public SyncSample
   {

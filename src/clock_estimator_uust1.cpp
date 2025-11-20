@@ -39,7 +39,7 @@ void ClockEstimatorUUST1::pushSyncSample(
     const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
 {
   const SyncSampleUUST1 s(t_req, t_res, (device_wall_stamp / 1000) * 1000);
-  if (s.delay_ > ros::Duration(DEVICE_TIMESTAMP_RESOLUTION))
+  if (s.delay_ > ros::Duration(ACCEPTABLE_SAMPLE_DELAY))
   {
     cnt_dropped_samples_++;
     return;
