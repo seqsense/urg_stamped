@@ -177,6 +177,28 @@ TEST(ClockEstimatorUUST1, InitialClockState)
       0.0001);
 }
 
+TEST(ClockEstimatorRaw, ClockState)
+{
+  ClockEstimatorRaw est;
+  const double t0 = 100;
+
+  est.startSync();
+  for (double t = 10; t < 10.2; t += 0.0101)
+  {
+    est.pushSyncSample(ros::Time(t0 + t), ros::Time(t0 + t + 0.00001), t * 1e6);
+  }
+  est.finishSync();
+
+  ASSERT_NEAR(
+      t0 + 31.0000,
+      est.getClockState().stampToTime(31000000).toSec(),
+      0.0001);
+  ASSERT_NEAR(
+      t0 + 51.0000,
+      est.getClockState().stampToTime(51000000).toSec(),
+      0.0001);
+}
+
 TEST(ScanEstimatorUTM, PushScanSampleRaw)
 {
   ClockEstimatorUUST1::Ptr clock_est(new ClockEstimatorUUST1());
@@ -211,6 +233,37 @@ TEST(ScanEstimatorUTM, PushScanSampleRaw)
   ASSERT_NEAR(
       t0 + 32.0005,
       est.estimateScanTime(ros::Time(t0 + 32.0205), clock.stampToTime(32000000)).first.toSec(),
+      0.0001);
+}
+
+TEST(ScanEstimatorRaw, PushScanSampleRaw)
+{
+  ClockEstimatorRaw::Ptr clock_est(new ClockEstimatorRaw());
+  ScanEstimatorRaw est(clock_est, ros::Duration(0.1));
+  const double t0 = 100;
+
+  clock_est->startSync();
+  for (double t = 10; t < 10.2; t += 0.0101)
+  {
+    clock_est->pushSyncSample(ros::Time(t0 + t), ros::Time(t0 + t + 0.00001), t * 1e6);
+  }
+  clock_est->finishSync();
+  clock_est->startSync();
+  for (double t = 20; t < 20.2; t += 0.0101)
+  {
+    clock_est->pushSyncSample(ros::Time(t0 + t), ros::Time(t0 + t + 0.00001), t * 1e6);
+  }
+  clock_est->finishSync();
+
+  const auto clock = clock_est->getClockState();
+
+  ASSERT_NEAR(
+      t0 + 31.0000,
+      est.pushScanSample(ros::Time(t0 + 31.0200), 31000000).first.toSec(),
+      0.0001);
+  ASSERT_NEAR(
+      t0 + 32.0000,
+      est.pushScanSample(ros::Time(t0 + 32.0205), 32000000).first.toSec(),
       0.0001);
 }
 

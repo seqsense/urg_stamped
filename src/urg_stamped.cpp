@@ -126,7 +126,8 @@ void UrgStampedNode::cbM(
         << step_max_ - step_min_ + 1
         << ", received: " << scan.ranges_.size() << "); refreshing" << std::endl;
     scip_->sendCommand(
-        stamp_command_prefix_ + (has_intensity ? "ME" : "MD") +
+        stamp_command_prefix_ +
+        (has_intensity ? "ME" : "MD") +
         (boost::format("%04d%04d") % step_min_ % step_max_).str() +
         "00000");
     return;
@@ -158,12 +159,13 @@ void UrgStampedNode::cbTM(
     const std::string& status,
     const scip2::Timestamp& time_device)
 {
+  const char arg = echo_back[0] == '%' ? echo_back[3] : echo_back[2];
   if (status != "00")
   {
     scip2::logger::error() << echo_back << " errored with " << status << std::endl;
     errorCountIncrement(status);
 
-    if (echo_back[2] == '0' && delay_estim_state_ == DelayEstimState::ESTIMATION_STARTING)
+    if (arg == '0' && delay_estim_state_ == DelayEstimState::ESTIMATION_STARTING)
     {
       scip2::logger::info()
           << "Failed to enter the time synchronization mode, "
@@ -184,7 +186,7 @@ void UrgStampedNode::cbTM(
   }
 
   timer_retry_tm_.stop();
-  switch (echo_back[2])
+  switch (arg)
   {
     case '0':
     {
@@ -247,6 +249,7 @@ void UrgStampedNode::cbTM(
 
       delay_estim_state_ = DelayEstimState::IDLE;
       scip_->sendCommand(
+          stamp_command_prefix_ +
           (publish_intensity_ ? "ME" : "MD") +
           (boost::format("%04d%04d") % step_min_ % step_max_).str() +
           "00000");
@@ -400,26 +403,28 @@ void UrgStampedNode::cbVV(
             << "Unknown sensor model. Fallback to UST mode"
             << std::endl;
       }
-      /*
       if (firm_major == 4 && firm_minor >= 1)
       {
         model = "UST (UUST-HighPrecStamp)";
-        clock.reset(new device_state_estimator::ClockEstimatorUUSTHighPrecStamp());
         stamp_command_prefix_ = "%";
-      }
-      */
-      else if (firm_major == 4 && firm_minor == 0 && firm_patch < 3)
-      {
-        model = "UST (UUST2-Unfixed)";
-        clock.reset(new device_state_estimator::ClockEstimatorUUST2());
-        is_uust2_unfixed_ = true;
+        clock.reset(new device_state_estimator::ClockEstimatorRaw());
+        scan.reset(new device_state_estimator::ScanEstimatorRaw(clock, ideal_scan_interval_));
       }
       else
       {
-        model = "UST (UUST1, UUST2-Fixed)";
-        clock.reset(new device_state_estimator::ClockEstimatorUUST1());
+        if (firm_major == 4 && firm_minor == 0 && firm_patch < 3)
+        {
+          model = "UST (UUST2-Unfixed)";
+          clock.reset(new device_state_estimator::ClockEstimatorUUST2());
+          is_uust2_unfixed_ = true;
+        }
+        else
+        {
+          model = "UST (UUST1, UUST2-Fixed)";
+          clock.reset(new device_state_estimator::ClockEstimatorUUST1());
+        }
+        scan.reset(new device_state_estimator::ScanEstimatorUST(clock, ideal_scan_interval_));
       }
-      scan.reset(new device_state_estimator::ScanEstimatorUST(clock, ideal_scan_interval_));
     }
     est_.reset(new device_state_estimator::Estimator(clock, scan));
     scip2::logger::info() << "Initialized timestamp estimator for " << model << std::endl;

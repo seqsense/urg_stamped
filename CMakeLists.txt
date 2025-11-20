@@ -29,8 +29,10 @@ include_directories(${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} include)
 
 add_executable(urg_stamped
   src/device_state_estimator.cpp
-  src/scan_estimator_utm.cpp
+  src/scan_estimator_raw.cpp
   src/scan_estimator_ust.cpp
+  src/scan_estimator_utm.cpp
+  src/clock_estimator_raw.cpp
   src/clock_estimator_uust1.cpp
   src/clock_estimator_uust2.cpp
   src/ros_logger.cpp

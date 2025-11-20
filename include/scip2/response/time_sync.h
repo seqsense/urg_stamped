@@ -74,7 +74,8 @@ public:
       readUntilEnd(stream);
       return;
     }
-    if (echo_back[2] == '1')
+    const char arg = echo_back[0] == '%' ? echo_back[3] : echo_back[2];
+    if (arg == '1')
     {
       std::string stamp;
       if (!std::getline(stream, stamp))
@@ -104,7 +105,7 @@ public:
         }
         case 11:
         {
-          auto dec = Decoder<4>(stamp);
+          auto dec = Decoder<11>(stamp);
           auto it = dec.begin();
           timestamp.timestamp_ = *it;
           timestamp.is_wall_ = true;

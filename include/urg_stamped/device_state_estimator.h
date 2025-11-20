@@ -301,7 +301,7 @@ private:
 
     inline SyncSampleUUST1(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
       : SyncSample(t_req, t_res, device_wall_stamp)
-      , t_origin_(t_process_ - ros::Duration(device_wall_stamp_ * TIMESTAMP_RESOLUTION))
+      , t_origin_(t_process_ - ros::Duration(device_wall_stamp * TIMESTAMP_RESOLUTION))
     {
     }
   };
@@ -353,7 +353,7 @@ private:
 
     inline SyncSampleUUST2(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
       : SyncSample(t_req, t_res, device_wall_stamp)
-      , t_origin_(t_res_ - ros::Duration(device_wall_stamp_ * TIMESTAMP_RESOLUTION))
+      , t_origin_(t_res_ - ros::Duration(device_wall_stamp * TIMESTAMP_RESOLUTION))
       , t_frac_(std::fmod(t_res.toSec(), RESPONSE_TIMER_INTERVAL))
     {
     }
@@ -367,6 +367,49 @@ private:
   std::vector<SyncSampleUUST2> sync_samples_;
   ros::Duration best_delay_;
   int cnt_samples_;
+};
+
+class ClockEstimatorRaw : public ClockEstimator
+{
+public:
+  class SyncSampleRaw : public SyncSample
+  {
+  public:
+    ros::Time t_origin_;
+
+    inline SyncSampleRaw(const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
+      : SyncSample(t_req, t_res, device_wall_stamp)
+      , t_origin_(t_process_ - ros::Duration(device_wall_stamp * TIMESTAMP_RESOLUTION))
+    {
+    }
+  };
+
+  void startSync() override;
+  void pushSyncSample(
+      const ros::Time& t_req,
+      const ros::Time& t_res,
+      const uint64_t device_wall_stamp) override;
+  bool hasEnoughSyncSamples() const override;
+  bool finishSync() override;
+
+  inline std::pair<ros::Duration, ros::Duration> syncWaitDuration() const override
+  {
+    // UST doesn't respond immediately when next TM1 command is sent without sleep
+    return std::make_pair(
+        ros::Duration(0),
+        ros::Duration(DEVICE_TIMESTAMP_RESOLUTION));
+  }
+
+private:
+  static constexpr int MIN_SYNC_SAMPLES = 10;
+  static constexpr int MAX_DROPPED_SAMPLES = 30;
+  static constexpr double ACCEPTABLE_SAMPLE_DELAY = 0.001;
+
+  std::vector<SyncSampleRaw> sync_samples_;
+  int cnt_dropped_samples_;
+
+  std::vector<SyncSampleRaw>::const_iterator findMinDelay() const;
+  ros::Duration delaySigma() const;
 };
 
 class ScanEstimatorUTM : public ScanEstimator
@@ -415,6 +458,22 @@ private:
   std::deque<uint64_t> stamps_ms_;
   std::deque<ScanSampleUST> scans_;
   int64_t primary_interval_;
+};
+
+class ScanEstimatorRaw : public ScanEstimator
+{
+public:
+  inline ScanEstimatorRaw(const ClockEstimator::Ptr clock_estim, const ros::Duration& ideal_scan_interval)
+    : ScanEstimator(clock_estim, ideal_scan_interval)
+  {
+  }
+
+  std::pair<ros::Time, bool> pushScanSample(
+      const ros::Time& t_recv,
+      const uint64_t device_wall_stamp) final;
+
+private:
+  ros::Time last_stamp_;
 };
 
 }  // namespace device_state_estimator

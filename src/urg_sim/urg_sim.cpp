@@ -232,7 +232,6 @@ void URGSimulator::handleTM(const std::string cmd0)
 {
   if (cmd0[0] == '%' && params_.model != Model::UST_UUST_HPTS)
   {
-    std::cerr << "hote" << std::endl;
     handleUnknown(cmd0);
     return;
   }
