@@ -288,10 +288,15 @@ TEST_P(E2EWithParam, Simple)
   pnh_.setParam("/urg_stamped/uust2_stamp_offset", -0.0002);
   ASSERT_NO_FATAL_FAILURE(startUrgStamped());
 
+  // Retry twice for waiting estimation status convergence.
+  // Retry 4 times on UUST2 which has fundamentally flawed sensor behavior.
+  const int test_attempts =
+      param.model == urg_sim::URGSimulator::Model::UST_UUST2 ? 4 : 2;
+
   std::shared_ptr<std::stringstream> serr;
   bool ok = false;
   int err_rms;
-  for (int retry = 0; retry < 2; retry++)
+  for (int retry = 0; retry < test_attempts; retry++)
   {
     SCOPED_TRACE("try " + std::to_string(retry));
 
