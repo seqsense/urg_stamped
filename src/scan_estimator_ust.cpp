@@ -103,13 +103,13 @@ std::pair<ros::Time, bool> ScanEstimatorUST::pushScanSample(const ros::Time& t_r
       {
         const int64_t stamp_diff = it_change0->stamp_ - it_change1->stamp_;
         const double ideal_scan_interval_cnt =
-            ideal_scan_interval_.toSec() * clock.gain_ / TIMESTAMP_RESOLUTION;
+            ideal_scan_interval_.toSec() * clock.gain_ / WALL_TIMESTAMP_RESOLUTION;
         const int num_scans = std::lround(static_cast<double>(stamp_diff) / ideal_scan_interval_cnt);
         const ros::Time new_origin = clock.stampToTime(it_change0->stamp_);
         if (new_origin != scan_.origin_)
         {
           scan_.origin_ = clock.stampToTime(it_change0->stamp_);
-          scan_.interval_ = ros::Duration(stamp_diff * TIMESTAMP_RESOLUTION / (clock.gain_ * num_scans));
+          scan_.interval_ = ros::Duration(stamp_diff * WALL_TIMESTAMP_RESOLUTION / (clock.gain_ * num_scans));
           scip2::logger::debug()
               << "scan_origin: " << scan_.origin_ << " interval: " << scan_.interval_ << std::endl;
         }
