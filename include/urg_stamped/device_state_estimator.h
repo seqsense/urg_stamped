@@ -411,7 +411,6 @@ private:
   static constexpr int MIN_SYNC_SAMPLES = 10;
   static constexpr int MAX_DROPPED_SAMPLES = 30;
   static constexpr double ACCEPTABLE_SAMPLE_DELAY = 0.001;
-  static constexpr double INTERVAL_UPDATE_TOLERANCE = 0.25;
 
   std::vector<SyncSampleRaw> sync_samples_;
   int cnt_dropped_samples_;
@@ -481,6 +480,7 @@ public:
       const uint64_t device_wall_stamp) final;
 
 private:
+  static constexpr double INTERVAL_UPDATE_TOLERANCE = 0.25;
   ros::Time last_stamp_;
 };
 
