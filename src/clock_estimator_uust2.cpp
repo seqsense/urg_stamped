@@ -60,7 +60,7 @@ bool ClockEstimatorUUST2::hasEnoughSyncSamples() const
 {
   return cnt_samples_ >= MAX_SYNC_ATTEMPTS ||
          (sync_samples_.size() >= MIN_SYNC_SAMPLES &&
-          best_delay_ < ros::Duration(DEVICE_TIMESTAMP_RESOLUTION));
+          best_delay_ < ros::Duration(SCIP2_TIMESTAMP_RESOLUTION));
 }
 
 bool ClockEstimatorUUST2::finishSync()
@@ -74,11 +74,11 @@ bool ClockEstimatorUUST2::finishSync()
     return false;
   }
 
-  if (best_delay_ >= ros::Duration(DEVICE_TIMESTAMP_RESOLUTION))
+  if (best_delay_ >= ros::Duration(SCIP2_TIMESTAMP_RESOLUTION))
   {
     // UUST2 sets a device timestamp of sometime between command receive time
     // and 5ms response timer. So, the timestamp can be matched only when
-    // it's returned within DEVICE_TIMESTAMP_RESOLUTION.
+    // it's returned within SCIP2_TIMESTAMP_RESOLUTION.
     scip2::logger::error()
         << "No sync response with small delay. "
         << "Communication delay may be too large"
@@ -99,7 +99,7 @@ bool ClockEstimatorUUST2::finishSync()
   for (auto& s : sync_samples_)
   {
     const double origin_compensate =
-        std::round((s.t_origin_ - min_t_origin).toSec() / DEVICE_TIMESTAMP_RESOLUTION) * DEVICE_TIMESTAMP_RESOLUTION;
+        std::round((s.t_origin_ - min_t_origin).toSec() / SCIP2_TIMESTAMP_RESOLUTION) * SCIP2_TIMESTAMP_RESOLUTION;
 
     s.t_origin_ -= ros::Duration(origin_compensate);
     sorted_samples.push_back(s);

@@ -37,8 +37,14 @@ namespace urg_stamped
 namespace device_state_estimator
 {
 
+// Original SCIP2 commands use a 24-bit timestamp with millisecond resolution.
+// It overflows in ~4.7 hours.
+static constexpr double SCIP2_TIMESTAMP_RESOLUTION = 1e-3;
+
+// Extended SCIP2 commands use a 64-bit timestamp with microsecond resolution.
+// It practically never overflows.
+// Also, urg_stamped internally uses 64-bit microseconds walltime.
 static constexpr double WALL_TIMESTAMP_RESOLUTION = 1e-6;
-static constexpr double DEVICE_TIMESTAMP_RESOLUTION = 1e-3;
 
 class CommDelay
 {
@@ -286,7 +292,7 @@ public:
     // UST doesn't respond immediately when next TM1 command is sent without sleep
     return std::make_pair(
         ros::Duration(0),
-        ros::Duration(DEVICE_TIMESTAMP_RESOLUTION));
+        ros::Duration(SCIP2_TIMESTAMP_RESOLUTION));
   }
 
 private:
@@ -398,7 +404,7 @@ public:
     // UST doesn't respond immediately when next TM1 command is sent without sleep
     return std::make_pair(
         ros::Duration(0),
-        ros::Duration(DEVICE_TIMESTAMP_RESOLUTION));
+        ros::Duration(SCIP2_TIMESTAMP_RESOLUTION));
   }
 
 private:

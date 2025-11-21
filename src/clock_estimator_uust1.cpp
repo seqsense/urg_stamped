@@ -170,17 +170,17 @@ OriginFracPart ClockEstimatorUUST1::originFracOverflow() const
     return OriginFracPart();
   }
 
-  double t_min = std::fmod(it_min_origin->t_process_.toSec(), DEVICE_TIMESTAMP_RESOLUTION);
-  double t_max = std::fmod(it_max_origin->t_process_.toSec(), DEVICE_TIMESTAMP_RESOLUTION);
-  if (t_min > t_max + DEVICE_TIMESTAMP_RESOLUTION / 2)
+  double t_min = std::fmod(it_min_origin->t_process_.toSec(), SCIP2_TIMESTAMP_RESOLUTION);
+  double t_max = std::fmod(it_max_origin->t_process_.toSec(), SCIP2_TIMESTAMP_RESOLUTION);
+  if (t_min > t_max + SCIP2_TIMESTAMP_RESOLUTION / 2)
   {
-    t_max += DEVICE_TIMESTAMP_RESOLUTION;
+    t_max += SCIP2_TIMESTAMP_RESOLUTION;
   }
-  else if (t_max > t_min + DEVICE_TIMESTAMP_RESOLUTION / 2)
+  else if (t_max > t_min + SCIP2_TIMESTAMP_RESOLUTION / 2)
   {
-    t_min += DEVICE_TIMESTAMP_RESOLUTION;
+    t_min += SCIP2_TIMESTAMP_RESOLUTION;
   }
-  if (std::abs(t_max - t_min) > DEVICE_TIMESTAMP_RESOLUTION / 4)
+  if (std::abs(t_max - t_min) > SCIP2_TIMESTAMP_RESOLUTION / 4)
   {
     return OriginFracPart(t_min, t_max, false);
   }

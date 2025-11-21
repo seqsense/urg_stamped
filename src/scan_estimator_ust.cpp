@@ -135,8 +135,8 @@ std::pair<ros::Time, bool> ScanEstimatorUST::pushScanSample(const ros::Time& t_r
   const ros::Time t_estimated = scan_.fit(t_stamp);
   const ros::Duration t_comp = t_estimated - t_stamp;
   const bool valid =
-      ros::Duration(-DEVICE_TIMESTAMP_RESOLUTION) < t_comp &&
-      t_comp < ros::Duration(DEVICE_TIMESTAMP_RESOLUTION);
+      ros::Duration(-SCIP2_TIMESTAMP_RESOLUTION) < t_comp &&
+      t_comp < ros::Duration(SCIP2_TIMESTAMP_RESOLUTION);
 
   return std::pair<ros::Time, bool>(t_estimated, valid);
 }
