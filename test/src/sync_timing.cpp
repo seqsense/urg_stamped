@@ -122,8 +122,8 @@ TEST_F(SyncTiming, NoConcurrentSync)
       {
           .model = urg_sim::URGSimulator::Model::UTM,
           .boot_duration = 0.01,
-          .comm_delay_base = 0.0005,
-          .comm_delay_sigma = 0.0005,
+          .comm_delay_base = 0.00035,  // takes around 80ms to sync
+          .comm_delay_sigma = 0.0,
           .scan_interval = 0.025,
           .clock_rate = 1.0,
           .hex_ii_timestamp = false,
@@ -149,9 +149,9 @@ TEST_F(SyncTiming, NoConcurrentSync)
   const double diff = std::remainder(
       (sync_start_time_["laser0"] - sync_start_time_["laser1"]).toSec(), 1.0);
 
-  // Sync takes more than 0.1s on this configuration,
-  // so the timings must have difference larger than 0.1s
-  ASSERT_GT(std::abs(diff), 0.1);
+  // Sync takes more than 70ms on this configuration,
+  // so the timings must have difference larger than 70ms
+  ASSERT_GT(std::abs(diff), 0.07);
 }
 
 int main(int argc, char** argv)
