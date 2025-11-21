@@ -37,7 +37,8 @@ std::pair<ros::Time, bool> ScanEstimatorRaw::pushScanSample(const ros::Time& t_r
   if (!last_stamp_.isZero())
   {
     const ros::Duration stamp_diff = t_stamp - last_stamp_;
-    if (std::abs((stamp_diff - ideal_scan_interval_).toSec()) < ideal_scan_interval_.toSec() / 4)
+    if (std::abs((stamp_diff - ideal_scan_interval_).toSec()) <
+        ideal_scan_interval_.toSec() * INTERVAL_UPDATE_TOLERANCE)
     {
       scan_.interval_ = stamp_diff;
     }
