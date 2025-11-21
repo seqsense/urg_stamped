@@ -87,6 +87,7 @@ public:
       const uint8_t checksum = stamp.back();
       stamp.pop_back();  // remove checksum
 
+      uint8_t calculated_checksum;
       switch (stamp.size())
       {
         case 4:
@@ -95,12 +96,7 @@ public:
           auto it = dec.begin();
           timestamp.timestamp_ = *it * 1000;
           timestamp.is_wall_ = false;
-          if ((dec.getChecksum() & 0x3F) + 0x30 != checksum)
-          {
-            logger::error() << "Checksum mismatch" << std::endl;
-            readUntilEnd(stream);
-            return;
-          }
+          calculated_checksum = (dec.getChecksum() & 0x3F) + 0x30;
           break;
         }
         case 11:
@@ -109,12 +105,7 @@ public:
           auto it = dec.begin();
           timestamp.timestamp_ = *it;
           timestamp.is_wall_ = true;
-          if ((dec.getChecksum() & 0x3F) + 0x30 != checksum)
-          {
-            logger::error() << "Checksum mismatch" << std::endl;
-            readUntilEnd(stream);
-            return;
-          }
+          calculated_checksum = (dec.getChecksum() & 0x3F) + 0x30;
           break;
         }
         default:
@@ -123,6 +114,12 @@ public:
           readUntilEnd(stream);
           return;
         }
+      }
+      if (calculated_checksum != checksum)
+      {
+        logger::error() << "Checksum mismatch" << std::endl;
+        readUntilEnd(stream);
+        return;
       }
     }
     if (cb_)
