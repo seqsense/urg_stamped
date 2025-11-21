@@ -243,17 +243,20 @@ TEST(ScanEstimatorRaw, PushScanSampleRaw)
   const double t0 = 100;
 
   clock_est->startSync();
+  ASSERT_FALSE(clock_est->finishSync()) << "should fail when no samples";
+
+  clock_est->startSync();
   for (double t = 10; t < 10.2; t += 0.0101)
   {
     clock_est->pushSyncSample(ros::Time(t0 + t), ros::Time(t0 + t + 0.00001), t * 1e6);
   }
-  clock_est->finishSync();
+  ASSERT_TRUE(clock_est->finishSync());
   clock_est->startSync();
   for (double t = 20; t < 20.2; t += 0.0101)
   {
     clock_est->pushSyncSample(ros::Time(t0 + t), ros::Time(t0 + t + 0.00001), t * 1e6);
   }
-  clock_est->finishSync();
+  ASSERT_TRUE(clock_est->finishSync());
 
   const auto clock = clock_est->getClockState();
 
