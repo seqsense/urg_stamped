@@ -67,6 +67,8 @@ std::pair<ros::Time, bool> ScanEstimatorUTM::pushScanSample(const ros::Time& t_r
 
     scan_.interval_ = med.interval_;
     scan_.origin_ = med.t_;
+    scip2::logger::debug()
+        << "scan_origin: " << scan_.origin_ << " interval: " << scan_.interval_ << std::endl;
   }
 
   if (scan_.origin_.isZero())
