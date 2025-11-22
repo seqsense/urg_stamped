@@ -300,7 +300,7 @@ TEST_P(E2EWithParam, Simple)
       test_attempts = 3;
       break;
     case urg_sim::URGSimulator::Model::UST_UUST2:
-      // UUST2 has fundamentally flawed sensor behavior.
+      // UUST2 without fixed firmware has fundamentally flawed sensor behavior.
       test_attempts = 4;
       break;
   }
