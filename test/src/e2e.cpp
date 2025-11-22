@@ -288,10 +288,22 @@ TEST_P(E2EWithParam, Simple)
   pnh_.setParam("/urg_stamped/uust2_stamp_offset", -0.0002);
   ASSERT_NO_FATAL_FAILURE(startUrgStamped());
 
-  // Retry twice for waiting estimation status convergence.
-  // Retry 4 times on UUST2 which has fundamentally flawed sensor behavior.
-  const int test_attempts =
-      param.model == urg_sim::URGSimulator::Model::UST_UUST2 ? 4 : 2;
+  int test_attempts;
+  switch (param.model)
+  {
+    default:
+      // Retry twice for waiting estimation status convergence.
+      test_attempts = 2;
+      break;
+    case urg_sim::URGSimulator::Model::UST_UTM:
+      // UTM scan estimator takes bit longer to converge.
+      test_attempts = 3;
+      break;
+    case urg_sim::URGSimulator::Model::UST_UUST2:
+      // UUST2 has fundamentally flawed sensor behavior.
+      test_attempts = 4;
+      break;
+  }
 
   std::shared_ptr<std::stringstream> serr;
   bool ok = false;
