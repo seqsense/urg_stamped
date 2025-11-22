@@ -8,10 +8,16 @@ on:
 permissions:
   contents: read
   packages: read
+  issues: write         # hiding bot comments
+  pull-requests: write  # hiding bot comments
 
 jobs:
   test:
     uses: alpine-ros/alpine-ros-ci-workflows/.github/workflows/ros1.yaml@main
     with:
-      enable-bot-comment: false
-      enable-codecov: false
+      enable-bot-comment: true
+      bot-comment-api-base: "https://gh-bot.dev-sq.work"
+      enable-codecov: true
+    secrets:
+      bot-comment-token: "b9ed4bd3-154f-4f5f-9722-412ef4c14446"
+      codecov-upload-token: ${{ secrets.CODECOV_TOKEN }}
