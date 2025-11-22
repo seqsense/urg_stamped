@@ -2,9 +2,10 @@ coverage:
   status:
     project:
       default:
-        target: auto
         threshold: 2%
     patch:
       default:
         target: 50%
-        base: pr
+        only_pulls: true
+ignore:
+  - test/
