@@ -27,13 +27,22 @@ target_link_libraries(test_scip2 ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 catkin_add_gtest(test_walltime src/test_walltime.cpp ../src/scip2/logger.cpp)
 target_link_libraries(test_walltime ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
-add_rostest_gtest(e2e tests/e2e.test
+add_executable(e2e
   src/e2e.cpp
   ../src/urg_sim/encode.cpp
   ../src/urg_sim/urg_sim.cpp
 )
-target_link_libraries(e2e ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(e2e ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${GTEST_LIBRARIES})
 add_dependencies(e2e urg_stamped)
+
+add_rostest(tests/e2e.test
+  DEPENDENCIES e2e
+  ARGS "publish_intensity:=true"
+)
+add_rostest(tests/e2e.test
+  DEPENDENCIES e2e
+  ARGS "publish_intensity:=false"
+)
 
 add_rostest_gtest(sync_timing tests/sync_timing.test
   src/sync_timing.cpp
