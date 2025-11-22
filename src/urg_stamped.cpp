@@ -392,6 +392,7 @@ void UrgStampedNode::cbVV(
     is_uust2_unfixed_ = false;
     if (prod == "UTM")
     {
+      model = "UTM";
       clock.reset(new device_state_estimator::ClockEstimatorUUST1());
       scan.reset(new device_state_estimator::ScanEstimatorUTM(clock, ideal_scan_interval_));
     }
