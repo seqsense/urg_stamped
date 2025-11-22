@@ -291,10 +291,6 @@ TEST_P(E2EWithParam, Simple)
   int test_attempts;
   switch (param.model)
   {
-    default:
-      // Retry twice for waiting estimation status convergence.
-      test_attempts = 2;
-      break;
     case urg_sim::URGSimulator::Model::UTM:
       // UTM scan estimator takes bit longer to converge.
       test_attempts = 3;
@@ -302,6 +298,10 @@ TEST_P(E2EWithParam, Simple)
     case urg_sim::URGSimulator::Model::UST_UUST2:
       // UUST2 without fixed firmware has fundamentally flawed sensor behavior.
       test_attempts = 4;
+      break;
+    default:
+      // Retry twice for waiting estimation status convergence.
+      test_attempts = 2;
       break;
   }
 
