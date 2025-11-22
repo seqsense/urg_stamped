@@ -329,9 +329,7 @@ TEST_P(E2EWithParam, Simple)
               << "err " << err << " "
               << std::setprecision(9)
               << "scan " << i << " gain " << status_msg_->sensor_clock_gain
-              << " stamp " << scans_[i]->header.stamp
-              << " true " << true_stamps_[index]
-              << std::endl;
+              << " stamp " << scans_[i]->header.stamp << std::endl;
       }
       err_rms += err * err;
     }
