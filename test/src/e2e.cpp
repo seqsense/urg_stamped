@@ -295,7 +295,7 @@ TEST_P(E2EWithParam, Simple)
       // Retry twice for waiting estimation status convergence.
       test_attempts = 2;
       break;
-    case urg_sim::URGSimulator::Model::UST_UTM:
+    case urg_sim::URGSimulator::Model::UTM:
       // UTM scan estimator takes bit longer to converge.
       test_attempts = 3;
       break;
