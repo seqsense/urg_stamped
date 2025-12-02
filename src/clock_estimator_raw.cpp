@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 The urg_stamped Authors
+ * Copyright 2025 The urg_stamped Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,16 +29,16 @@ namespace urg_stamped
 namespace device_state_estimator
 {
 
-void ClockEstimatorUUST1::startSync()
+void ClockEstimatorRaw::startSync()
 {
   sync_samples_.clear();
   cnt_dropped_samples_ = 0;
 }
 
-void ClockEstimatorUUST1::pushSyncSample(
+void ClockEstimatorRaw::pushSyncSample(
     const ros::Time& t_req, const ros::Time& t_res, const uint64_t device_wall_stamp)
 {
-  const SyncSampleUUST1 s(t_req, t_res, (device_wall_stamp / 1000) * 1000);
+  const SyncSampleRaw s(t_req, t_res, device_wall_stamp);
   if (s.delay_ > ros::Duration(ACCEPTABLE_SAMPLE_DELAY))
   {
     cnt_dropped_samples_++;
@@ -51,26 +51,17 @@ void ClockEstimatorUUST1::pushSyncSample(
   }
 }
 
-bool ClockEstimatorUUST1::hasEnoughSyncSamples() const
+bool ClockEstimatorRaw::hasEnoughSyncSamples() const
 {
   const size_t n = sync_samples_.size();
   if (cnt_dropped_samples_ >= MAX_DROPPED_SAMPLES)
   {
     return true;
   }
-  if (n < MIN_SYNC_SAMPLES)
-  {
-    return false;
-  }
-  if (n >= MAX_SYNC_SAMPLES)
-  {
-    return true;
-  }
-  const OriginFracPart overflow_range = originFracOverflow();
-  return overflow_range.t_max_ > overflow_range.t_min_;
+  return n >= MIN_SYNC_SAMPLES;
 }
 
-bool ClockEstimatorUUST1::finishSync()
+bool ClockEstimatorRaw::finishSync()
 {
   if (cnt_dropped_samples_ >= MAX_DROPPED_SAMPLES)
   {
@@ -79,17 +70,7 @@ bool ClockEstimatorUUST1::finishSync()
         << std::endl;
     return false;
   }
-  const OriginFracPart overflow_range = originFracOverflow();
-  if (!overflow_range)
-  {
-    scip2::logger::info()
-        << "Failed to find origin fractional part overflow: "
-        << overflow_range.t_min_ << ", " << overflow_range.t_max_
-        << ", samples=" << sync_samples_.size()
-        << std::endl;
-    return false;
-  }
-  const auto min_delay = findMinDelay(overflow_range);
+  const auto min_delay = findMinDelay();
   if (min_delay == sync_samples_.cend())
   {
     scip2::logger::info() << "Failed to find minimal delay sample" << std::endl;
@@ -107,13 +88,13 @@ bool ClockEstimatorUUST1::finishSync()
       {
           .t_estim_ = min_delay->t_process_,
           .stamp_ = min_delay->device_wall_stamp_,
-          .origin_ = overflow_range.compensate(min_delay->t_origin_),
+          .origin_ = min_delay->t_origin_,
       };
   return pushClockSample(clock);
 }
 
-std::vector<ClockEstimatorUUST1::SyncSampleUUST1>::const_iterator
-ClockEstimatorUUST1::findMinDelay(const OriginFracPart& overflow_range) const
+std::vector<ClockEstimatorRaw::SyncSampleRaw>::const_iterator
+ClockEstimatorRaw::findMinDelay() const
 {
   if (sync_samples_.size() == 0)
   {
@@ -122,10 +103,6 @@ ClockEstimatorUUST1::findMinDelay(const OriginFracPart& overflow_range) const
   auto it_min_delay = sync_samples_.cbegin();
   for (auto it = sync_samples_.cbegin() + 1; it != sync_samples_.cend(); it++)
   {
-    if (overflow_range.isOnOverflow(it->t_process_))
-    {
-      continue;
-    }
     if (it->delay_ < it_min_delay->delay_)
     {
       it_min_delay = it;
@@ -134,60 +111,7 @@ ClockEstimatorUUST1::findMinDelay(const OriginFracPart& overflow_range) const
   return it_min_delay;
 }
 
-OriginFracPart ClockEstimatorUUST1::originFracOverflow() const
-{
-  if (sync_samples_.size() == 0)
-  {
-    return OriginFracPart();
-  }
-
-  const ros::Duration max_delay = comm_delay_.min_ + delaySigma();
-  int valid_samples = 0;
-
-  auto it_min_origin = sync_samples_.begin();
-  auto it_max_origin = sync_samples_.begin();
-  for (auto it = sync_samples_.begin() + 1; it != sync_samples_.end(); it++)
-  {
-    if (it->delay_ > max_delay)
-    {
-      continue;
-    }
-    valid_samples++;
-    if (it->t_origin_ < it_min_origin->t_origin_)
-    {
-      it_min_origin = it;
-    }
-    if (it->t_origin_ > it_max_origin->t_origin_)
-    {
-      it_max_origin = it;
-    }
-  }
-
-  if (valid_samples < MIN_SYNC_SAMPLES ||
-      it_min_origin->delay_ > max_delay ||
-      it_max_origin->delay_ > max_delay)
-  {
-    return OriginFracPart();
-  }
-
-  double t_min = std::fmod(it_min_origin->t_process_.toSec(), SCIP2_TIMESTAMP_RESOLUTION);
-  double t_max = std::fmod(it_max_origin->t_process_.toSec(), SCIP2_TIMESTAMP_RESOLUTION);
-  if (t_min > t_max + SCIP2_TIMESTAMP_RESOLUTION / 2)
-  {
-    t_max += SCIP2_TIMESTAMP_RESOLUTION;
-  }
-  else if (t_max > t_min + SCIP2_TIMESTAMP_RESOLUTION / 2)
-  {
-    t_min += SCIP2_TIMESTAMP_RESOLUTION;
-  }
-  if (std::abs(t_max - t_min) > SCIP2_TIMESTAMP_RESOLUTION / 4)
-  {
-    return OriginFracPart(t_min, t_max, false);
-  }
-  return OriginFracPart(t_min, t_max);
-}
-
-ros::Duration ClockEstimatorUUST1::delaySigma() const
+ros::Duration ClockEstimatorRaw::delaySigma() const
 {
   if (sync_samples_.size() == 0)
   {

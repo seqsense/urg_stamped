@@ -70,7 +70,10 @@ void UrgStampedNode::cbM(
     return;
   }
 
-  const uint64_t walltime_device = walltime_.update(scan.timestamp_);
+  const uint64_t walltime_device =
+      scan.is_wall_ ?
+          scan.timestamp_ :
+          walltime_.update(scan.timestamp_);
   const ros::Time time_read_ros = ros::Time::fromBoost(time_read);
 
   if (!next_sync_.isZero() && time_read_ros > next_sync_)
@@ -82,7 +85,7 @@ void UrgStampedNode::cbM(
   std::pair<ros::Time, bool> t_scan = est_->scan_->pushScanSample(time_read_ros, walltime_device);
   sensor_msgs::LaserScan msg(msg_base_);
   msg.header.stamp = t_scan.first;
-  if (is_uust2_)
+  if (is_uust2_unfixed_)
   {
     msg.header.stamp += uust2_stamp_offset_;
   }
@@ -123,6 +126,7 @@ void UrgStampedNode::cbM(
         << step_max_ - step_min_ + 1
         << ", received: " << scan.ranges_.size() << "); refreshing" << std::endl;
     scip_->sendCommand(
+        stamp_command_prefix_ +
         (has_intensity ? "ME" : "MD") +
         (boost::format("%04d%04d") % step_min_ % step_max_).str() +
         "00000");
@@ -155,12 +159,13 @@ void UrgStampedNode::cbTM(
     const std::string& status,
     const scip2::Timestamp& time_device)
 {
+  const char arg = echo_back[0] == '%' ? echo_back[3] : echo_back[2];
   if (status != "00")
   {
     scip2::logger::error() << echo_back << " errored with " << status << std::endl;
     errorCountIncrement(status);
 
-    if (echo_back[2] == '0' && delay_estim_state_ == DelayEstimState::ESTIMATION_STARTING)
+    if (arg == '0' && delay_estim_state_ == DelayEstimState::ESTIMATION_STARTING)
     {
       scip2::logger::info()
           << "Failed to enter the time synchronization mode, "
@@ -181,7 +186,7 @@ void UrgStampedNode::cbTM(
   }
 
   timer_retry_tm_.stop();
-  switch (echo_back[2])
+  switch (arg)
   {
     case '0':
     {
@@ -205,7 +210,10 @@ void UrgStampedNode::cbTM(
         break;
       }
 
-      const uint64_t walltime_device = walltime_.update(time_device.timestamp_);
+      const uint64_t walltime_device =
+          time_device.is_wall_ ?
+              time_device.timestamp_ :
+              walltime_.update(time_device.timestamp_);
 
       est_->clock_->pushSyncSample(
           ros::Time::fromBoost(time_tm_request_.second),
@@ -241,6 +249,7 @@ void UrgStampedNode::cbTM(
 
       delay_estim_state_ = DelayEstimState::IDLE;
       scip_->sendCommand(
+          stamp_command_prefix_ +
           (publish_intensity_ ? "ME" : "MD") +
           (boost::format("%04d%04d") % step_min_ % step_max_).str() +
           "00000");
@@ -380,7 +389,7 @@ void UrgStampedNode::cbVV(
     device_state_estimator::ClockEstimator::Ptr clock;
     device_state_estimator::ScanEstimator::Ptr scan;
     std::string model;
-    is_uust2_ = false;
+    is_uust2_unfixed_ = false;
     if (prod == "UTM")
     {
       model = "UTM";
@@ -395,18 +404,28 @@ void UrgStampedNode::cbVV(
             << "Unknown sensor model. Fallback to UST mode"
             << std::endl;
       }
-      if (firm_major == 4 && firm_minor == 0 && firm_patch < 3)
+      if ((firm_major == 4 && firm_minor >= 1) || (firm_major == 1 && firm_minor >= 1))
       {
-        model = "UST (UUST2Unfixed)";
-        clock.reset(new device_state_estimator::ClockEstimatorUUST2());
-        is_uust2_ = true;
+        model = "UST (UUST-HighPrecisionTimestamp)";
+        stamp_command_prefix_ = "%";
+        clock.reset(new device_state_estimator::ClockEstimatorRaw());
+        scan.reset(new device_state_estimator::ScanEstimatorRaw(clock, ideal_scan_interval_));
       }
       else
       {
-        model = "UST (UUST1, UUST2Fixed)";
-        clock.reset(new device_state_estimator::ClockEstimatorUUST1());
+        if (firm_major == 4 && firm_minor == 0 && firm_patch < 3)
+        {
+          model = "UST (UUST2-Unfixed)";
+          clock.reset(new device_state_estimator::ClockEstimatorUUST2());
+          is_uust2_unfixed_ = true;
+        }
+        else
+        {
+          model = "UST (UUST1, UUST2-Fixed)";
+          clock.reset(new device_state_estimator::ClockEstimatorUUST1());
+        }
+        scan.reset(new device_state_estimator::ScanEstimatorUST(clock, ideal_scan_interval_));
       }
-      scan.reset(new device_state_estimator::ScanEstimatorUST(clock, ideal_scan_interval_));
     }
     est_.reset(new device_state_estimator::Estimator(clock, scan));
     scip2::logger::info() << "Initialized timestamp estimator for " << model << std::endl;
@@ -718,7 +737,7 @@ void UrgStampedNode::sendTM1()
 {
   std::stringstream cmd;
   tm_key_++;
-  cmd << "TM1;" << std::hex << tm_key_;
+  cmd << stamp_command_prefix_ << "TM1;" << std::hex << tm_key_;
   scip_->sendCommand(
       cmd.str(),
       boost::bind(&UrgStampedNode::cbTMSend, this, boost::arg<1>(), cmd.str()));
@@ -790,7 +809,7 @@ UrgStampedNode::UrgStampedNode()
   , scan_drop_count_(0)
   , scan_drop_continuous_(0)
   , cmd_resetting_(false)
-  , is_uust2_(false)
+  , is_uust2_unfixed_(false)
 {
   std::random_device rd;
   random_engine_.seed(rd());

@@ -39,19 +39,19 @@ std::pair<ros::Time, bool> ScanEstimatorUST::pushScanSample(const ros::Time& t_r
     return std::pair<ros::Time, bool>(t_stamp, true);
   }
 
-  stamps_.push_back(device_wall_stamp);
-  if (stamps_.size() < STAMP_SAMPLES)
+  stamps_ms_.push_back(device_wall_stamp / 1000);
+  if (stamps_ms_.size() < STAMP_SAMPLES)
   {
     return std::pair<ros::Time, bool>(t_stamp, true);
   }
-  stamps_.pop_front();
+  stamps_ms_.pop_front();
 
-  const int64_t interval = device_wall_stamp - stamps_[stamps_.size() - 2];
+  const int64_t interval = device_wall_stamp / 1000 - stamps_ms_[stamps_ms_.size() - 2];
 
   std::vector<int64_t> intervals;
-  for (size_t i = 1; i < stamps_.size(); ++i)
+  for (size_t i = 1; i < stamps_ms_.size(); ++i)
   {
-    const int64_t interval = stamps_[i] - stamps_[i - 1];
+    const int64_t interval = stamps_ms_[i] - stamps_ms_[i - 1];
     intervals.push_back(interval);
   }
   std::sort(intervals.begin(), intervals.end());
@@ -103,13 +103,13 @@ std::pair<ros::Time, bool> ScanEstimatorUST::pushScanSample(const ros::Time& t_r
       {
         const int64_t stamp_diff = it_change0->stamp_ - it_change1->stamp_;
         const double ideal_scan_interval_cnt =
-            ideal_scan_interval_.toSec() * clock.gain_ / DEVICE_TIMESTAMP_RESOLUTION;
+            ideal_scan_interval_.toSec() * clock.gain_ / WALL_TIMESTAMP_RESOLUTION;
         const int num_scans = std::lround(static_cast<double>(stamp_diff) / ideal_scan_interval_cnt);
         const ros::Time new_origin = clock.stampToTime(it_change0->stamp_);
         if (new_origin != scan_.origin_)
         {
           scan_.origin_ = clock.stampToTime(it_change0->stamp_);
-          scan_.interval_ = ros::Duration(stamp_diff * DEVICE_TIMESTAMP_RESOLUTION / (clock.gain_ * num_scans));
+          scan_.interval_ = ros::Duration(stamp_diff * WALL_TIMESTAMP_RESOLUTION / (clock.gain_ * num_scans));
           scip2::logger::debug()
               << "scan_origin: " << scan_.origin_ << " interval: " << scan_.interval_ << std::endl;
         }
@@ -135,8 +135,8 @@ std::pair<ros::Time, bool> ScanEstimatorUST::pushScanSample(const ros::Time& t_r
   const ros::Time t_estimated = scan_.fit(t_stamp);
   const ros::Duration t_comp = t_estimated - t_stamp;
   const bool valid =
-      ros::Duration(-DEVICE_TIMESTAMP_RESOLUTION) < t_comp &&
-      t_comp < ros::Duration(DEVICE_TIMESTAMP_RESOLUTION);
+      ros::Duration(-SCIP2_TIMESTAMP_RESOLUTION) < t_comp &&
+      t_comp < ros::Duration(SCIP2_TIMESTAMP_RESOLUTION);
 
   return std::pair<ros::Time, bool>(t_estimated, valid);
 }

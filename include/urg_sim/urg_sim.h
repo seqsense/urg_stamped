@@ -39,7 +39,8 @@ namespace urg_sim
 
 struct RawScanData
 {
-  uint32_t timestamp;
+  uint32_t timestamp_ms;
+  uint64_t timestamp_us;
   boost::posix_time::ptime full_time;
   std::vector<uint32_t> ranges;
   std::vector<uint32_t> intensities;
@@ -64,6 +65,7 @@ public:
     UTM,
     UST_UUST1,
     UST_UUST2,
+    UST_UUST_HPTS,
   };
   struct Params
   {
@@ -113,13 +115,16 @@ public:
               {"VV", std::bind(&URGSimulator::handleVV, this, std::placeholders::_1)},
               {"PP", std::bind(&URGSimulator::handlePP, this, std::placeholders::_1)},
               {"TM", std::bind(&URGSimulator::handleTM, this, std::placeholders::_1)},
+              {"%TM", std::bind(&URGSimulator::handleTM, this, std::placeholders::_1)},
               {"BM", std::bind(&URGSimulator::handleBM, this, std::placeholders::_1)},
               {"QT", std::bind(&URGSimulator::handleQT, this, std::placeholders::_1)},
               {"RS", std::bind(&URGSimulator::handleRS, this, std::placeholders::_1)},
               {"RT", std::bind(&URGSimulator::handleRS, this, std::placeholders::_1)},
               {"RB", std::bind(&URGSimulator::handleRB, this, std::placeholders::_1)},
               {"MD", std::bind(&URGSimulator::handleMX, this, std::placeholders::_1)},
+              {"%MD", std::bind(&URGSimulator::handleMX, this, std::placeholders::_1)},
               {"ME", std::bind(&URGSimulator::handleMX, this, std::placeholders::_1)},
+              {"%ME", std::bind(&URGSimulator::handleMX, this, std::placeholders::_1)},
           })  // NOLINT(whitespace/braces)
     , sensor_state_(SensorState::IDLE)
     , boot_cnt_(0)
@@ -132,11 +137,15 @@ public:
         break;
       case Model::UST_UUST1:
         model_name_ = "UST-30LC";
-        firm_version_ = "1.1.0 (2011-09-30)";
+        firm_version_ = "1.0.1";
         break;
       case Model::UST_UUST2:
         model_name_ = "UST-30LC";
         firm_version_ = "4.0.2-A";
+        break;
+      case Model::UST_UUST_HPTS:
+        model_name_ = "UST-30LC";
+        firm_version_ = "4.1.0b-A";
         break;
     }
   }
@@ -189,6 +198,7 @@ private:
   int measurement_scans_;
   int measurement_cnt_;
   int measurement_sent_;
+  bool measurement_hpts_;
   std::string measurement_cmd_;
   std::string measurement_extra_string_;
   int boot_cnt_;
@@ -232,7 +242,9 @@ private:
   void handleUnknown(const std::string cmd);
   void handleDisconnect();
 
-  uint32_t timestamp(
+  uint32_t timestampMs(
+      const boost::posix_time::ptime& now = boost::posix_time::microsec_clock::universal_time());
+  uint64_t timestampUs(
       const boost::posix_time::ptime& now = boost::posix_time::microsec_clock::universal_time());
   bool validateExtraString(
       const std::string& cmd,

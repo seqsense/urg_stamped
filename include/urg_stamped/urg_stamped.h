@@ -129,8 +129,9 @@ protected:
 
   device_state_estimator::Estimator::Ptr est_;
 
-  bool is_uust2_;
+  bool is_uust2_unfixed_;
   ros::Duration uust2_stamp_offset_;
+  std::string stamp_command_prefix_;
 
   void cbM(
       const boost::posix_time::ptime& time_read,

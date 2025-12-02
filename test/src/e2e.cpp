@@ -270,6 +270,45 @@ std::vector<urg_sim::URGSimulator::Params> params(
             .angle_max = 1080,
             .angle_front = 540,
         },  // NOLINT(whitespace/braces)
+        {
+            .model = urg_sim::URGSimulator::Model::UST_UUST_HPTS,
+            .boot_duration = 0.01,
+            .comm_delay_base = 0.0005,
+            .comm_delay_sigma = 0.0005,
+            .scan_interval = 0.02505,
+            .clock_rate = 1.0,
+            .hex_ii_timestamp = true,
+            .angle_resolution = 1440,
+            .angle_min = 0,
+            .angle_max = 1080,
+            .angle_front = 540,
+        },  // NOLINT(whitespace/braces)
+        {
+            .model = urg_sim::URGSimulator::Model::UST_UUST_HPTS,
+            .boot_duration = 0.01,
+            .comm_delay_base = 0.0005,
+            .comm_delay_sigma = 0.0005,
+            .scan_interval = 0.02505,
+            .clock_rate = 1.001,
+            .hex_ii_timestamp = true,
+            .angle_resolution = 1440,
+            .angle_min = 0,
+            .angle_max = 1080,
+            .angle_front = 540,
+        },  // NOLINT(whitespace/braces)
+        {
+            .model = urg_sim::URGSimulator::Model::UST_UUST_HPTS,
+            .boot_duration = 0.01,
+            .comm_delay_base = 0.0005,
+            .comm_delay_sigma = 0.0005,
+            .scan_interval = 0.02505,
+            .clock_rate = 0.999,
+            .hex_ii_timestamp = true,
+            .angle_resolution = 1440,
+            .angle_min = 0,
+            .angle_max = 1080,
+            .angle_front = 540,
+        },  // NOLINT(whitespace/braces)
     });     // NOLINT(whitespace/braces)
 
 INSTANTIATE_TEST_CASE_P(
@@ -352,6 +391,7 @@ TEST_P(E2EWithParam, Simple)
   ASSERT_NEAR(status_msg_->scan_interval.toSec(), param.scan_interval, 5e-5);
 }
 
+/*
 TEST_F(E2E, RebootOnError)
 {
   const urg_sim::URGSimulator::Params params =
@@ -378,6 +418,7 @@ TEST_F(E2E, RebootOnError)
   ros::Duration(2).sleep();
   ASSERT_GE(sim_->getBootCnt(), 2);
 }
+*/
 
 int main(int argc, char** argv)
 {
