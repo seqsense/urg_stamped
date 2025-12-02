@@ -404,7 +404,7 @@ void UrgStampedNode::cbVV(
             << "Unknown sensor model. Fallback to UST mode"
             << std::endl;
       }
-      if (firm_major == 4 && firm_minor >= 1)
+      if ((firm_major == 4 && firm_minor >= 1) || (firm_major == 1 && firm_minor >= 1))
       {
         model = "UST (UUST-HighPrecisionTimestamp)";
         stamp_command_prefix_ = "%";
