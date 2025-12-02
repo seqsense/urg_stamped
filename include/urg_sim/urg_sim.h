@@ -137,7 +137,7 @@ public:
         break;
       case Model::UST_UUST1:
         model_name_ = "UST-30LC";
-        firm_version_ = "1.1.0 (2011-09-30)";
+        firm_version_ = "1.0.1";
         break;
       case Model::UST_UUST2:
         model_name_ = "UST-30LC";
