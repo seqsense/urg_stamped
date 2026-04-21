@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0...3.26)
+cmake_minimum_required(VERSION 3.1...3.26)
 project(urg_stamped)
 
 set(CATKIN_DEPENDS
@@ -24,7 +24,9 @@ catkin_package(CATKIN_DEPENDS
 
 find_package(Boost 1.53 REQUIRED system chrono thread)
 
-add_compile_options(-std=c++14)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 include_directories(${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} include)
 
 add_executable(urg_stamped
