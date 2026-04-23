@@ -31,7 +31,7 @@ namespace device_state_estimator
 
 ros::Time ClockState::stampToTime(const uint64_t stamp) const
 {
-  const double from_origin = (stamp_ + static_cast<int64_t>(stamp - stamp_) / gain_) * DEVICE_TIMESTAMP_RESOLUTION;
+  const double from_origin = (stamp_ + static_cast<int64_t>(stamp - stamp_) / gain_) * WALL_TIMESTAMP_RESOLUTION;
   return origin_ + ros::Duration(from_origin);
 }
 
@@ -45,7 +45,7 @@ ros::Time ScanState::fit(const ros::Time& t) const
 
 bool OriginFracPart::isOnOverflow(const ros::Time& t) const
 {
-  const double r = std::fmod(t.toSec(), DEVICE_TIMESTAMP_RESOLUTION);
+  const double r = std::fmod(t.toSec(), SCIP2_TIMESTAMP_RESOLUTION);
   const double t0 = std::min(t_min_, t_max_);
   const double t1 = std::max(t_min_, t_max_);
   return t0 - TOLERANCE < r && r < t1 + TOLERANCE;
@@ -54,10 +54,10 @@ bool OriginFracPart::isOnOverflow(const ros::Time& t) const
 ros::Time OriginFracPart::compensate(const ros::Time& t) const
 {
   const double frac = (t_min_ + t_max_) / 2;
-  double t_integral = std::floor(t.toSec() / DEVICE_TIMESTAMP_RESOLUTION) * DEVICE_TIMESTAMP_RESOLUTION;
-  if (std::fmod(t.toSec(), DEVICE_TIMESTAMP_RESOLUTION) < frac)
+  double t_integral = std::floor(t.toSec() / SCIP2_TIMESTAMP_RESOLUTION) * SCIP2_TIMESTAMP_RESOLUTION;
+  if (std::fmod(t.toSec(), SCIP2_TIMESTAMP_RESOLUTION) < frac)
   {
-    t_integral -= DEVICE_TIMESTAMP_RESOLUTION;
+    t_integral -= SCIP2_TIMESTAMP_RESOLUTION;
   }
   return ros::Time(t_integral + frac);
 }

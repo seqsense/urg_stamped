@@ -32,9 +32,11 @@ class Timestamp
 {
 public:
   uint32_t timestamp_;
+  bool is_wall_;
 
   Timestamp()
     : timestamp_(0)
+    , is_wall_(false)
   {
   }
 };
@@ -72,7 +74,8 @@ public:
       readUntilEnd(stream);
       return;
     }
-    if (echo_back[2] == '1')
+    const char arg = echo_back[0] == '%' ? echo_back[3] : echo_back[2];
+    if (arg == '1')
     {
       std::string stamp;
       if (!std::getline(stream, stamp))
@@ -83,17 +86,36 @@ public:
       }
       const uint8_t checksum = stamp.back();
       stamp.pop_back();  // remove checksum
-      if (stamp.size() < 4)
-      {
-        logger::error() << "Wrong timestamp format" << std::endl;
-        readUntilEnd(stream);
-        return;
-      }
 
-      auto dec = Decoder<4>(stamp);
-      auto it = dec.begin();
-      timestamp.timestamp_ = *it;
-      if ((dec.getChecksum() & 0x3F) + 0x30 != checksum)
+      uint8_t calculated_checksum;
+      switch (stamp.size())
+      {
+        case 4:
+        {
+          auto dec = Decoder<4>(stamp);
+          auto it = dec.begin();
+          timestamp.timestamp_ = *it * 1000;
+          timestamp.is_wall_ = false;
+          calculated_checksum = (dec.getChecksum() & 0x3F) + 0x30;
+          break;
+        }
+        case 11:
+        {
+          auto dec = Decoder<11>(stamp);
+          auto it = dec.begin();
+          timestamp.timestamp_ = *it;
+          timestamp.is_wall_ = true;
+          calculated_checksum = (dec.getChecksum() & 0x3F) + 0x30;
+          break;
+        }
+        default:
+        {
+          logger::error() << "Wrong timestamp format" << std::endl;
+          readUntilEnd(stream);
+          return;
+        }
+      }
+      if (calculated_checksum != checksum)
       {
         logger::error() << "Checksum mismatch" << std::endl;
         readUntilEnd(stream);

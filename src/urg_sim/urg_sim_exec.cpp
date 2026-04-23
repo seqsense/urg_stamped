@@ -52,6 +52,20 @@ int main(int argc, char** argv)
           .angle_max = 1080,
           .angle_front = 540,
       };
+  const urg_sim::URGSimulator::Params params_uust_hpts =
+      {
+          .model = urg_sim::URGSimulator::Model::UST_UUST_HPTS,
+          .boot_duration = 0.5,
+          .comm_delay_base = 0.0004,
+          .comm_delay_sigma = 0.00005,
+          .scan_interval = 0.02505,
+          .clock_rate = 1.00005,
+          .hex_ii_timestamp = false,
+          .angle_resolution = 1440,
+          .angle_min = 0,
+          .angle_max = 1080,
+          .angle_front = 540,
+      };
   const urg_sim::URGSimulator::Params params_utm =
       {
           .model = urg_sim::URGSimulator::Model::UTM,
@@ -77,12 +91,17 @@ int main(int argc, char** argv)
   else if (std::string(argv[1]) == "UST" || std::string(argv[1]) == "UUST1")
   {
     params = params_uust1;
-    std::cerr << "Using UST (UUST1) model" << std::endl;
+    std::cerr << "Using UST (UUST1 and UUST2-Fixed) model" << std::endl;
   }
   else if (std::string(argv[1]) == "UUST2")
   {
     params = params_uust2;
     std::cerr << "Using UST (UUST2) model" << std::endl;
+  }
+  else if (std::string(argv[1]) == "UUST_HPTS")
+  {
+    params = params_uust_hpts;
+    std::cerr << "Using UST (UUST High Precision Timestamp) model" << std::endl;
   }
   else
   {

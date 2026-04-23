@@ -34,9 +34,10 @@ enum class EncodeType
   CED2 = 2,
   CED3 = 3,
   CED4 = 4,
+  CED11 = 11,
 };
 
-std::string encode(const std::vector<uint32_t>& v, const EncodeType ced);
+std::string encode(const std::vector<uint64_t>& v, const EncodeType ced);
 
 }  // namespace encode
 }  // namespace urg_sim

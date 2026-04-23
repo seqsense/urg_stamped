@@ -37,20 +37,27 @@ class ResponseProcessor
 {
 protected:
   std::map<std::string, Response::Ptr> responses_;
-  void registerResponse(Response::Ptr response)
+  void registerResponse(Response::Ptr response, const std::string& prefix = "")
   {
-    responses_[response->getCommandCode()] = response;
+    responses_[prefix + response->getCommandCode()] = response;
   }
 
 public:
   ResponseProcessor()
   {
+    auto responseMD = Response::Ptr(new ResponseMD);
+    auto responseME = Response::Ptr(new ResponseME);
+    auto responseTM = Response::Ptr(new ResponseTM);
+
     registerResponse(Response::Ptr(new ResponsePP));
     registerResponse(Response::Ptr(new ResponseVV));
     registerResponse(Response::Ptr(new ResponseII));
-    registerResponse(Response::Ptr(new ResponseMD));
-    registerResponse(Response::Ptr(new ResponseME));
-    registerResponse(Response::Ptr(new ResponseTM));
+    registerResponse(responseMD);
+    registerResponse(responseMD, "%");
+    registerResponse(responseME);
+    registerResponse(responseME, "%");
+    registerResponse(responseTM);
+    registerResponse(responseTM, "%");
     registerResponse(Response::Ptr(new ResponseQT));
     registerResponse(Response::Ptr(new ResponseRB));
     registerResponse(Response::Ptr(new ResponseRS));
@@ -62,7 +69,10 @@ public:
       const std::string& status,
       std::istream& stream) const
   {
-    const std::string command_code(echo_back.substr(0, 2));
+    const std::string command_code =
+        echo_back[0] == '%' ?
+            echo_back.substr(0, 3) :
+            echo_back.substr(0, 2);
     const auto response = responses_.find(command_code);
     if (response == responses_.end())
     {

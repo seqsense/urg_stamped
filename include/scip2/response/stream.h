@@ -33,7 +33,8 @@ namespace scip2
 class ScanData
 {
 public:
-  uint32_t timestamp_;
+  uint64_t timestamp_;
+  bool is_wall_;
   std::vector<int32_t> ranges_;
   std::vector<int32_t> intensities_;
 };
@@ -77,20 +78,42 @@ public:
     }
     const uint8_t checksum = stamp.back();
     stamp.pop_back();  // remove checksum
-    if (stamp.size() < 4)
+
+    switch (stamp.size())
     {
-      logger::error() << "Wrong timestamp format" << std::endl;
-      return false;
+      case 4:
+      {
+        auto dec = Decoder<4>(stamp);
+        auto it = dec.begin();
+        scan.timestamp_ = *it * 1000;
+        scan.is_wall_ = false;
+        if ((dec.getChecksum() & 0x3F) + 0x30 != checksum)
+        {
+          logger::error() << "Checksum mismatch" << std::endl;
+          return false;
+        }
+        break;
+      }
+      case 11:
+      {
+        auto dec = Decoder<11>(stamp);
+        auto it = dec.begin();
+        scan.timestamp_ = *it;
+        scan.is_wall_ = true;
+        if ((dec.getChecksum() & 0x3F) + 0x30 != checksum)
+        {
+          logger::error() << "Checksum mismatch" << std::endl;
+          return false;
+        }
+        break;
+      }
+      default:
+      {
+        logger::error() << "Wrong timestamp format" << std::endl;
+        return false;
+      }
     }
 
-    auto dec = Decoder<4>(stamp);
-    auto it = dec.begin();
-    scan.timestamp_ = *it;
-    if ((dec.getChecksum() & 0x3F) + 0x30 != checksum)
-    {
-      logger::error() << "Checksum mismatch" << std::endl;
-      return false;
-    }
     return true;
   }
   void registerCallback(Callback cb)

@@ -40,11 +40,11 @@ std::string withChecksum(const std::string& s)
   return s + checksum(s);
 }
 
-std::string encode(const std::vector<uint32_t>& v, const EncodeType ced)
+std::string encode(const std::vector<uint64_t>& v, const EncodeType ced)
 {
   std::string out;
 
-  for (const uint32_t w : v)
+  for (const uint64_t w : v)
   {
     for (int i = 0; i < static_cast<int>(ced); ++i)
     {
