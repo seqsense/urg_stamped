@@ -10,8 +10,8 @@ Changelog for package urg_stamped
 * Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
 * Contributors: Atsushi Watanabe
 
-Forthcoming
------------
+0.5.0 (2026-04-23)
+------------------
 * Support high precision timestamp extension (`#187 <https://github.com/seqsense/urg_stamped/issues/187>`_)
 * Update C++ standard version (`#195 <https://github.com/seqsense/urg_stamped/issues/195>`_)
 * Update required cmake version (`#194 <https://github.com/seqsense/urg_stamped/issues/194>`_)
