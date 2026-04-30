@@ -892,6 +892,10 @@ int URGSimulator::getBootCnt()
 
 double URGSimulator::randomCommDelay()
 {
+  if (params_.comm_delay_sigma <= 0.0)
+  {
+    return params_.comm_delay_base;
+  }
   // Communication delay must not be less than comm_delay_base.
   return std::abs(comm_delay_distribution_(rand_engine_)) + params_.comm_delay_base;
 }
