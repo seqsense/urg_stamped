@@ -10,6 +10,18 @@ Changelog for package urg_stamped
 * Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
 * Contributors: Atsushi Watanabe
 
+0.5.0 (2026-05-07)
+------------------
+* Fix assertion when comm_delay_sigma is zero (`#198 <https://github.com/seqsense/urg_stamped/issues/198>`_)
+* Support high precision timestamp extension (`#187 <https://github.com/seqsense/urg_stamped/issues/187>`_)
+* Update C++ standard version (`#195 <https://github.com/seqsense/urg_stamped/issues/195>`_)
+* Update required cmake version (`#194 <https://github.com/seqsense/urg_stamped/issues/194>`_)
+* Update codecov config (`#188 <https://github.com/seqsense/urg_stamped/issues/188>`_)
+* Run E2E test also for no-intensity mode (`#193 <https://github.com/seqsense/urg_stamped/issues/193>`_)
+* Increase retry attempts for the flaky e2e test cases (`#192 <https://github.com/seqsense/urg_stamped/issues/192>`_)
+* Fix flaky sync_timing test (`#191 <https://github.com/seqsense/urg_stamped/issues/191>`_)
+* Contributors: Atsushi Watanabe, nabeya11
+
 0.4.1 (2025-07-11)
 ------------------
 * Fix time validation (`#184 <https://github.com/seqsense/urg_stamped/issues/184>`_)
