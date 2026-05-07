@@ -107,7 +107,7 @@ public:
     , scan_timer_(io_service_)
     , raw_scan_data_cb_(raw_scan_data_cb)
     , rand_engine_(std::random_device()())
-    , comm_delay_distribution_(0, params.comm_delay_sigma)
+    , comm_delay_distribution_(0, params.comm_delay_sigma > 0.0 ? params.comm_delay_sigma : 1.0)
     , killed_(false)
     , handlers_(
           {
