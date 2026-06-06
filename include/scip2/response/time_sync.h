@@ -31,7 +31,7 @@ namespace scip2
 class Timestamp
 {
 public:
-  uint32_t timestamp_;
+  uint64_t timestamp_;
   bool is_wall_;
 
   Timestamp()
