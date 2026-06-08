@@ -10,6 +10,11 @@ Changelog for package urg_stamped
 * Migrate to GitHub Actions (`#81 <https://github.com/seqsense/urg_stamped/issues/81>`_)
 * Contributors: Atsushi Watanabe
 
+Forthcoming
+-----------
+* Fix periodic timestamp overflow by widening Timestamp field to uint64_t (`#200 <https://github.com/seqsense/urg_stamped/issues/200>`_)
+* Contributors: nabeya11
+
 0.5.0 (2026-05-07)
 ------------------
 * Fix assertion when comm_delay_sigma is zero (`#198 <https://github.com/seqsense/urg_stamped/issues/198>`_)
